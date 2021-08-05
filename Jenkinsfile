@@ -1,6 +1,12 @@
 pipeline {
   agent any
   stages {
+    stage ("sonar-publish") {
+      steps {
+        echo "===========Performing Sonar Scan============"
+        sh "${tool("sonarqube")}/bin/sonar-scanner"
+      }
+    }
     stage('frontend') {
       steps {
          sh script:'''
