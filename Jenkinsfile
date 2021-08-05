@@ -4,7 +4,7 @@ pipeline {
     stage ("sonar-publish") {
       steps {
         echo "===========Performing Sonar Scan============"
-        sh "${tool("sonarqube")}/bin/sonar-scanner"
+        sh "${tool("sonarQube")}/bin/sonar-scanner"
       }
     }
     stage('frontend') {
