@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block navtabs %}
+
+<li><a href="certify">Certify</a></li>
+<!-- <li><a href="get_lineage">Data Lineage</a></li> -->
+<!-- <li><a href="demo_lineage">Data Lineage</a></li> -->
+
+{% endblock %}
+
+{% block content %}
+
+<div class="table-responsive">
+    <table class="table table-striped" width="100%" border="1" cellspacing="0" cellpadding="0">
+        <thead>
+            <tr>
+                <th>{{ "PII type" }}</th>
+                <th colspan="2" style="text-align: center;">{{ "Validation Function: Pass Score" }}</th>
+            </tr>
+        </thead>
+        {% for key, val in pii_dict.items() %}
+        <tr>
+                <th> {{ key }} </th>
+                {% for k,v in val.items() %}
+                {% if k not in ['btc_addresses', 'credit_cards'] %}
+                    <td>{{ k|upper }}: {{ '%d'| format(v*100|int) }}%</td>
+                {% else %}
+                    <td>-</td>
+                {% endif %}
+                {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}

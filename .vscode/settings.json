@@ -1,0 +1,21 @@
+{
+  "python.languageServer": "Pylance",
+  "files.watcherExclude": {
+    "**/target": true
+  },
+  "python.pythonPath": "/home/bharath/Downloads/egghead/data-management-v02/env36/bin/python3",
+  "launch": {
+
+    "configurations": [
+      {
+      "name": "Python: api/app/runserver.py",
+      "type": "python",
+      "request": "launch",
+      "program": "api/app/runserver.py",
+      "args": ["--port", "5002"],
+      "justMyCode": false
+    }
+  ],
+    "compounds": []
+  }
+}

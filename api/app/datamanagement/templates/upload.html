@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+div#loading {
+    width: 35px;
+    height: 35px;
+    display: none;
+    background: url(/static/graphics/loadingimage.gif) no-repeat;
+    cursor: wait;
+    }
+</style>
+
+<div class="container" style="position: relative; left: -20px; bottom: -5px">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert alert-{{ messages.0.0 }}" role="alert">
+            {% for category, message in messages %}
+                {{ message }} </br>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
+ 
+<h3>Upload a data set</h3>
+
+<div id="fileUploadDiv">
+    <form action="{{ url_for('main.upload_file') }}" method="post" enctype="multipart/form-data" id="fileUpload">
+        <table class="table table-striped">
+            <tr>
+               <td style="font-weight: 500;">
+                   File
+               </td>
+                <td>
+                    <input type="file" id="file" name="file" >
+               </td>
+            </tr>
+            <tr>
+                <td style="font-weight: 500;">
+                    Title
+                </td>
+                <td>
+                    <input type="text" name="title" id="title" >
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    ID column name
+                </td>
+                <td>
+                    <input type="text" name="id">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Label column name
+                </td>
+                <td>
+                    <input type="text" name="label">
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight: 500;">
+                    Glossary File
+                </td>
+                 <td>
+                    <input type="file" id="glossary" name="glossary" >
+                </td>
+             </tr>
+             <tr>
+                <td style="font-weight: 500;">
+                    Validation Rules File
+                </td>
+                 <td>
+                    <input type="file" id="validation" name="validation" >
+                </td>
+             </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="submit" value="Upload" onclick="loading();">
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+
+<div id="loading"></div>
+
+{% endblock %}
+
+{% block script %}
+
+<script type="text/javascript">// <![CDATA[
+        function loading(){
+            $("#loading").show();
+            $("#fileUploadDiv").hide();       
+        }
+// ]]></script>
+
+{% endblock %}

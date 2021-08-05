@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block navtabs %}
+
+<li><a href="certify">Certify</a></li>
+<!-- <li><a href="get_lineage">Data Lineage</a></li> -->
+<!-- <li><a href="demo_lineage">Data Lineage</a></li> -->
+
+{% endblock %}
+
+<style type="text/css">
+    .header{
+        text-align: center;
+        background-color: rgb(136, 185, 229);
+        height: 70px;
+        line-height: 70px;
+    }
+    .chart{
+        margin-top: 30px;
+        text-align: center;
+    }
+</style>
+
+
+
+{% block content %}
+
+<div class="header">
+    <h2>
+        Data Lineage: {{ data_file }}
+    </h2>
+</div>
+
+<div id="chart" class="chart">
+    
+</div>
+
+{% endblock %}
+
+{% block script %}
+<!-- Plotly.js -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<!-- D3.js --> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+
+<script type="text/javascript">
+    var graphs = {{ graphJSON | safe }};
+    Plotly.plot('chart', graphs, {})
+</script>
+{% endblock %}

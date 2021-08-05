@@ -1,0 +1,16 @@
+PII,Easy Rules
+date,date_check
+time,time_check
+phone,phone_check
+link,link_check
+email,email_check
+ip,ip_check
+ipv6,ipv6_check
+price,price_check
+hex_color,hex_color_check
+credit_card,credit_card_check
+btc_address,btc_address_check
+street_address,street_address_check
+zip_code,zip_code_check
+po_box,po_box_check
+ssn,ssn_check

@@ -1,0 +1,335 @@
+body {
+    padding-top: 0px;
+    padding-bottom: 30px;
+}
+
+h2, h3 {
+	color: #2E5FE2;
+}
+
+.theme-dropdown .dropdown-menu {
+    position: static;
+    display: block;
+    margin-bottom: 20px;
+}
+
+.theme-showcase > p > .btn {
+    margin: 5px 0;
+}
+
+.theme-showcase .navbar .container {
+    width: auto;
+}
+
+@media (min-width: 768px) {
+.panel-body-left, .panel-body-right {
+    float: left;
+}
+.panel-body-left-half {
+    width: 50%;
+    margin: auto;
+    float: left;
+}
+/*
+.table {
+	table-layout: fixed;
+}*/
+}
+
+.panel-body-right {
+    padding: 10pt;
+}
+
+.fileUpload {
+    position: relative;
+    overflow: hidden;
+    margin: 10px;
+}
+
+.fileUpload input.upload {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0;
+    filter: alpha(opacity=0);
+}
+
+.selectiondiv {
+    border:1px dashed black;
+    background:#D9FF00;
+    opacity:0.4;
+    filter:alpha(opacity=40);
+    margin:0px;
+    padding:0px;
+    display:none;
+}
+
+.dataset {
+    background-color: white; /* #357b7b */
+    margin-bottom: 0px;
+    border-radius: 0px;
+}
+
+.dataset-menu {
+    margin-top: 10px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.tabs {
+    background-color:  #2E5FE2 !important;  /* #c9dada */
+    border-radius: 0px;
+}
+
+/*  Navigation tabs */
+.navbar-default .navbar-nav > .active > a:focus {
+  color: #555;
+  background-color: #e7e7e7;
+}
+
+.active-tab {
+	background-color: #2E5FE2 !important; /* #ffffff  */
+}
+
+.custom-dropdown--border {
+	border: 1px solid grey;
+}
+
+.table-hidden {
+	display: none;
+}
+
+@media (min-width: 768px) {
+#fileUploadDiv {
+    max-width: 1000px;
+    margin: auto;
+}
+}
+
+#fileUploadDiv input[type='submit'] {
+    margin: auto;
+    display: block;
+    width: 50%;
+}
+
+#fileUploadDiv input[type='text'] {
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+.feature-tables {
+	float: left;
+	width: 50%;
+}
+
+.feature-graphs, .feature-comments {
+	float: right;
+	width: 50%;
+}
+}
+
+.feature-comments {
+    width: 90%;
+    padding-top: 10px;
+}
+
+.feature-comments img {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.feature-graphs img {
+	width: 100%;
+	height: 100%;
+}
+
+.singlecol-graphs {
+	display: flex;
+	justify-content: center;
+}
+
+.singlecol-graphs img {
+	max-width: 90%;
+}
+
+.frequency_count_cols {
+	font-style: italic;
+	font-weight: normal;
+}
+
+.frequency_count_rows {
+	font-style: italic;
+	font-weight: normal;
+}
+
+.uploadingDataField {
+
+}
+
+.table-responsive p {
+	margin-bottom: 25px;
+	font-style: italic;
+	font-weight: lighter;
+	font-size: 10pt;
+}
+
+.topbar-title {
+	/* float: left; */
+	color: #2E5FE2;
+	font-size: 14pt;
+}
+
+.topbar-title > img {
+	float: left;
+}
+
+.topbar-title > a {
+	
+}
+
+.topbar-dropdown {
+	float: right; 
+}
+
+.navbar-overrides {
+	background-color: #2E5FE2 !important;  /* #c9dada */
+	border: none;
+	background-image: none;
+	box-shadow: none;
+	-webkit-box-shadow: none;
+	background-repeat: none;
+	filter: none;
+}
+
+.navbar-overrides .navbar-nav > li > a {
+    color: white; /* #23527c */
+}
+
+.navbar-overrides .navbar-nav > .active > a, .navbar-overrides .navbar-nav > .active > a:focus, .navbar-overrides .navbar-nav > .active > a:hover {
+    background-color: #e8f1f1;
+    font-weight: bold;
+    background-image: none;
+    box-shadow: none;
+}
+
+.navbar-overrides .navbar-toggle .icon-bar {
+    background-color: #000;
+}
+
+.navbar-overrides .navbar-toggle {
+    border-color: #000;
+}
+
+.navbar-overrides .navbar-toggle:focus, .navbar-overrides .navbar-toggle:hover {
+    background-color: none;
+}
+
+.navbar-nav {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/*  Custom dropdown style from: Red Team Design
+    Thank you!
+    http://red-team-design.com/making-html-dropdowns-not-suck/ */
+
+.custom-dropdown--large {
+	font-size: 1.5em;
+}
+
+.custom-dropdown--small {
+	font-size: .7em;
+}
+
+.custom-dropdown__select{
+	font-size: inherit; /* inherit size from .custom-dropdown */
+	padding: .5em; /* add some space*/
+	margin: 0; /* remove default margins */
+}
+
+.custom-dropdown__select--white {
+	background-color: #fff;
+	color:  #444;
+}
+
+@supports (pointer-events: none) and
+	  ((-webkit-appearance: none) or
+	  (-moz-appearance: none) or
+	  (appearance: none)) {
+
+	.custom-dropdown {
+		position: relative;
+		display: inline-block;
+		vertical-align: middle; 
+		border:1px solid #2E5FE2; 
+		border-radius:3px; 
+	}
+
+	.custom-dropdown__select {
+		padding-right: 2.5em; /* accommodate with the pseudo elements for the dropdown arrow */
+		border: 0;
+		border-radius: 3px;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		appearance: none;
+	}
+
+	.custom-dropdown::before,
+	.custom-dropdown::after {
+		content: "";
+		position: absolute;
+		pointer-events: none;
+	}
+
+	.custom-dropdown::after { /*  Custom dropdown arrow */
+		content: "\25BC";
+		height: 1em;
+		font-size: .625em;
+		line-height: 1;
+		right: 1.2em;
+		top: 50%; margin-top: -.5em;
+	}
+
+	.custom-dropdown::before { /*  Custom dropdown arrow cover */
+		width: 2em;
+		right: 0; top: 0; bottom: 0;
+		border-radius: 0 3px 3px 0;
+	}
+
+	.custom-dropdown__select[disabled] {
+		color: rgba(0,0,0,.3);
+	}
+
+	.custom-dropdown.custom-dropdown--disabled::after {
+		color: rgba(0,0,0,.1);
+	}
+
+	/* White dropdown style */
+	.custom-dropdown--white::before {
+		background-color: #fff;
+		border-left: 1px solid rgba(0,0,0,.1);
+	}
+
+	.custom-dropdown--white::after {
+		color: rgba(0,0,0,.9);
+	}
+
+	/* FF only temp fix */
+	@-moz-document url-prefix() {
+		.custom-dropdown__select 			 { padding-right: .9em }
+		.custom-dropdown--large .custom-dropdown__select { padding-right: 1.3em }
+		.custom-dropdown--small .custom-dropdown__select { padding-right: .5em }
+	}
+}
+
+.red {
+	color: red;
+}
+
+.green {
+	color: green;
+}

@@ -1,0 +1,23 @@
+<nz-page-header nzTitle="Certification">
+  <nz-breadcrumb nz-page-header-breadcrumb>
+    <nz-breadcrumb-item>
+      <a routerLink="/welcome">Home</a>
+    </nz-breadcrumb-item>
+    <nz-breadcrumb-item>Certification</nz-breadcrumb-item>
+  </nz-breadcrumb>
+</nz-page-header>
+
+<nz-divider></nz-divider>
+
+<nz-tabset style="margin-top: 8px;" [nzTabPosition]="'left'">
+  <nz-tab nzTitle="Rule Builder">
+    <ng-template nz-tab>
+      <app-line-draggable></app-line-draggable>
+    </ng-template>
+  </nz-tab>
+  <nz-tab nzTitle="Certification Summary">
+    <ng-template nz-tab>
+      <app-connect-charts></app-connect-charts>
+    </ng-template>
+  </nz-tab>
+</nz-tabset>

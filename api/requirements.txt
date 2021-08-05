@@ -1,0 +1,71 @@
+flask
+# flask_bootstrap
+# flask_jsonpify
+flask_cors
+
+
+# redis
+# celery
+
+
+# uvicorn
+# sqlalchemy
+# passlib
+# bcrypt>=3.2.0
+# python-jose
+# python-multipart
+
+werkzeug
+
+
+usaddress
+# spacy
+# en_core_web_sm
+nltk
+boto3
+botocore
+pandas-profiling
+pandas_schema
+objectpath
+more_itertools
+jsonpickle
+tldextract
+mysql-connector-python
+
+# pandas>=1.2
+# numpy>=1.19.0
+numpy==1.17.1
+pandas==0.25.1
+# scikit-learn
+plotly
+pandas-profiling
+great-expectations
+
+# pydeequ
+# pyspark==2.4.7
+
+aiofiles
+grpcio
+google
+google-cloud
+google-cloud-vision
+firebase_admin
+pyrebase4
+
+rich
+
+pglast
+inflection
+networkx
+
+
+# Run this all the way in the end: comment out and back in
+# sparse_dot_topn
+# pysqlite3
+
+# Don't run unless needed
+# libsqlite3-dev
+
+# Run manually below
+# pip3 install -U pip setuptools wheel
+# pip3 install -U spacy

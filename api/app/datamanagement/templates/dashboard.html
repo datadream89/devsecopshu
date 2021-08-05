@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block navtabs %}
+
+<li><a href="index">Data Overview</a></li>
+<li><a href="search">Search</a></li>
+<li><a href="univariate">Data Summary</a></li>
+<li><a href="dashboard">Dashboard</a></li>
+<li><a href="businessGlossary">Business Glossary</a></li>
+<li><a href="dataComparision">Data Compare</a></li>
+
+{% endblock %}
+
+<style type="text/css">
+    .header{
+        text-align: center;
+        background-color: rgb(136, 185, 229);
+        height: 70px;
+        line-height: 70px;
+    }
+    .chart{
+        margin-top: 30px;
+        text-align: center;
+    }
+</style>
+
+{% block content %}
+
+<div class="container my-4">
+
+    <div class="header">
+        <h2>
+            Dashboard
+        </h2>
+    </div>
+    <center><h3>Exceptions in the data</h3></center>
+    {% for i, c in range(graphs|length)|zip(columns) %}
+        <h4> Data Table: <span style="color:#2E5FE2">{{c}}</span></h4>
+        <div id="chart_{{ i }}" class="chart">
+        </div>
+    {% endfor %}
+    
+</div>
+<div id="myDiv"></div>
+
+<div class="modal fade" id="myOutput" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"> 
+                    <label for="colColumn">Add Column:</label>
+                    <input type="text" class="form-control" name="colColumn" id="colColumn"
+                    aria-describedby="columnHelp" placeholder="Enter Comment" />
+                    <small id="columnHelp" class="form-text text-muted"> Add Column to the metadata 
+                        for the column</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" id="buttonCloseID" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block script %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<!-- <script src="https://d14fo0winaifog.cloudfront.net/plotly-basic.js"></script> -->
+<script src=" https://cdn.plot.ly/plotly-basic-latest.js"></script>
+
+<script type="text/javascript">
+
+    var graphs= {{graphs | safe}}; 
+    var graph_1= {{graph_1 | safe}};     
+    var graph_2= {{graph_2 | safe}};           
+    var graph_3= {{graph_3 | safe}};
+    var graph_4= {{graph_4 | safe}};
+    var graph_5= {{graph_5 | safe}};
+    var myLength= graphs.length;
+    
+    
+    var graph1 = document.getElementById('chart_0');
+
+
+    Plotly.plot('chart_0', graph_1, {});
+    Plotly.plot('chart_1', graph_2, {});
+    Plotly.plot('chart_2', graph_3, {});
+    Plotly.plot('chart_3', graph_4, {});
+    Plotly.plot('chart_4', graph_5, {});
+           
+    graph1.on('plotly_click', function(){
+        alert('You clicked this Plotly pie chart!');
+        <!-- /*  $('#myOutput').modal(options); */ -->
+    });
+
+</script>
+
+
+{% endblock %}

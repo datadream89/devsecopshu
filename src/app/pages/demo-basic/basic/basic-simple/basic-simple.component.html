@@ -1,0 +1,26 @@
+<!-- DEMO START -->
+<!-- <button (click)="readData()">Click here to fetch data from Flask</button>
+<hr> -->
+
+<table id="profile">
+  <tr>
+    <th *ngFor="let column of headers">
+      {{column}}
+    </th>
+  </tr>
+  <tr *ngFor="let row of profile">
+    <td *ngFor="let col of headers">
+      {{row[col]}}
+    </td>
+  </tr>
+
+</table>
+<div *ngIf="isShown" class="d-flex justify-content-center">
+  <div class="row container-fluid" id="divshow">
+    <div class="spinner-border" role="status">
+      <span class="sr-only" id="loading"></span>
+    </div>
+  </div>
+</div>
+
+  <!-- DEMO END -->

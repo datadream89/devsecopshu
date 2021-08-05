@@ -1,0 +1,82 @@
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * The content below * * * * * * * * * * * -->
+<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->
+<!-- * * * * * * * * * * and can be replaced. * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * Delete the template below * * * * * * * * * * -->
+<!-- * * * * * * * to get started with your project! * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
+<div class="container">
+
+  <div *ngIf="isSubmit" class="row container-fluid" id="divshow">
+    <p id="status" style="color:green;">Rules {{selectedOptions}} have been submitted</p>
+  </div>
+  <div *ngIf="isDelete" class="row container-fluid" id="divshow">
+    <p id="status" style="color:red;">Rules {{selectedOptions}} have been deleted</p>
+  </div>
+
+  <form [formGroup]="cloudStore">
+    <div class="form-row">
+      <div class="form-group col-md-4">
+        <label for="dbname">Critical Data Element</label>
+        <input type="text" class="form-control" id="cde" placeholder="First Name..." formControlName="cde">
+        <button (click)="submitRule()" class="btn btn-success btn-sm" style="float: right;
+    margin-right 5px;">
+          {{show}}
+        </button>
+      </div>
+
+    </div>
+    <div class="form-group" *ngIf="isRule">
+      <p>Existing Rules</p>
+      <select class="form-control" multiple id="existname" formControlName="existname">
+        <option *ngFor="let current of currents" [ngValue]="current">
+          {{current}}
+        </option>
+      </select>
+    </div>
+    <div class="form-group">
+      <p>Rules</p>
+      <select class="form-control" multiple id="rulename" formControlName="rulename">
+        <option *ngFor="let option of options" [ngValue]="option">
+          {{option}}
+        </option>
+      </select>
+    </div>
+    <div class="form-group col-md-4">
+      <label for="regex">Regex</label>
+      <input type="text" class="form-control" id="regex_pattern" placeholder="/((\d{3})(?:\.|-))?(\d{3})(?:\.|-)(\d{4})/..." formControlName="regex_pattern">
+    </div>
+    <div class="form-group col-md-4">
+      <label for="regex">Regex Description</label>
+      <input type="text" class="form-control" id="regex_description" placeholder="Must be at least 5 characters..." formControlName="regex_description">
+    </div>
+
+    <div class="d-flex justify-content-center">
+      <button (click)="submitForm()" class="btn btn-success btn-sm" style="float: right;
+    margin-right 5px;">
+        Submit
+      </button>
+      <button (click)="deleteRules()"
+              class="btn btn-danger btn-sm" style="float: right">
+        Delete
+      </button>
+    </div>
+  </form>
+
+</div>
+
+
+
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * The content above * * * * * * * * * * * -->
+<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->
+<!-- * * * * * * * * * * and can be replaced. * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * End of Placeholder * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
+
+
+<router-outlet></router-outlet>

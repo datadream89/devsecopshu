@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block navtabs %}
+
+<li><a href="discoverPii">PII</a></li>
+
+{% endblock %}
+
+
+{% block content %}
+
+<h3>PII Risk Classification for "<span style="color: deepskyblue;">{{ data_file }}</span>"</h3>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>{{ "PII type"|upper }}</th>
+            
+            {% for h in pii_cols %}
+            <th>{{ h|upper }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for pii_ent, row in IDs %}
+        <tr>
+            <td>{{ pii_ent }}</td>
+            {% for val in row %}
+                {% if val > 0 %}
+                <td class="{{'red' if val > 0.25 else 'black' }}">{{ '%0.2f'| format(val|float) }}</td>
+                {% else %}
+                <td>-</td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

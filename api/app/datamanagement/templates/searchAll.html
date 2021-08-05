@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+
+{% block navtabs %}
+
+
+<li><a href="index">Data Overview</a></li>
+<li><a href="search">Search</a></li>
+<li><a href="univariate">Data Summary</a></li>
+<li><a href="dashboard">Dashboard</a></li>
+<li><a href="businessGlossary">Business Glossary</a></li>
+
+{% endblock %}
+
+
+{% block content %}
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous"> -->
+
+
+{% if col_feat_values %}
+    <h3>Business Glossary </h3>
+
+    <div class="table-responsive">
+        <table id="searchTable" class="table table-hover">
+            <thead class="thead-light">
+            <tr >
+                <th>{{ "table" }}</th>
+                {% for h in features %}
+                <th><strong>{{ h|regex_replace("feat", "")|regex_replace("_", " ")|upper}}</strong></th>
+                {% endfor %}
+                <th>{{ "Columns" }}</th>
+            </tr>
+            </thead>
+            <tbody data-link="row" class="rowlink hand-cursor">
+            {% for col_feat in col_feat_values %}
+            <tr class='clickable-row' data-toggle="modal" data-target="#myOutput{{ col_feat[0] }}__{{ col_feat[1] }}" style="cursor: pointer"> -->
+                {% for val in col_feat %}
+                    <td>{{ val }}</td>
+                {% endfor %}
+                <td><button id="bt_summary" type="button" class="btn btn-info btn-sm"  data-toggle="modal" data-target="#comment{{ col_feat[0] }}__{{ col_feat[1] }}">Columns</button></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+<div><h1></h1></div>
+{% endif %}
+
+{% for col_feat in col_feat_values %}
+<!-- Modal -->
+<div class="modal fade" id="myOutput{{ col_feat[0] }}__{{ col_feat[1] }}" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"> 
+                    <label for="colColumn">Add Column:</label>
+                    <input type="text" class="form-control" name="colColumn" id="colColumn"
+                    aria-describedby="columnHelp" placeholder="Enter Comment" />
+                    <small id="columnHelp" class="form-text text-muted"> Add Column to the metadata 
+                        for the column {{ col_feat[1] }}</small>
+                </div>
+                
+                <div class="table-responsive">
+                    <h4 class="modal-title">Frequency Distribution</h4>
+                    <table class="table table-striped">
+                        <thead class="thead-light">
+                        <tr>
+                            <th rowspan="1">
+                                Table
+                            </th>
+                            <th rowspan="1">
+                                Column
+                            </th>
+                            <th rowspan="1">
+                                Business Name
+                            </th>
+                            <th rowspan="1">
+                                Sample List
+                            </th>
+                        </tr>
+                        </thead>
+                        <tr>
+                            <td>{{ col_feat[0] }}</td>
+                            <td>{{ col_feat[1] }}</td>
+                            <td>{{ col_feat[-1] }}</td>
+                            <td>{{ summary_list[col_feat[0]][col_feat[1]][0] }}</td>
+                        </tr>
+                        {% for val in summary_list[col_feat[0]][col_feat[1]][1:] %}
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>{{ val }}</td>
+                        </tr>
+                        {% endfor %}
+                        </table>
+                </div>
+                <div class="table-responsive">
+                    <h4 class="modal-title">Exception Summary</h4>
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th rowspan="1">
+                                Table
+                            </th>
+                            <th rowspan="1">
+                                Column
+                            </th>
+                            <th rowspan="1">
+                                Business Name
+                            </th>
+                            <th rowspan="1">
+                                Exception Type
+                            </th>
+                            <th rowspan="1">
+                                Count
+                            </th>
+                        </tr>
+                        </thead>
+                         <tr>
+                            <td>{{ col_feat[0] }}</td>
+                            <td>{{ col_feat[1] }}</td>
+                            <td>{{ col_feat[-1] }}</td>
+                            {% if errors_list[col_feat[0]][col_feat[1]] %}
+                                {% for k,v in errors_list[col_feat[0]][col_feat[1]].items() %}
+                                    <!-- <td style="color:#ff0000">{{ v }}</td> -->
+                                    <td style="color:#ff0000"> Does not match the pattern set for {{ col_feat[-1] }}</td>
+                                {% endfor %}
+                            {% else %}
+                                <td style="color:#09ff00">No Exceptions detected</td>
+                                <td style="color:#0000ff">NA</td>
+                            {% endif %}
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" id="buttonCloseID" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- <script type="text/javascript">
+
+    $(document).ready(function(){
+        $('#buttonCloseID{{ col_feat[0] }}__{{ col_feat[1] }}').click(function(){
+            var databack = $('#comment{{ col_feat[0] }}__{{ col_feat[1] }} #colColumn').val();
+            $('#result').html(databack);
+        });
+    });
+</script> -->
+{% endfor %}
+
+{% for col_feat in col_feat_values %}
+
+<div class="modal fade" id="comment{{ col_feat[0] }}__{{ col_feat[1] }}" role="dialog">
+    <div class="modal-dialog modal-lg">
+        
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Add Column:</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"> 
+                    <label for="colColumn">Add Column:</label>
+                    <input type="text" class="form-control" name="colColumn" id="colColumn"
+                    aria-describedby="columnHelp" placeholder="Enter Comment" />
+                    <small id="columnHelp" class="form-text text-muted"> Add Column to the metadata 
+                        for the column "{{ col_feat[1] }}"" and table "{{ col_feat[0] }}"</small>
+                    <input type="hidden" id="colName" name="colName" value= {{ col_feat[1] }}>
+                    <input type="hidden" id="tableName" name="tableName" value= {{ col_feat[0] }}>
+                </div>
+            </div>
+            <div id="successAlert" class="alert alert-success" role="alert" style="display: none;"></div>
+            <div id="errorAlert" class="alert alert-success" role="alert" style="display: none;"></div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="buttonCloseID__{{ col_feat[0] }}__{{ col_feat[1] }}" data-recipient="{{ col_feat[0] }}__{{ col_feat[1] }}" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="buttonSubmitID__{{ col_feat[0] }}__{{ col_feat[1] }}">Submit</button>
+        </div>
+    </div>
+</div>
+</div>
+<!-- <script type="text/javascript">
+    $('#buttonCloseID{{ col_feat[0] }}__{{ col_feat[1] }}').click(function(){
+        var databack = $('#comment{{ col_feat[0] }}__{{ col_feat[1] }} #colColumn').val();
+        $('#result').html(databack);
+    });
+</script> -->
+{% endfor %}
+
+
+
+{% endblock %}
+
+{% block script %}
+
+<link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+<link rel="stylesheet" href="/static/styles/search.css">
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"> -->
+
+<!-- https://www.youtube.com/watch?v=8zTL1LMxBqc -->
+{% for col_feat in col_feat_values %}
+<script type="text/javascript">
+
+    $(document).ready(function(){
+
+        $('#buttonSubmitID__{{ col_feat[0] }}__{{ col_feat[1] }}').click(function(){
+
+            $('#searchTable tbody tr td').removeClass('clickable-row')
+            var databack = $('#comment{{ col_feat[0] }}__{{ col_feat[1] }} #colColumn').val();
+            var colName = $('#comment{{ col_feat[0] }}__{{ col_feat[1] }} #colName').val();
+            var tableName = $('#comment{{ col_feat[0] }}__{{ col_feat[1] }} #tableName').val();
+            var buttonName = $(this.id.selector);
+
+            $.ajax({
+                data: {
+                    table: tableName,
+                    column: colName,
+                    comment: databack,
+                },
+                type: 'POST',
+                url: '/commentView',
+            })
+            .done(function(data) {
+                if (data.error) {
+                    $('#comment{{ col_feat[0] }}__{{ col_feat[1] }} #errorAlert').text(data.error).show();
+                    $('#comment{{ col_feat[0] }}__{{ col_feat[1] }} #successAlert').hide();
+                }
+                else {
+                    $('#comment{{ col_feat[0] }}__{{ col_feat[1] }} #successAlert').text(data.comment).show();
+                    $('#comment{{ col_feat[0] }}__{{ col_feat[1] }} #errorAlert').hide();
+                }
+                
+            });
+
+            $('#searchTable tbody tr td').addClass('clickable-row')
+        });
+
+    
+
+    $('#buttonCancelID__{{ col_feat[0] }}__{{ col_feat[1] }}').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var recipient = button.data('recipient');
+        var modal = $(this);
+        modal.find('.modal.title').text('New message to' + recipient);
+        modal.find('.modal-body input').val(recipient);
+
+        });
+
+    
+
+    });
+</script>
+
+{% endfor %}
+
+{% endblock  %}

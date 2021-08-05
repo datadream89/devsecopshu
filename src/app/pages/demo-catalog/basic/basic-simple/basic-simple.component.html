@@ -1,0 +1,21 @@
+<!-- DEMO START -->
+<hr>
+
+<!-- <button (click)="readData()">Click here to fetch data from Flask</button>
+<hr> -->
+
+<table id="profile">
+  <tr>
+    <th *ngFor="let column of headers">
+      {{column}}
+    </th>
+  </tr>
+
+  <tr *ngFor="let row of profile">
+    <td *ngFor="let col of headers">
+      {{row[col]}}
+    </td>
+  </tr>
+
+</table>
+<!-- DEMO END -->

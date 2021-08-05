@@ -1,0 +1,369 @@
+{
+  "name": "piis",
+  "children": [
+    {
+      "name": "Policy_id",
+      "children":[
+      {"name": "is_pii", "children": [{"name": "True"}]},
+      {"name": "most_likely_pii_type", "children": [{"name": "phones"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 0}, 
+        {"name": "times", "value": 0},
+        {"name": "phones", "value": 2500},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    },
+    {
+      "name": "Coverage_num",
+      "children":[
+      {"name": "is_pii", "children": [{"name": "False"}]},
+      {"name": "most_likely_pii_type", "children": [{"name": "None"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 0}, 
+        {"name": "times", "value": 0},
+        {"name": "phones", "value": 0},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    },
+    {
+      "name": "Bonus_div_typ_cd",
+      "children":[
+      {"name": "is_pii", "children": [{"name": "False"}]},
+      {"name": "most_likely_pii_type", "children": [{"name": "None"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 0}, 
+        {"name": "times", "value": 0},
+        {"name": "phones", "value": 0},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    },
+    {
+      "name": "Bonus_div_seq_num",
+      "children":[
+      {"name": "is_pii", "children": [{"name": "False"}]},
+      {"name": "most_likely_pii_type", "children": [{"name": "None"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 0}, 
+        {"name": "times", "value": 0},
+        {"name": "phones", "value": 0},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    },
+    {
+      "name": "User_id",
+      "children":[
+      {"name": "is_pii", "children": [{"name": "False"}]},
+      {"name": "most_likely_pii_type", "children": [{"name": "None"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 0}, 
+        {"name": "times", "value": 0},
+        {"name": "phones", "value": 0},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    },
+    {
+      "name": "Create_date_tm",
+      "children":[
+      {"name": "is_pii", "children": [{"name": "False"}]},
+      {"name": "most_likely_pii_type", "children": [{"name": "None"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 2500}, 
+        {"name": "times", "value": 2500},
+        {"name": "phones", "value": 0},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    },
+    {
+      "name": "Bonus_div_trxn_amt",
+      "children":[
+      {"name": "is_pii", "children": [{"name": "False"}]},
+      {"name": "most_likely_pii_type", "children": [{"name": "None"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 0}, 
+        {"name": "times", "value": 0},
+        {"name": "phones", "value": 0},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    },
+    {
+      "name": "Bonus_div_stat_cd",
+      "children":[
+      {"name": "is_pii", "children": [{"name": "False"}]},
+      {"name": "most_likely_pii_type", "children": [{"name": "None"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 0}, 
+        {"name": "times", "value": 0},
+        {"name": "phones", "value": 0},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    },
+    {
+      "name": "Bonus_div_trxn_cd",
+      "children":[
+      {"name": "is_pii", "children": [{"name": "False"}]},
+      {"name": "most_likely_pii_type", "children": [{"name": "None"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 0}, 
+        {"name": "times", "value": 0},
+        {"name": "phones", "value": 0},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    },
+    {
+      "name": "Bonus_div_pua_amt",
+      "children":[
+      {"name": "is_pii", "children": [{"name": "False"}]},
+      {"name": "most_likely_pii_type", "children": [{"name": "None"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 0}, 
+        {"name": "times", "value": 0},
+        {"name": "phones", "value": 0},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    },
+    {
+      "name": "Fnd_id",
+      "children":[
+      {"name": "is_pii", "value": [{"name": "False"}]},
+      {"name": "most_likely_pii_type", "value": [{"name": "None"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 0}, 
+        {"name": "times", "value": 0},
+        {"name": "phones", "value": 0},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    },
+    {
+      "name": "Dlr_redc_app_amt",
+      "children":[
+      {"name": "is_pii", "children": [{"name": "False"}]},
+      {"name": "most_likely_pii_type", "children": [{"name": "None"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 0}, 
+        {"name": "times", "value": 0},
+        {"name": "phones", "value": 0},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    },
+    {
+      "name": "C_seq_num",
+      "children":[
+      {"name": "is_pii", "children": [{"name": "False"}]},
+      {"name": "most_likely_pii_type", "children": [{"name": "None"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 0}, 
+        {"name": "times", "value": 0},
+        {"name": "phones", "value": 0},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    },
+    {
+      "name": "Prev_dod_avb_amt",
+      "children":[
+      {"name": "is_pii", "children": [{"name": "False"}]},
+      {"name": "most_likely_pii_type", "children": [{"name": "None"}]},
+      {"name": "pii_types_and_scores",
+       "children": [
+        {"name": "dates", "value": 0}, 
+        {"name": "times", "value": 0},
+        {"name": "phones", "value": 0},
+        {"name": "phones_with_exts", "value": 0},
+        {"name": "links", "value": 0},
+        {"name": "emails", "value": 0},
+        {"name": "ips", "value": 0},
+        {"name": "ipv6s", "value": 0},
+        {"name": "prices", "value": 0},
+        {"name": "credit_cards", "value": 0},
+        {"name": "street_addresses", "value": 0.0},
+        {"name": "zip_codes", "value": 0},
+        {"name": "po_boxes", "value": 0},
+        {"name": "ssn_number", "value": 0}
+       ]
+      },
+      {"name": "pii_exceptions", "children": [{"name": []}]}
+    ]
+    }
+  ]
+}

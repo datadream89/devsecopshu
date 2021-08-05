@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+<link   rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+
+{% block navtabs %}
+
+<li><a href="dashboard">Home</a></li>
+<li><a href="index">Data Overview</a></li>
+<li><a href="search">Search</a></li>
+<li><a href="univariate">Data Summary</a></li>
+
+{% endblock %}
+
+
+{% block content %}
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous"> -->
+
+<div class="container">
+    <br/>
+	<div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-8">
+            <form class="card card-sm" method="POST">
+                <div class="card-body row no-gutters align-items-center">
+                    <div class="col-auto">
+                        <i class="fas fa-search h4 text-body"></i>
+                    </div>
+                    <!--end of col-->
+                    <div class="col">
+                        <input class="form-control form-control-lg form-control-borderless" type="search" placeholder="Search physical term Info..." name='search'>
+                    </div>
+                    <!--end of col-->
+                    <div class="col-auto">
+                        <button class="btn btn-lg btn-success" type="submit">Search</button>
+                    </div>
+                    <!--end of col-->
+                </div>
+            </form>
+        </div>
+        <!--end of col-->
+    </div>
+</div>
+
+<!-- <div class="container">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for msg in messages %}
+            <h3>{{ msg }}</h3>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div> -->
+
+<div class="container" style="position: relative; left: -20px; bottom: -5px">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert alert-{{ messages.0.0 }}" role="alert">
+            {% for category, message in messages %}
+                {{ message }} </br>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
+
+{% if mydata.features %}
+<div class="container dataset-menu">
+        <span class="custom-dropdown custom-dropdown--white custom-dropdown--border" style="display: none;">
+            <select id="feature_selector" class="custom-dropdown__select custom-dropdown__select--white">
+        
+                <option value="{{ match_id }}" selected="selected">{{ matched_term }}</option>
+                
+            </select>
+        </span>
+</div>
+{% endif %}
+
+
+<!-- <script>console.log({{matched_term}})</script> -->
+
+
+
+{% if match %}
+    <div id="graphs">
+    
+        {% set f = mydata.features[match_id] %}
+        <div id="graph-{{ f.feat_index }}" class="feature-graphs table-hidden">
+            {% if f.graph_histogram is not none %}
+            <h4>Histogram</h4>
+            <img src="{{ f.graph_histogram }}" />
+            {% endif %}
+
+            {% if f.graph_countplot is not none %}
+            <h4>Count plot</h4>
+            <img src="{{ f.graph_countplot }}" />
+            {% endif %}
+
+            <div id="messages-{{ f.feat_index }}" class="feature-comments">
+                {% if f.errors %}
+                {% for e in f.errors %}
+                <p>{{ e }}</p>
+                {% endfor %}
+                {% endif %}
+
+                {% if f.warnings %}
+                {% for w in f.warnings %}
+                <p><img src="./static/graphics/warningicon.png"> {{ w }}</p>
+                {% endfor %}
+                {% endif %}
+
+                {% if f.notes %}
+                {% for n in f.notes %}
+                <p><img src="./static/graphics/checkicon.png"> {{ n }}</p>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    
+    </div>
+{% endif %}
+
+<!-- Table with stats -->
+{% if match %}
+    {% set f = mydata.features[match_id] %}
+    <div id="feature-{{ f.feat_index }}" class="feature-tables table-hidden">
+        <h4>{{ f.feat_physical_name }}</h4>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th rowspan="2">
+                        Overview
+                    </th>
+                </tr>
+                </thead>
+                <tr>
+                    <td>Name</td>
+                    <td>{{ f.feat_physical_name }}</td>
+                </tr>
+                <tr>
+                    <td>Data type</td>
+                    <td>{{ f.feat_datatype }}</td>
+                </tr>
+                <tr>
+                    <td>Variable type</td>
+                    <td>{{ f.feat_vartype }}</td>
+                </tr>
+                <tr>
+                    <td>Count</td>
+                    <td>{{ f.feat_count }}</td>
+                </tr>
+                <tr>
+                    <td># Missing</td>
+                    <td>{{ f.feat_missing }}</td>
+                </tr>
+                <tr>
+                    <td># Unique</td>
+                    <td>{{ f.feat_unique }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Numeric fields only -->
+{% if match %}
+    {% set f = mydata.features[match_id] %}
+    {% if f.feat_average %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th rowspan="2">
+                    Central tendency
+                </th>
+            </tr>
+            </thead>
+            {% if f.feat_average is not none %}
+            <tr>
+                <td>Mean</td>
+                <td>{{ f.feat_average }}</td>
+            </tr>
+            {% endif %}
+            {% if f.feat_median is not none %}
+            <tr>
+                <td>Median</td>
+                <td>{{ f.feat_median }}</td>
+            </tr>
+            {% endif %}
+            {% if f.feat_mode is not none %}
+            <tr>
+                <td>Mode</td>
+                <td>{{ f.feat_mode }}</td>
+            </tr>
+            {% endif %}
+            </table>
+        <p>Missing values excluded in calculations for mean and median</p>
+    </div>
+    {% endif %}
+{% endif %}
+
+{% if match %}
+    {% set f = mydata.features[match_id] %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th rowspan="2">
+                    Distribution
+                </th>
+            </tr>
+            </thead>
+            {% if f.feat_stddev is not none %}
+            <tr>
+                <td>Standard deviation</td>
+                <td>{{ f.feat_stddev }}</td>
+            </tr>
+            {% endif %}
+            {% if f.feat_variance is not none %}
+            <tr>
+                <td>Variance</td>
+                <td>{{ f.feat_variance }}</td>
+            </tr>
+            {% endif %}
+            {% if f.feat_min is not none %}
+            <tr>
+                <td>Min</td>
+                <td>{{ f.feat_min }}</td>
+            </tr>
+            {% endif %}
+            {% if f.feat_quantile_25 is not none %}
+            <tr>
+                <td>25% (Q1)
+                    <a title="The middle number between the smallest value in the data and the median">
+                    <img src="./static/graphics/infoicon.png"></a>
+                </td>
+                <td>{{ f.feat_quantile_25 }}</td>
+            </tr>
+            {% endif %}
+            {% if f.feat_quantile_75 is not none %}
+            <tr>
+                <td>75% (Q3)
+                    <a title="The middle number between the median and the largest value in the data">
+                    <img src="./static/graphics/infoicon.png"></a>
+                </td>
+                <td>{{ f.feat_quantile_75 }}</td>
+            </tr>
+            {% endif %}
+            {% if f.feat_quantile_75 is not none %}
+            <tr>
+                <td>Interquartile range
+                    <a title="The difference between Q3 and Q1. The interquartile range (IQR) is a measure of variability.">
+                    <img src="./static/graphics/infoicon.png"></a>
+                </td>
+                <td>{{ f.feat_iqr }}</td>
+            </tr>
+            {% endif %}
+            {% if f.feat_max is not none %}
+            <tr>
+                <td>Max</td>
+                <td>{{ f.feat_max }}</td>
+            </tr>
+            {% endif %}
+            {% if f.feat_skew is not none %}
+            <tr>
+                <td>Skewness
+                    <a title="A measure of asymmetry. Negative values indicate that the data are skewed left and positive values indicate data that are skewed right.">
+                    <img src="./static/graphics/infoicon.png"></a>
+                </td>
+                <td>{{ f.feat_skew }}</td>
+            </tr>
+            {% endif %}
+            {% if f.feat_kurtosis is not none %}
+            <tr>
+                <td>Kurtosis
+                    <a title="A measure of whether the data are heavy-tailed or light-tailed relative to a normal distribution. Data sets with higher kurtosis values may have outliers.">
+                    <img src="./static/graphics/infoicon.png"></a>
+                </td>
+                <td>{{ f.feat_kurtosis }}</td>
+            </tr>
+            {% endif %}
+
+            <!-- Categorical only -->
+            {% if f.feat_mostcommon is not none %}
+            <tr>
+                <td>Most common value</td>
+                <td>{{ f.feat_mostcommon }}</td>
+            </tr>
+            {% endif %}
+            {% if f.feat_leastcommon is not none %}
+            <tr>
+                <td>Least common value</td>
+                <td>{{ f.feat_leastcommon }}</td>
+            </tr>
+            {% endif %}
+
+            <!-- outliers -->
+        </table>
+        {% if f.feat_stddev is not none %}
+        <p>Missing values excluded in calculations for standard deviation, variance, skew, and kurtosis<br/>
+            Standard deviation, variance, skew, and kurtosis normalized by n-1</p>
+        {% endif %}
+    </div>
+    <br/>
+    </div>
+{% endif %}
+
+
+
+{% endblock %}
+

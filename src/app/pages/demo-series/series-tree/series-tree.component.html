@@ -1,0 +1,19 @@
+<nz-page-header nzTitle="Structured">
+  <nz-breadcrumb nz-page-header-breadcrumb>
+    <nz-breadcrumb-item>
+      <a routerLink="/welcome">Home</a>
+    </nz-breadcrumb-item>
+    <nz-breadcrumb-item>Data Classification</nz-breadcrumb-item>
+    <nz-breadcrumb-item> Structured</nz-breadcrumb-item>
+  </nz-breadcrumb>
+</nz-page-header>
+
+<nz-divider></nz-divider>
+
+<nz-tabset style="margin-top: 8px;" [nzTabPosition]="'left'">
+  <nz-tab nzTitle="PII Classification">
+    <ng-template nz-tab>
+      <app-tree-from-left-to-right></app-tree-from-left-to-right>
+    </ng-template>
+  </nz-tab>
+</nz-tabset>

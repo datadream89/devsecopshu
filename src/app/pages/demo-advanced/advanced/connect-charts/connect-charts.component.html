@@ -1,0 +1,26 @@
+<!-- DEMO START -->
+<hr>
+
+<!-- <button (click)="readData()">Click here to fetch data from Flask</button>
+<hr> -->
+
+<table id="certify">
+  <tr>
+    <th *ngFor="let column of headers">
+      {{column}}
+    </th>
+  </tr>
+
+  <tr *ngFor="let row of certify">
+    <td *ngFor="let col of headers">
+      {{row[col]}}
+    </td>
+  </tr>
+
+</table>
+<div *ngIf="isShown" class="d-flex justify-content-center">
+  <div class="spinner-border" role="status">
+    <span class="sr-only" id="loading"></span>
+  </div>
+</div>
+<!-- DEMO END -->

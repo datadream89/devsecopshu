@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>Bi-variate Analysis</h3>
+
+{% if error_msg %}
+<div>
+    <p>There was an error handling the data set:</p>
+    <p>{{ error_msg }}</p>
+</div>
+{% endif %}
+
+<!-- Pick a variable, select the label field by default -->
+{% if data.features %}
+<div class="container dataset-menu">
+        <span class="custom-dropdown custom-dropdown--white custom-dropdown--border">
+            <select id="interaction_selector" class="custom-dropdown__select custom-dropdown__select--white">
+                {% for f in data.features %}
+                {% if f.feat_physical_name == data_label %}
+                <option value="{{ f.feat_index }}" selected="selected">{{ f.feat_physical_name }}</option>
+                {% else %}
+                <option value="{{ f.feat_index }}">{{ f.feat_physical_name }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </span>
+</div>
+{% endif %}
+
+<!-- Table with bivariate stats for selected variable against all others -->
+{% if data.feature_interactions %}
+{% for f in data.feature_interactions.keys() %}
+<div id="interactions-{{ data.feature_interactions[f].feat_index }}" class="interactions-tables table-hidden">
+    {% for i in data.feature_interactions[f].other_features %}
+    {% if data.feature_interactions[f].correlations[i] or data.feature_interactions[f].covariances[i] or
+                data.feature_interactions[f].ttests[i] or data.feature_interactions[f].chisquared[i] or
+                data.feature_interactions[f].cramers[i] or data.feature_interactions[f].frequency_table[i] or
+                data.feature_interactions[f].scatterplots[i] or data.feature_interactions[f].boxplots[i] or
+                data.feature_interactions[f].stackedbarplots[i] %}
+    <div>
+        {% if
+        (data.feature_interactions[f].statsbycategory[i] and data.feature_interactions[f].statsbycategory[i]|length > 5) or
+        (data.feature_interactions[f].statsbycategoryflipped[i] and data.feature_interactions[f].statsbycategoryflipped[i]|length > 5) or
+        (data.feature_interactions[f].frequency_table[i] and data.feature_interactions[f].frequency_table[i]|length > 5)
+        %}
+        <div>
+        {% else %}
+        <div class="feature-tables">
+        {% endif %}
+            <!-- Label -->
+            <h4>{{ data.feature_interactions[f].feat_physical_name }} and {{ i }}</h4>
+
+            {% if data.feature_interactions[f].correlations[i] or data.feature_interactions[f].covariances[i] or
+                data.feature_interactions[f].ttests[i] or data.feature_interactions[f].chisquared[i] or
+                data.feature_interactions[f].cramers[i]
+            %}
+            <h5>Statistics</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    {% if data.feature_interactions[f].correlations[i] %}
+                    <tr>
+                        <td>Correlation</td>
+                        <td>{{ data.feature_interactions[f].correlations[i] }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if data.feature_interactions[f].covariances[i] %}
+                    <tr>
+                        <td>Covariance</td>
+                        <td>{{ data.feature_interactions[f].covariances[i] }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if data.feature_interactions[f].ttests[i] %}
+                    <tr>
+                        <td>T-test</td>
+                        <td>{{ data.feature_interactions[f].ttests[i] }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if data.feature_interactions[f].chisquared[i] %}
+                    <tr>
+                        <td>Chi-Squared</td>
+                        <td>{{ data.feature_interactions[f].chisquared[i] }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if data.feature_interactions[f].cramers[i] %}
+                    <tr>
+                        <td>Cramer's V</td>
+                        <td>{{ data.feature_interactions[f].cramers[i] }}</td>
+                    </tr>
+                    {% endif %}
+                    </table>
+                    {% if data.feature_interactions[f].chisquared[i] is not none or
+                          data.feature_interactions[f].cramers[i] is not none %}
+                    <p>Missing values excluded in calculations for Chi-Squared and Cramer's V</p>
+                    {% endif %}
+            </div>
+            {% endif %}
+
+            {% if data.feature_interactions[f].statsbycategory[i] %}
+            <h5>Statistics by Category</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        {% for category in data.feature_interactions[f].statsbycategory[i].keys() %}
+                        <th class="frequency_count_cols">{{ f }} = {{ category }}</th>
+                        {% endfor %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for stat in data.feature_interactions[f].statsforcategory %}
+                    <tr>
+                        <td class="frequency_count_rows">{{ stat }} ({{ i }})</td>
+                        {% for category in data.feature_interactions[f].statsbycategory[i].keys() %}
+                        <td>{{ data.feature_interactions[f].statsbycategory[i][category][stat] }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <p>Missing values excluded in calculations for median, mean, standard deviation, and skew<br/>
+                    Standard deviation and skew normalized by n-1</p>
+            </div>
+            {% endif %}
+
+            {% if data.feature_interactions[f].statsbycategoryflipped[i] %}
+            <h5>Statistics by Category</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th colspan="{{ data.feature_interactions[f].statsforcategory|length }}" style="text-align: center;">{{ f }}</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        {% for stat in data.feature_interactions[f].statsforcategory %}
+                        <th class="frequency_count_cols">{{ stat }}</th>
+                        {% endfor %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for category in data.feature_interactions[f].statsbycategoryflipped[i]["Minimum"].keys() %}
+                    <tr>
+                        <th class="frequency_count_cols">{{ i }} = {{ category }}</th>
+                        {% for stat in data.feature_interactions[f].statsforcategory %}
+                        <td>{{ data.feature_interactions[f].statsbycategoryflipped[i][stat][category] }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <p>Missing values excluded in calculations for median, mean, standard deviation, and skew<br/>
+                    Standard deviation and skew normalized by n-1</p>
+            </div>
+            {% endif %}
+
+            {% if data.feature_interactions[f].frequency_table[i] %}
+            <h5>Frequencies</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        {% for col in data.feature_interactions[f].frequency_table[i][ data.feature_interactions[f].frequencytable_firstrow[i] ].keys() %}
+                        <th class="frequency_count_cols">{{ f }} = {{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in data.feature_interactions[f].frequency_table[i].keys() %}
+                    <tr>
+                        <td class="frequency_count_rows">{{ i }} = {{ row }}</td>
+                        {% for col in data.feature_interactions[f].frequency_table[i][row].keys() %}
+                        <td>{{ data.feature_interactions[f].frequency_table[i][row][col] }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if
+        (data.feature_interactions[f].statsbycategory[i] and data.feature_interactions[f].statsbycategory[i]|length > 5) or
+        (data.feature_interactions[f].statsbycategoryflipped[i] and data.feature_interactions[f].statsbycategoryflipped[i]|length > 5) or
+        (data.feature_interactions[f].frequency_table[i] and data.feature_interactions[f].frequency_table[i]|length > 5)
+        %}
+        <div class="singlecol-graphs">
+        {% else %}
+        <div class="feature-graphs">
+        {% endif %}
+            <!-- Graph -->
+            <!-- Scatter plots -->
+            {% if data.feature_interactions[f].scatterplots[i] %}
+            <img src="{{ data.feature_interactions[f].scatterplots[i] }}" >
+            {% endif %}
+            <!-- Box plot -->
+            {% if data.feature_interactions[f].boxplots[i] %}
+            <img src="{{ data.feature_interactions[f].boxplots[i] }}" >
+            {% endif %}
+            <!-- Bar plot -->
+            {% if data.feature_interactions[f].stackedbarplots[i] %}
+            <img src="{{ data.feature_interactions[f].stackedbarplots[i] }}" >
+            {% endif %}
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+    <hr/>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

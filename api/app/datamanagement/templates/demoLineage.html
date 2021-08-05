@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+
+{% block navtabs %}
+
+<li><a href="certify">Certify</a></li>
+<!-- <li><a href="get_lineage">Data Lineage</a></li> -->
+<!-- <li><a href="demo_lineage">Data Lineage</a></li> -->
+
+{% endblock %}
+
+{% block content %}
+
+<div ng-app="myApp" ng-controller="Ctrl">
+    <lineage data="lineageData"> </lineage>
+</div>
+
+{% endblock %}
+
+{% block script %}
+
+
+<link href="./static/css/graph.css" rel="stylesheet">
+<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
+<script src="{{ url_for('static', filename='js/data_lineage.js') }}"></script>
+
+{% endblock  %}

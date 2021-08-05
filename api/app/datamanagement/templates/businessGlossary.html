@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+
+{% block navtabs %}
+
+
+<li><a href="index">Data Overview</a></li>
+<li><a href="search">Search</a></li>
+<li><a href="univariate">Data Summary</a></li>
+<li><a href="dashboard">Dashboard</a></li>
+<!-- <li><a href="businessGlossary">Business Glossary</a></li> -->
+<li><a href="dataComparision">Data Compare</a></li>
+
+{% endblock %}
+
+{% block content %}
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous"> -->
+
+
+{% if business_glossary %}
+    <h3>Business Glossary </h3>
+
+    <div class="table-responsive">
+        <table id="searchTable" class="table table-hover">
+            <thead class="thead-light">
+                <th>{{ "column name" |upper }}</th>
+                <th>{{ "business name" |upper }}</th>
+                <th>{{ "business description" |upper }}</th>
+            </thead>
+            <tbody>
+                {% for k, v in business_glossary.items() %}
+                    <tr>
+                        <td>{{ k }}</td>
+                        <!-- <td>{{ v[0]|upper }}</td>
+                        <td>{{ v[1] }}</td> -->
+                        <td>{{v}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div>
+        <h3>There is no business data available for this dataset.</h3>
+    </div>
+{% endif %}
+
+{% endblock %}

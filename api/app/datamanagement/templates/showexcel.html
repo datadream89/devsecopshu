@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>
+    Upload the schema as Excel sheet
+</h3>
+<form action="upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file"><br /><br />
+    <input type="submit" value="Upload">
+</form>
+{% if rows and headers %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            {% for h in headers %}
+            <th>{{ h }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+        <tr>
+            {% for val in row %}
+            <td>{{ val }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% endblock %}

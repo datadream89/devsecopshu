@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block navtabs %}
+
+<li><a href="index">Data Overview</a></li>
+<li><a href="search">Search</a></li>
+<li><a href="univariate">Data Summary</a></li>
+<li><a href="dashboard">Dashboard</a></li>
+<!-- <li><a href="businessGlossary">Business Glossary</a></li> -->
+<li><a href="dataComparision">Data Compare</a></li>
+
+{% endblock %}
+
+{% block content %}
+
+<!--Data set title-->
+{% if summary_data.name %}
+<h3>Data summary: {{ summary_data.name }}</h3>
+{% elif data_file %}
+<h3>{{ data_file }}</h3>
+{% endif %}
+
+{% if error_msg %}
+<div>
+    <p>There was an error handling the data set:</p>
+    <p>{{ error_msg }}</p>
+</div>
+{% endif %}
+
+<!-- Summary stats about the data set -->
+{% if summary_data.num_records or summary_data.num_features or summary_data.index_column or summary_data.label_column %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <tbody>
+        {% if summary_data.num_records is not none %}
+        <tr>
+            <td>Number of records</td>
+            <td>{{ summary_data.num_records }}</td>
+        </tr>
+        {% endif %}
+        {% if summary_data.num_features is not none %}
+        <tr>
+            <td>Number of columns</td>
+            <td>{{ summary_data.num_features }}</td>
+        </tr>
+        {% endif %}
+        {% if summary_data.index_column is not none %}
+         <tr>
+            <td>Index column</td>
+            <td>{{ summary_data.index_column }}</td>
+        </tr>
+        {% endif %}
+        {% if summary_data.label_column is not none %}
+         <tr>
+            <td>Label column</td>
+            <td>{{ summary_data.label_column }}</td>
+        </tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- {% if summary_data.rows_missing %}
+<h3>Missing data</h3>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <th>Number of missing features</th>
+            <th>Number of applicable rows</th>
+        </thead>
+        <tbody>
+        {% for num_missing in summary_data.rows_missing.keys() %}
+        <tr>
+            <td>{{ num_missing }} missing features</td>
+            <td>{{ summary_data.rows_missing[num_missing] }} rows</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %} -->
+
+{% if univariate_data.features %}
+<h3>Profile Summary</h3>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <th>{{ "name" |upper }}</th>
+            <th>{{ "count" |upper }}</th>
+            <th>{{ "missing" |upper }}</th>
+            <th>{{ "unique" |upper }}</th>
+            <th>{{ "median" |upper }}</th>
+            <th>{{ "max" |upper }}</th>
+            <th>{{ "min" |upper }}</th>
+            <th>{{ "max length" |upper }}</th>
+            <th>{{ "min length" |upper }}</th>
+            <th>{{ "outlier count" |upper }}</th>
+            <th>{{ "most common" |upper }}</th>
+            <th>{{ "least common" |upper }}</th>
+            <th>{{ "pii" |upper }}</th>
+            <th>{{ "pii type" |upper }}</th>
+        </thead>
+        <tbody>
+            {% for f in univariate_data.features %}
+                <tr>
+                    <td class="{{'red' if pii_data[f.feat_physical_name] and not pii_data[f.feat_physical_name] == 'btc_addresses' else 'green' }}">{{ f.feat_physical_name }}</td>
+                    <td>{{ f.feat_count }}</td>
+                    <td>{{ f.feat_missing }}</td>
+                    <td>{{ f.feat_unique }}</td>
+                    <td>{{ f.feat_median|replaceNone('-') }}</td>
+                    <td>{{ f.feat_max|replaceNone('-') }}</td>
+                    <td>{{ f.feat_min|replaceNone('-') }}</td>
+                    <td>{{ f.feat_max_length|replaceNone('-') }}</td>
+                    <td>{{ f.feat_min_length|replaceNone('-') }}</td>
+                    <td>{{ f.feat_outlierscore }}</td>
+                    <td>{{ f.feat_mostcommon|replaceNone('-') }}</td>
+                    <td>{{ f.feat_leastcommon|replaceNone('-') }}</td>
+                    <td>{{ 'Y' if pii_data[f.feat_physical_name] and not pii_data[f.feat_physical_name] == "btc_addresses" else 'N'}}</td>
+                    {% if pii_data[f.feat_physical_name] == "btc_addresses"%}
+                    <td>-</td>
+                    {% else %}
+                    <td style="color: red;">{{ pii_data[f.feat_physical_name]|upper }}</td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+
+{% if univariate_data.features %}
+<h3>Frequency Distribution</h3>
+<div class="table-responsive">
+    <table class="table table-striped" width="100%" border="1" cellspacing="0" cellpadding="0">
+        <thead>
+            <tr>
+                <th rowspan="2">{{ "Column Name" }}</th>
+                <th colspan="3" style="text-align: center;">{{ "Most Common" }}</th>
+                <th colspan="3" style="text-align: center;">{{ "Least Common" }}</th>
+            </tr>
+            <tr>
+                <th>Value</th>
+                <th>Count</th>
+                <th>Percentage</th>
+                <th>Value</th>
+                <th>Count</th>
+                <th>Percentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in univariate_data.features %}
+            {% if f.feat_5_mostcommon_values and f.feat_5_mostcommon_counts %}
+            {% for (((value_most, count_most), value_least), count_least), feat_physical_name in f.feat_5_mostcommon_values|zip(f.feat_5_mostcommon_counts)|zip(f.feat_5_leastcommon_values)|zip(f.feat_5_leastcommon_counts)|zip(f.feat_physical_name|pad(5, "")) %}
+            <tr>
+                <td>{{ feat_physical_name }}</td>
+                <td>{{ value_most }}</td>
+                <td>{{ count_most }}</td>
+                <td>{{ (count_most|int * 100 / f.feat_count)|round(2, 'floor') }}%</td>
+                <td>{{ value_least }}</td>
+                <td>{{ count_least }}</td>
+                <td>{{ (count_most|int * 100 / f.feat_count)|round(2, 'floor') }}%</td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+                <td>{{ f.feat_physical_name }}</td>
+                <td>-NA-</td>
+                <td>-NA-</td>
+                <td>-NA-</td>
+                <td>-NA-</td>
+                <td>-NA-</td>
+                <td>-NA-</td>
+            </tr>
+            {% endif %}
+            <tr style="border-bottom: 1px solid #000;">-</tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+
+
+{% if summary_data.sample_list %}
+<h3>Sample rows</h3>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            {% for h in summary_data.features_list %}
+            <th>{{ h }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in summary_data.sample_list %}
+        <tr>
+            {% for val in row %}
+            <td>{{ val }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% endblock %}

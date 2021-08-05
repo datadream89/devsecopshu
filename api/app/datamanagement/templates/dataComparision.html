@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+
+{% block navtabs %}
+
+<li><a href="index">Data Overview</a></li>
+<li><a href="search">Search</a></li>
+<li><a href="univariate">Data Summary</a></li>
+<li><a href="dashboard">Dashboard</a></li>
+<!-- <li><a href="businessGlossary">Business Glossary</a></li> -->
+<li><a href="dataComparision">Data Compare</a></li>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="container dataset-menu">
+<form action="dataComparision" method="post" class="topbar-dropdown">
+    <label for="sourceData">Select Source</label>
+    <span class="custom-dropdown custom-dropdown--white">
+        <select class="custom-dropdown__select custom-dropdown__select--white" name="data_set_field_1" onchange="this.form.submit()">
+
+            {% for dataset in dataset_options.dataset_info %}
+                {% if dataset.dataset_file == data_file %}
+                    <option value="{{ dataset.dataset_file }}" selected="selected">Data set: {{ dataset.dataset_title }}</option>
+                {% else %}
+                    <option value="{{ dataset.dataset_file }}">{{ dataset.dataset_title }}</option>
+                {% endif %}
+            {% endfor %}
+            
+            {% if uploaded_dataset and uploaded_dataset[0] != data_file %}
+                <option value="{{ uploaded_dataset[0] }}">
+                    --Uploaded: {{ uploaded_dataset[1] }}
+                </option>
+            {% elif uploaded_dataset and uploaded_dataset[0] == data_file %}
+                <option value="{{ uploaded_dataset[0] }}" selected="selected">--Uploaded: {{ uploaded_dataset[1] }}</option>
+            {% endif %}
+
+        </select>
+    </span>
+    <label for="destinationData">Select Destination</label>
+    <span class="custom-dropdown custom-dropdown--white">
+        <select class="custom-dropdown__select custom-dropdown__select--white" name="data_set_field_2" onchange="this.form.submit()">
+
+            {% for dataset in dataset_options.dataset_info %}
+                {% if dataset.dataset_file == data_file %}
+                    <option value="{{ dataset.dataset_file }}" selected="selected">Data set: {{ dataset.dataset_title }}</option>
+                {% else %}
+                    <option value="{{ dataset.dataset_file }}">{{ dataset.dataset_title }}</option>
+                {% endif %}
+            {% endfor %}
+            
+            {% if uploaded_dataset and uploaded_dataset[0] != data_file %}
+                <option value="{{ uploaded_dataset[0] }}">
+                    --Uploaded: {{ uploaded_dataset[1] }}
+                </option>
+            {% elif uploaded_dataset and uploaded_dataset[0] == data_file %}
+                <option value="{{ uploaded_dataset[0] }}" selected="selected">--Uploaded: {{ uploaded_dataset[1] }}</option>
+            {% endif %}
+
+        </select>
+    </span>
+</form>
+</div>
+
+{% if report %}
+    <!-- <a href="{{ url_for('main.compare_report_download', report=report) }}">Download Report</a> -->
+    <div class="barcode">
+        {% autoescape false %}
+            {{ report|replaceEscape }}
+        {% endautoescape %}
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block script %}
+
+<script>
+    $(function () {
+        $('select').selectpicker();
+    });
+</script>
+
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script> -->
+
+
+{% endblock %}
