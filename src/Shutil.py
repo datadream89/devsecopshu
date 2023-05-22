@@ -33,3 +33,24 @@ directory_path = '/path/to/directory'
 
 # Call the function to group and move files
 group_files_by_prefix(directory_path)
+import boto3
+import os
+
+def upload_directory(local_path, bucket_name, s3_path):
+    s3_client = boto3.client('s3')
+    for root, dirs, files in os.walk(local_path):
+        for file in files:
+            local_file_path = os.path.join(root, file)
+            s3_key = os.path.join(s3_path, os.path.relpath(local_file_path, local_path))
+            s3_client.upload_file(local_file_path, bucket_name, s3_key)
+            print(f"Uploaded {local_file_path} to s3://{bucket_name}/{s3_key}")
+
+# Specify the local directory path you want to copy
+local_directory = '/path/to/local/directory'
+
+# Specify your S3 bucket name and the destination path in S3
+bucket_name = 'your-s3-bucket-name'
+s3_directory = 'path/to/s3/directory'
+
+# Upload the directory to S3
+upload_directory(local_directory, bucket_name, s3_directory)
