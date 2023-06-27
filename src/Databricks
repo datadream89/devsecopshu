@@ -1,3 +1,72 @@
+import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.{Sink, Source}
+import spray.json._
+
+import scala.concurrent.Future
+
+// Define your JSON data model
+case class MyData(name: String, age: Int)
+
+// Define your JSON protocol using Spray JSON
+object MyJsonProtocol extends DefaultJsonProtocol {
+  implicit val myDataFormat: RootJsonFormat[MyData] = jsonFormat2(MyData)
+}
+
+import MyJsonProtocol._
+
+class PostRequestExample {
+  implicit val system: ActorSystem = ActorSystem("post-request-example")
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+  import system.dispatcher
+
+  def sendPostRequest(url: String, data: MyData, headers: List[HttpHeader]): Future[HttpResponse] = {
+    val jsonEntity = HttpEntity(ContentTypes.`application/json`, data.toJson.toString)
+    val request = HttpRequest(
+      method = HttpMethods.POST,
+      uri = url,
+      entity = jsonEntity,
+      headers = headers
+    )
+
+    val responseFuture: Future[HttpResponse] = Source.single(request).via(Http().outgoingConnectionHttps(url)).runWith(Sink.head)
+
+    responseFuture
+  }
+}
+
+object Main {
+  def main(args: Array[String]): Unit = {
+    val example = new PostRequestExample()
+
+    val url = "https://example.com/api/endpoint"
+    val data = MyData("John Doe", 30)
+    val headers = List(RawHeader("Authorization", "Bearer token"))
+
+    val responseFuture: Future[HttpResponse] = example.sendPostRequest(url, data, headers)
+
+    responseFuture.onComplete {
+      case scala.util.Success(response) =>
+        println(s"Request successful: ${response.status}")
+        response.entity.toStrict(5000).map(_.data.utf8String).foreach(println)
+        example.system.terminate()
+
+      case scala.util.Failure(ex) =>
+        println(s"Request failed: ${ex.getMessage}")
+        example.system.terminate()
+    }
+  }
+}
+
+
+
+
+
 import os
 from datetime import datetime, timedelta
 from airflow import DAG
