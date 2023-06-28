@@ -1,64 +1,20 @@
-import java.io.{BufferedReader, DataOutputStream, InputStreamReader}
-import java.net.HttpURLConnection
-import java.net.URL
+import scalaj.http.{Http, HttpResponse}
 
-case class PostRequestExample() extends HttpOperations {
-  def sendPostRequest(url: String, data: String, headers: List[(String, String)]): String = {
-    val connection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
-    connection.setRequestMethod("POST")
+// Define the URL to which you want to send the POST request (HTTPS)
+val url = "https://example.com/api/endpoint"
 
-    // Set headers
-    headers.foreach { case (key, value) =>
-      connection.setRequestProperty(key, value)
-    }
+// Create a map of form parameters
+val formData = Map(
+  "param1" -> "value1",
+  "param2" -> "value2"
+)
 
-    connection.setDoOutput(true)
+// Send the POST request
+val response: HttpResponse[String] = Http(url)
+  .postData(formData.map { case (k, v) => s"$k=$v" }.mkString("&"))
+  .header("Content-Type", "application/x-www-form-urlencoded")
+  .option(HttpOptions.allowUnsafeSSL) // Allow self-signed SSL certificates
+  .asString
 
-    val outputStream = new DataOutputStream(connection.getOutputStream)
-    outputStream.writeBytes(data)
-    outputStream.flush()
-    outputStream.close()
-
-    val responseCode = connection.getResponseCode
-    if (responseCode == HttpURLConnection.HTTP_OK) {
-      val inputStream = new BufferedReader(new InputStreamReader(connection.getInputStream))
-      val response = new StringBuilder
-      var inputLine: String = null
-      while ({ inputLine = inputStream.readLine(); inputLine != null }) {
-        response.append(inputLine)
-      }
-      inputStream.close()
-      response.toString()
-    } else {
-      val errorStream = new BufferedReader(new InputStreamReader(connection.getErrorStream))
-      val errorResponse = new StringBuilder
-      var errorLine: String = null
-      while ({ errorLine = errorStream.readLine(); errorLine != null }) {
-        errorResponse.append(errorLine)
-      }
-      errorStream.close()
-      throw new RuntimeException(s"POST request failed with response code: $responseCode\nResponse body: ${errorResponse.toString()}")
-    }
-  }
-}
-
-trait HttpOperations {
-  def sendPostRequest(url: String, data: String, headers: List[(String, String)]): String
-}
-
-object Main {
-  def main(args: Array[String]): Unit = {
-    val example = PostRequestExample()
-
-    val url = "https://example.com/api/endpoint"
-    val data = """{"name": "John Doe", "age": 30}"""
-    val headers = List(("Authorization", "Bearer token"), ("X-Custom-Header", "Custom Value"))
-
-    try {
-      val response = example.sendPostRequest(url, data, headers)
-      println(response)
-    } catch {
-      case e: Exception => println(e.getMessage)
-    }
-  }
-}
+// Print the response
+println(response.body)
