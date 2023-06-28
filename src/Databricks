@@ -1,4 +1,12 @@
 import scalaj.http.{Http, HttpResponse}
+import scala.reflect.runtime.{universe => ru}
+
+object PackagePathExample {
+  def main(args: Array[String]): Unit = {
+    val packageName = ru.typeOf[FirstScript].typeSymbol.asClass.fullName
+    println(packageName)
+  }
+}
 
 class HttpClient {
   def sendPostRequest(): Unit = {
