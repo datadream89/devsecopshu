@@ -2,39 +2,42 @@ import java.io.{BufferedReader, DataOutputStream, InputStreamReader}
 import java.net.HttpURLConnection
 import java.net.URL
 
-def sendPostRequest(url: String, data: String, contentType: String): String = {
-  val connection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
-  connection.setRequestMethod("POST")
-  connection.setRequestProperty("Content-Type", contentType)
-  connection.setDoOutput(true)
+object PostRequestExample {
+  def sendPostRequest(url: String, data: String, contentType: String): String = {
+    val connection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
+    connection.setRequestMethod("POST")
+    connection.setRequestProperty("Content-Type", contentType)
+    connection.setDoOutput(true)
 
-  val outputStream = new DataOutputStream(connection.getOutputStream)
-  outputStream.writeBytes(data)
-  outputStream.flush()
-  outputStream.close()
+    val outputStream = new DataOutputStream(connection.getOutputStream)
+    outputStream.writeBytes(data)
+    outputStream.flush()
+    outputStream.close()
 
-  val responseCode = connection.getResponseCode
-  if (responseCode == HttpURLConnection.HTTP_OK) {
-    val inputStream = new BufferedReader(new InputStreamReader(connection.getInputStream))
-    val response = new StringBuilder
-    var inputLine: String = null
-    while ({ inputLine = inputStream.readLine(); inputLine != null }) {
-      response.append(inputLine)
+    val responseCode = connection.getResponseCode
+    if (responseCode == HttpURLConnection.HTTP_OK) {
+      val inputStream = new BufferedReader(new InputStreamReader(connection.getInputStream))
+      val response = new StringBuilder
+      var inputLine: String = null
+      while ({ inputLine = inputStream.readLine(); inputLine != null }) {
+        response.append(inputLine)
+      }
+      inputStream.close()
+      response.toString()
+    } else {
+      throw new RuntimeException(s"POST request failed with response code: $responseCode")
     }
-    inputStream.close()
-    response.toString()
-  } else {
-    throw new RuntimeException(s"POST request failed with response code: $responseCode")
+  }
+
+  def main(args: Array[String]): Unit = {
+    val url = "https://example.com/api/endpoint"
+    val data = """{"name": "John Doe", "age": 30}"""
+    val contentType = "application/json"
+
+    val response = sendPostRequest(url, data, contentType)
+    println(response)
   }
 }
-
-// Usage example
-val url = "https://example.com/api/endpoint"
-val data = """{"name": "John Doe", "age": 30}"""
-val contentType = "application/json"
-
-val response = sendPostRequest(url, data, contentType)
-println(response)
 
 
 
