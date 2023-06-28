@@ -3,10 +3,15 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 case class PostRequestExample() extends HttpOperations {
-  def sendPostRequest(url: String, data: String, contentType: String): String = {
+  def sendPostRequest(url: String, data: String, headers: List[(String, String)]): String = {
     val connection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
     connection.setRequestMethod("POST")
-    connection.setRequestProperty("Content-Type", contentType)
+    
+    // Set headers
+    headers.foreach { case (key, value) =>
+      connection.setRequestProperty(key, value)
+    }
+
     connection.setDoOutput(true)
 
     val outputStream = new DataOutputStream(connection.getOutputStream)
@@ -31,7 +36,7 @@ case class PostRequestExample() extends HttpOperations {
 }
 
 trait HttpOperations {
-  def sendPostRequest(url: String, data: String, contentType: String): String
+  def sendPostRequest(url: String, data: String, headers: List[(String, String)]): String
 }
 
 object Main {
@@ -40,9 +45,9 @@ object Main {
 
     val url = "https://example.com/api/endpoint"
     val data = """{"name": "John Doe", "age": 30}"""
-    val contentType = "application/json"
+    val headers = List(("Authorization", "Bearer token"), ("X-Custom-Header", "Custom Value"))
 
-    val response = example.sendPostRequest(url, data, contentType)
+    val response = example.sendPostRequest(url, data, headers)
     println(response)
   }
 }
