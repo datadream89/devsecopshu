@@ -1,20 +1,32 @@
 import scalaj.http.{Http, HttpResponse}
 
-// Define the URL to which you want to send the POST request (HTTPS)
-val url = "https://example.com/api/endpoint"
+class HttpClient {
+  def sendPostRequest(): Unit = {
+    // Define the URL to which you want to send the POST request (HTTPS)
+    val url = "https://example.com/api/endpoint"
 
-// Create a map of form parameters
-val formData = Map(
-  "param1" -> "value1",
-  "param2" -> "value2"
-)
+    // Create a map of form parameters
+    val formData = Map(
+      "param1" -> "value1",
+      "param2" -> "value2"
+    )
 
-// Send the POST request
-val response: HttpResponse[String] = Http(url)
-  .postData(formData.map { case (k, v) => s"$k=$v" }.mkString("&"))
-  .header("Content-Type", "application/x-www-form-urlencoded")
-  .option(HttpOptions.allowUnsafeSSL) // Allow self-signed SSL certificates
-  .asString
+    // Send the POST request
+    val response: HttpResponse[String] = Http(url)
+      .postData(formData.map { case (k, v) => s"$k=$v" }.mkString("&"))
+      .header("Content-Type", "application/x-www-form-urlencoded")
+      .option(HttpOptions.allowUnsafeSSL) // Allow self-signed SSL certificates
+      .asString
 
-// Print the response
-println(response.body)
+    // Print the response
+    println(response.body)
+  }
+}
+
+object Main {
+  def main(args: Array[String]): Unit = {
+    val client = new HttpClient()
+    client.sendPostRequest()
+  }
+}
+
