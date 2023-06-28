@@ -1,5 +1,7 @@
 import scalaj.http.{Http, HttpResponse}
 import scala.reflect.runtime.{universe => ru}
+println("All Environment Variables:")
+sys.env.foreach { case (key, value) => println(key + " -> " + value) }
 
 object PackagePathExample {
   def main(args: Array[String]): Unit = {
