@@ -1,3 +1,38 @@
+from openshift import client
+import os
+# Create an instance of the OpenShift API client
+api_client = client.ApiClient()
+
+# Set the OpenShift API URL
+api_client.configuration.host = 'https://api.openshift.example.com:6443'
+
+# Set the authentication credentials
+username = os.getenv('OPENSHIFT_USERNAME')
+password = os.getenv('OPENSHIFT_PASSWORD')
+
+# Create an instance of the CoreV1Api for interacting with the cluster
+v1_client = client.CoreV1Api(api_client=api_client)
+
+# Rest of the code...
+
+job_metadata = client.V1ObjectMeta(name="my-job")
+job_container = client.V1Container(
+    name="my-container",
+    image="my-image",
+)
+job_template = client.V1PodTemplateSpec(
+    metadata=job_metadata,
+    spec=client.V1PodSpec(restart_policy="Never", containers=[job_container])
+)
+job_spec = client.V1JobSpec(template=job_template, backoff_limit=0)
+job = client.V1Job(api_version="batch/v1", kind="Job", metadata=job_metadata, spec=job_spec)
+
+# Submit the job
+v1_client.create_namespaced_job(namespace="my-namespace", body=job)
+
+
+
+
 import java.lang.ProcessBuilder
 
 object SetEnvironmentVariableExample {
