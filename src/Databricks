@@ -1,70 +1,40 @@
-import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Sink, Source}
-import spray.json._
+import java.io.{BufferedReader, DataOutputStream, InputStreamReader}
+import java.net.HttpURLConnection
+import java.net.URL
 
-import scala.concurrent.{ExecutionContext, Future}
+def sendPostRequest(url: String, data: String, contentType: String): String = {
+  val connection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
+  connection.setRequestMethod("POST")
+  connection.setRequestProperty("Content-Type", contentType)
+  connection.setDoOutput(true)
 
-// Define your JSON data model
-case class MyData(name: String, age: Int)
+  val outputStream = new DataOutputStream(connection.getOutputStream)
+  outputStream.writeBytes(data)
+  outputStream.flush()
+  outputStream.close()
 
-// Define your JSON protocol using Spray JSON
-object MyJsonProtocol extends DefaultJsonProtocol {
-  implicit val myDataFormat: RootJsonFormat[MyData] = jsonFormat2(MyData)
-}
-
-import MyJsonProtocol._
-
-class PostRequestExample(implicit val executionContext: ExecutionContext) {
-  implicit val system: ActorSystem = ActorSystem("post-request-example")
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
-
-  import system.dispatcher
-
-  def sendPostRequest(url: String, data: MyData, headers: List[HttpHeader]): Future[HttpResponse] = {
-    val jsonEntity = HttpEntity(ContentTypes.`application/json`, data.toJson.toString)
-    val request = HttpRequest(
-      method = HttpMethods.POST,
-      uri = url,
-      entity = jsonEntity,
-      headers = headers
-    )
-
-    val responseFuture: Future[HttpResponse] = Source.single(request).via(Http().outgoingConnectionHttps(url)).runWith(Sink.head)
-
-    responseFuture
-  }
-}
-
-object Main {
-  def main(args: Array[String]): Unit = {
-    implicit val system: ActorSystem = ActorSystem("main")
-    implicit val executionContext: ExecutionContext = system.dispatcher
-
-    val example = new PostRequestExample()
-
-    val url = "https://example.com/api/endpoint"
-    val data = MyData("John Doe", 30)
-    val headers = List(RawHeader("Authorization", "Bearer token"))
-
-    val responseFuture: Future[HttpResponse] = example.sendPostRequest(url, data, headers)
-
-    responseFuture.onComplete {
-      case scala.util.Success(response) =>
-        println(s"Request successful: ${response.status}")
-        response.entity.toStrict(5000).map(_.data.utf8String).foreach(println)
-        example.system.terminate()
-
-      case scala.util.Failure(ex) =>
-        println(s"Request failed: ${ex.getMessage}")
-        example.system.terminate()
+  val responseCode = connection.getResponseCode
+  if (responseCode == HttpURLConnection.HTTP_OK) {
+    val inputStream = new BufferedReader(new InputStreamReader(connection.getInputStream))
+    val response = new StringBuilder
+    var inputLine: String = null
+    while ({ inputLine = inputStream.readLine(); inputLine != null }) {
+      response.append(inputLine)
     }
+    inputStream.close()
+    response.toString()
+  } else {
+    throw new RuntimeException(s"POST request failed with response code: $responseCode")
   }
 }
+
+// Usage example
+val url = "https://example.com/api/endpoint"
+val data = """{"name": "John Doe", "age": 30}"""
+val contentType = "application/json"
+
+val response = sendPostRequest(url, data, contentType)
+println(response)
 
 
 
