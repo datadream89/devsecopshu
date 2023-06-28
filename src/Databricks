@@ -7,7 +7,7 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import spray.json._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 // Define your JSON data model
 case class MyData(name: String, age: Int)
@@ -19,7 +19,7 @@ object MyJsonProtocol extends DefaultJsonProtocol {
 
 import MyJsonProtocol._
 
-class PostRequestExample {
+class PostRequestExample(implicit val executionContext: ExecutionContext) {
   implicit val system: ActorSystem = ActorSystem("post-request-example")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
@@ -42,6 +42,9 @@ class PostRequestExample {
 
 object Main {
   def main(args: Array[String]): Unit = {
+    implicit val system: ActorSystem = ActorSystem("main")
+    implicit val executionContext: ExecutionContext = system.dispatcher
+
     val example = new PostRequestExample()
 
     val url = "https://example.com/api/endpoint"
