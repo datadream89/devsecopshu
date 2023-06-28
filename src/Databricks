@@ -6,7 +6,7 @@ case class PostRequestExample() extends HttpOperations {
   def sendPostRequest(url: String, data: String, headers: List[(String, String)]): String = {
     val connection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
     connection.setRequestMethod("POST")
-    
+
     // Set headers
     headers.foreach { case (key, value) =>
       connection.setRequestProperty(key, value)
@@ -30,7 +30,14 @@ case class PostRequestExample() extends HttpOperations {
       inputStream.close()
       response.toString()
     } else {
-      throw new RuntimeException(s"POST request failed with response code: $responseCode")
+      val errorStream = new BufferedReader(new InputStreamReader(connection.getErrorStream))
+      val errorResponse = new StringBuilder
+      var errorLine: String = null
+      while ({ errorLine = errorStream.readLine(); errorLine != null }) {
+        errorResponse.append(errorLine)
+      }
+      errorStream.close()
+      throw new RuntimeException(s"POST request failed with response code: $responseCode\nResponse body: ${errorResponse.toString()}")
     }
   }
 }
@@ -47,7 +54,11 @@ object Main {
     val data = """{"name": "John Doe", "age": 30}"""
     val headers = List(("Authorization", "Bearer token"), ("X-Custom-Header", "Custom Value"))
 
-    val response = example.sendPostRequest(url, data, headers)
-    println(response)
+    try {
+      val response = example.sendPostRequest(url, data, headers)
+      println(response)
+    } catch {
+      case e: Exception => println(e.getMessage)
+    }
   }
 }
