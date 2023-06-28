@@ -1,3 +1,24 @@
+import java.lang.ProcessBuilder
+
+object SetEnvironmentVariableExample {
+  def main(args: Array[String]): Unit = {
+    val pb = new ProcessBuilder()
+    val env = pb.environment()
+
+    // Set the environment variable
+    env.put("MY_ENV_VAR", "variable_value")
+
+    // Optionally, you can also append to an existing environment variable
+    // env.put("PATH", env.get("PATH") + ":/path/to/additional/directory")
+
+    // Start a new process with the updated environment
+    pb.start()
+    
+    // Now the environment variable is set for the new process
+  }
+}
+
+
 import scalaj.http.{Http, HttpResponse}
 import scala.reflect.runtime.{universe => ru}
 println("All Environment Variables:")
