@@ -1,25 +1,12 @@
 # Dockerfile
+# Install dependencies
+RUN yum install -y java-11-openjdk-devel curl zip unzip
 
-# Add the sbt repository key
-RUN curl -Ls "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xEEA14886" | gpg --import
+# Install SDKMAN
+RUN curl -s "https://get.sdkman.io" | bash
 
-# Add the sbt repository
-RUN echo "deb https://repo.scala-sbt.org/scalasbt/maven-releases/org/scala-sbt/sbt/1.5.5 /" > /etc/yum.repos.d/sbt.repo
-
-# Install sbt
-RUN yum install -y sbt
-
-# Copy the project files
-COPY snowpark_project /app/snowpark_project
-
-# Set the project directory
-WORKDIR /app/snowpark_project
-
-# Build the project
-RUN /usr/local/sbt/bin/sbt compile
-
-# Expose any necessary ports
-EXPOSE 8080
+# Load SDKMAN automatically by running the SDKMAN init script
+RUN /bin/bash -c "source $HOME/.sdkman/bin/sdkman-init.sh && sdk install java && sdk install sbt"
 
 # Define the entry point command
 CMD ["/usr/local/sbt/bin/sbt", "run"]
