@@ -1,19 +1,13 @@
 # Dockerfile
 
-# Use UBI8 as the base image
-FROM registry.access.redhat.com/ubi8/ubi:latest
+# Add the sbt repository key
+RUN curl -Ls "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xEEA14886" | gpg --import
 
-# Set the working directory inside the container
-WORKDIR /app
+# Add the sbt repository
+RUN echo "deb https://repo.scala-sbt.org/scalasbt/maven-releases/org/scala-sbt/sbt/1.5.5 /" > /etc/yum.repos.d/sbt.repo
 
-# Install dependencies
-RUN yum install -y java-11-openjdk-devel
-RUN curl -Ls "https://github.com/sbt/sbt/releases/download/v1.5.5/sbt-1.5.5.tgz" | tar -xz -C /usr/local
-RUN curl -Ls "https://downloads.lightbend.com/scala/2.13.6/scala-2.13.6.tgz" | tar -xz -C /usr/local
-
-# Set environment variables for Scala and SBT
-ENV SCALA_HOME=/usr/local/scala-2.13.6
-ENV PATH=$PATH:$SCALA_HOME/bin
+# Install sbt
+RUN yum install -y sbt
 
 # Copy the project files
 COPY snowpark_project /app/snowpark_project
