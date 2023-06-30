@@ -1,3 +1,36 @@
+# Dockerfile
+
+# Use UBI8 as the base image
+FROM registry.access.redhat.com/ubi8/ubi:latest
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Install dependencies
+RUN yum install -y java-11-openjdk-devel
+RUN curl -Ls "https://github.com/sbt/sbt/releases/download/v1.5.5/sbt-1.5.5.tgz" | tar -xz -C /usr/local
+RUN curl -Ls "https://downloads.lightbend.com/scala/2.13.6/scala-2.13.6.tgz" | tar -xz -C /usr/local
+
+# Set environment variables for Scala and SBT
+ENV SCALA_HOME=/usr/local/scala-2.13.6
+ENV PATH=$PATH:$SCALA_HOME/bin
+
+# Copy the project files
+COPY snowpark_project /app/snowpark_project
+
+# Set the project directory
+WORKDIR /app/snowpark_project
+
+# Build the project
+RUN /usr/local/sbt/bin/sbt compile
+
+# Expose any necessary ports
+EXPOSE 8080
+
+# Define the entry point command
+CMD ["/usr/local/sbt/bin/sbt", "run"]
+
+
 from openshift import client
 import os
 # Create an instance of the OpenShift API client
