@@ -1,8 +1,12 @@
+# Install Scala
 RUN curl -LO https://downloads.lightbend.com/scala/2.13.6/scala-2.13.6.rpm && \
     rpm -i scala-2.13.6.rpm && \
     rm -f scala-2.13.6.rpm
 
-
+# Install sbt
+RUN curl -Ls https://github.com/sbt/sbt/releases/download/v1.5.5/sbt-1.5.5.rpm -o sbt-1.5.5.rpm && \
+    rpm -i sbt-1.5.5.rpm && \
+    rm -f sbt-1.5.5.rpm
 
 from openshift import client
 import os
