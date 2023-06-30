@@ -1,15 +1,7 @@
-# Dockerfile
-# Install dependencies
-RUN yum install -y java-11-openjdk-devel curl zip unzip
+RUN curl -LO https://downloads.lightbend.com/scala/2.13.6/scala-2.13.6.rpm && \
+    rpm -i scala-2.13.6.rpm && \
+    rm -f scala-2.13.6.rpm
 
-# Install SDKMAN
-RUN curl -s "https://get.sdkman.io" | bash
-
-# Load SDKMAN automatically by running the SDKMAN init script
-RUN /bin/bash -c "source $HOME/.sdkman/bin/sdkman-init.sh && sdk install java && sdk install sbt"
-
-# Define the entry point command
-CMD ["/usr/local/sbt/bin/sbt", "run"]
 
 
 from openshift import client
