@@ -1,44 +1,58 @@
-# Install Scala
-RUN curl -LO https://downloads.lightbend.com/scala/2.13.6/scala-2.13.6.rpm && \
-    rpm -i scala-2.13.6.rpm && \
-    rm -f scala-2.13.6.rpm
+from openshift import client, config
 
-# Install sbt
-RUN curl -Ls https://github.com/sbt/sbt/releases/download/v1.5.5/sbt-1.5.5.rpm -o sbt-1.5.5.rpm && \
-    rpm -i sbt-1.5.5.rpm && \
-    rm -f sbt-1.5.5.rpm
+# Load OpenShift configuration
+config.load_kube_config()
 
-from openshift import client
-import os
-# Create an instance of the OpenShift API client
-api_client = client.ApiClient()
+# Create an instance of the BatchV1Api
+batch_api = client.BatchV1Api()
 
-# Set the OpenShift API URL
-api_client.configuration.host = 'https://api.openshift.example.com:6443'
+# Define the common namespace for the jobs
+job_namespace = "my-namespace"
 
-# Set the authentication credentials
-username = os.getenv('OPENSHIFT_USERNAME')
-password = os.getenv('OPENSHIFT_PASSWORD')
+# Define the environment variables for the container
+env_vars = [
+    client.V1EnvVar(name="ENV_VAR1", value="value1"),
+    client.V1EnvVar(name="ENV_VAR2", value="value2")
+]
 
-# Create an instance of the CoreV1Api for interacting with the cluster
-v1_client = client.CoreV1Api(api_client=api_client)
+# Define the list of job names
+job_names = ["job1", "job2"]
 
-# Rest of the code...
-
-job_metadata = client.V1ObjectMeta(name="my-job")
-job_container = client.V1Container(
+# Define the container and its configuration
+container = client.V1Container(
     name="my-container",
-    image="my-image",
+    image="your-container-image",
+    command=["python", "your_script.py"],
+    env=env_vars,
+    resources=client.V1ResourceRequirements(
+        limits={"cpu": "1", "memory": "1Gi"},
+        requests={"cpu": "0.5", "memory": "512Mi"}
+    )
 )
-job_template = client.V1PodTemplateSpec(
-    metadata=job_metadata,
-    spec=client.V1PodSpec(restart_policy="Never", containers=[job_container])
-)
-job_spec = client.V1JobSpec(template=job_template, backoff_limit=0)
-job = client.V1Job(api_version="batch/v1", kind="Job", metadata=job_metadata, spec=job_spec)
 
-# Submit the job
-v1_client.create_namespaced_job(namespace="my-namespace", body=job)
+# Trigger the jobs
+for job_name in job_names:
+    # Define job configuration
+    job_body = client.V1Job(
+        api_version="batch/v1",
+        kind="Job",
+        metadata=client.V1ObjectMeta(name=job_name, namespace=job_namespace),
+        spec=client.V1JobSpec(
+            template=client.V1PodTemplateSpec(
+                metadata=client.V1ObjectMeta(name=job_name),
+                spec=client.V1PodSpec(
+                    restart_policy="Never",
+                    containers=[container]
+                )
+            )
+        )
+    )
+
+    # Create the job
+    batch_api.create_namespaced_job(body=job_body, namespace=job_namespace)
+
+print("Jobs triggered successfully!")
+
 
 
 
