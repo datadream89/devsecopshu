@@ -1,122 +1,32 @@
-from openshift import client, config
+FROM registry.access.redhat.com/ubi8/ubi:latest AS build
 
-# Load OpenShift configuration
-config.load_kube_config()
+# Install Java
+RUN yum -y install java-11-openjdk-devel
 
-# Create an instance of the BatchV1Api
-batch_api = client.BatchV1Api()
+# Install Scala
+ENV SCALA_VERSION=2.12.9
+RUN yum -y install scala-$SCALA_VERSION
 
-# Define the common namespace for the jobs
-job_namespace = "my-namespace"
+# Set up Snowpark dependencies
+ENV SNOWPARK_VERSION=0.11.2
+RUN mkdir -p /app/libs && \
+    curl -L https://repo1.maven.org/maven2/org/apache/spark/spark-sql_2.12/3.2.0/spark-sql_2.12-3.2.0.jar -o /app/libs/spark-sql.jar && \
+    curl -L https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.2.0/spark-sql-kafka-0-10_2.12-3.2.0.jar -o /app/libs/spark-sql-kafka.jar && \
+    curl -L https://repo1.maven.org/maven2/org/apache/spark/spark-avro_2.12/3.2.0/spark-avro_2.12-3.2.0.jar -o /app/libs/spark-avro.jar && \
+    curl -L https://repo1.maven.org/maven2/org/scalatest/scalatest_2.12/3.2.10/scalatest_2.12-3.2.10.jar -o /app/libs/scalatest.jar
 
-# Define the environment variables for the container
-env_vars = [
-    client.V1EnvVar(name="ENV_VAR1", value="value1"),
-    client.V1EnvVar(name="ENV_VAR2", value="value2")
-]
+# Install additional dependencies
+RUN scala -e 'libraryDependencies += "org.scalaj" %% "scalaj-http" % "2.4.2"' && \
+    scala -e 'libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.7.0"' && \
+    scala -e 'libraryDependencies += "org.apache.spark" %% "snowpark" % "$SNOWPARK_VERSION"' && \
+    scala -e 'libraryDependencies += "com.typesafe" % "config" % "1.4.1"'
 
-# Define the list of job names
-job_names = ["job1", "job2"]
+WORKDIR /app
 
-# Define the container and its configuration
-container = client.V1Container(
-    name="my-container",
-    image="your-container-image",
-    command=["python", "your_script.py"],
-    env=env_vars,
-    resources=client.V1ResourceRequirements(
-        limits={"cpu": "1", "memory": "1Gi"},
-        requests={"cpu": "0.5", "memory": "512Mi"}
-    )
-)
+# Copy your Scala code to the container
+COPY src/main/scala ./src/main/scala
 
-# Trigger the jobs
-for job_name in job_names:
-    # Define job configuration
-    job_body = client.V1Job(
-        api_version="batch/v1",
-        kind="Job",
-        metadata=client.V1ObjectMeta(name=job_name, namespace=job_namespace),
-        spec=client.V1JobSpec(
-            template=client.V1PodTemplateSpec(
-                metadata=client.V1ObjectMeta(name=job_name),
-                spec=client.V1PodSpec(
-                    restart_policy="Never",
-                    containers=[container]
-                )
-            )
-        )
-    )
+# Build your Snowpark code
+RUN scalac -cp "/app/libs/spark-sql.jar:/app/libs/spark-sql-kafka.jar:/app/libs/spark-avro.jar:/app/libs/scalatest.jar" src/main/scala/*.scala
 
-    # Create the job
-    batch_api.create_namespaced_job(body=job_body, namespace=job_namespace)
-
-print("Jobs triggered successfully!")
-
-
-
-
-
-import java.lang.ProcessBuilder
-
-object SetEnvironmentVariableExample {
-  def main(args: Array[String]): Unit = {
-    val pb = new ProcessBuilder()
-    val env = pb.environment()
-
-    // Set the environment variable
-    env.put("MY_ENV_VAR", "variable_value")
-
-    // Optionally, you can also append to an existing environment variable
-    // env.put("PATH", env.get("PATH") + ":/path/to/additional/directory")
-
-    // Start a new process with the updated environment
-    pb.start()
-    
-    // Now the environment variable is set for the new process
-  }
-}
-
-
-import scalaj.http.{Http, HttpResponse}
-import scala.reflect.runtime.{universe => ru}
-println("All Environment Variables:")
-sys.env.foreach { case (key, value) => println(key + " -> " + value) }
-
-object PackagePathExample {
-  def main(args: Array[String]): Unit = {
-    val packageName = ru.typeOf[FirstScript].typeSymbol.asClass.fullName
-    println(packageName)
-  }
-}
-
-class HttpClient {
-  def sendPostRequest(): Unit = {
-    // Define the URL to which you want to send the POST request (HTTPS)
-    val url = "https://example.com/api/endpoint"
-
-    // Create a map of form parameters
-    val formData = Map(
-      "param1" -> "value1",
-      "param2" -> "value2"
-    )
-
-    // Send the POST request
-    val response: HttpResponse[String] = Http(url)
-      .postData(formData.map { case (k, v) => s"$k=$v" }.mkString("&"))
-      .header("Content-Type", "application/x-www-form-urlencoded")
-      .option(HttpOptions.allowUnsafeSSL) // Allow self-signed SSL certificates
-      .asString
-
-    // Print the response
-    println(response.body)
-  }
-}
-
-object Main {
-  def main(args: Array[String]): Unit = {
-    val client = new HttpClient()
-    client.sendPostRequest()
-  }
-}
-
+CMD ["scala", "-cp", "/app/libs/spark-sql.jar:/app/libs/spark-sql-kafka.jar:/app/libs/spark-avro.jar:/app/libs/scalatest.jar", "YourSnowparkCode"]
