@@ -1,4 +1,61 @@
 FROM registry.access.redhat.com/ubi8/ubi:latest AS build
+from kubernetes import client, config
+
+# Assuming you have a list of values
+my_list = ['value1', 'value2', 'value3', 'value4']
+
+# Load the Kubernetes configuration
+config.load_kube_config()
+
+# Create the Kubernetes API client
+api_client = client.ApiClient()
+
+# Create a list to store the Job objects
+jobs = []
+
+# Create jobs for every three values in the list
+for i in range(0, len(my_list), 3):
+    # Get three values for the current job
+    values = my_list[i:i+3]
+
+    # Create the Job specification
+    job_spec = {
+        "apiVersion": "batch/v1",
+        "kind": "Job",
+        "metadata": {
+            "name": f"my-job-{i}"
+        },
+        "spec": {
+            "template": {
+                "spec": {
+                    "restartPolicy": "Never",
+                    "containers": []
+                }
+            }
+        }
+    }
+
+    # Create a container for each value in the current job
+    for j, value in enumerate(values):
+        container = {
+            "name": f"container-{j}",
+            "image": "your-container-image",
+            "env": [
+                {
+                    "name": "MY_ENV_VARIABLE",
+                    "value": value
+                }
+            ]
+        }
+        job_spec["spec"]["template"]["spec"]["containers"].append(container)
+
+    # Add the Job to the list
+    jobs.append(job_spec)
+
+# Create the Job objects
+api_instance = client.BatchV1Api(api_client)
+for job_spec in jobs:
+    api_instance.create_namespaced_job(body=job_spec, namespace="default")
 
 # Install Java
 RUN yum -y install java-11-openjdk-devel
