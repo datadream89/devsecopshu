@@ -1,63 +1,61 @@
-from kubernetes import client, config
-import time
+import java.io.{File, FileInputStream}
+import scala.io.Source
 
-def create_job_object(namespace, job_name, container_name, value):
-    # Create a Kubernetes job object for a single container
-    job = client.V1Job(api_version="batch/v1", kind="Job", metadata=client.V1ObjectMeta(name=job_name))
-    container = client.V1Container(name=container_name, image="your-container-image")
-    container.env = [client.V1EnvVar(name="VALUE", value=value)]  # Pass the value as an environment variable
-    container_command = ["your-container-command"]
-    container.command = container_command
-    job.spec = client.V1JobSpec(template=client.V1PodTemplateSpec(spec=client.V1PodSpec(restart_policy="Never", containers=[container])))
-    return job
+class IniFileParser {
+  def parseIniFile(file: File): Map[String, Map[String, String]] = {
+    val lines = Source.fromInputStream(new FileInputStream(file)).getLines().toList
+    val sections = lines.filter(_.startsWith("["))
+    val sectionValues = sections.map { section =>
+      val sectionName = section.substring(1, section.length - 1)
+      val sectionLines = lines.dropWhile(_ != section).drop(1).takeWhile(!_.startsWith("["))
+      val keyValues = sectionLines.map { line =>
+        val keyValue = line.split("=", 2)
+        (keyValue(0).trim, keyValue(1).trim)
+      }
+      (sectionName, keyValues.toMap)
+    }
+    sectionValues.toMap
+  }
 
-def create_jobs(namespace, job_base_name, container_name, values):
-    # Create and submit multiple jobs
-    api_instance = client.BatchV1Api()
-    for i, value in enumerate(values):
-        job_name = f"{job_base_name}-{i}"
-        job = create_job_object(namespace, job_name, container_name, value)
-        api_instance.create_namespaced_job(namespace=namespace, body=job)
-        print(f"Job '{job_name}' with value '{value}' submitted.")
+  def retrieveInfoFromIniFiles(folderPath: String): Map[String, Map[String, Map[String, String]]] = {
+    val folder = new File(folderPath)
+    val iniFiles = folder.listFiles.filter(_.getName.endsWith(".ini"))
 
-def are_containers_complete(namespace, job_base_name, num_jobs):
-    # Load the Kubernetes configuration (assuming you are running this code inside a Kubernetes cluster)
-    config.load_incluster_config()
+    val infoMap = scala.collection.mutable.Map[String, Map[String, Map[String, String]]]()
 
-    # Alternatively, if you are running this code outside the cluster, use the following line instead:
-    # config.load_kube_config()
+    iniFiles.foreach { file =>
+      val fileKeyValues = parseIniFile(file)
+      val sectionInfoMap = scala.collection.mutable.Map[String, Map[String, String]]()
 
-    # Create the Kubernetes API client
-    api_instance = client.CoreV1Api()
+      fileKeyValues.foreach { case (section, keyValues) =>
+        val queryKey = keyValues.getOrElse("queryKey", "")
+        val tin = keyValues.getOrElse("tin", "")
+        val tout = keyValues.getOrElse("tout", "")
 
-    # Check if all jobs are complete
-    for i in range(num_jobs):
-        job_name = f"{job_base_name}-{i}"
-        try:
-            job = api_instance.read_namespaced_job(name=job_name, namespace=namespace)
-        except Exception as e:
-            print(f"Error while fetching job '{job_name}': {e}")
-            return False
+        if (queryKey.nonEmpty || tin.nonEmpty || tout.nonEmpty) {
+          sectionInfoMap.getOrElseUpdate(section, Map.empty) += ("queryKey" -> queryKey, "tin" -> tin, "tout" -> tout)
+        }
+      }
 
-        if job.status.succeeded is None or job.status.succeeded == 0:
-            return False
+      infoMap(file.getName) = sectionInfoMap.toMap
+    }
 
-    return True
+    infoMap.toMap
+  }
+}
 
-# Example usage:
-if __name__ == "__main__":
-    namespace = "your-namespace"
-    num_jobs = 3
-    num_containers = 5
-    values_list = [f"value{i}" for i in range(num_containers)]
+val folderPath = "/path/to/folder"  // Specify the folder path containing .ini files
+val parser = new IniFileParser()
+val infoMap = parser.retrieveInfoFromIniFiles(folderPath)
 
-    job_base_name = "your-job-base-name"
-    container_name = "your-container-name"
-
-    create_jobs(namespace, job_base_name, container_name, values_list)
-    
-    while not are_containers_complete(namespace, job_base_name, num_jobs):
-        print("Containers are still running...")
-        time.sleep(10)
-    
-    print("All containers are complete!")
+// Print the query keys, tin, and tout for each section
+infoMap.foreach { case (fileName, fileSectionInfo) =>
+  println(s"File: $fileName")
+  fileSectionInfo.foreach { case (section, info) =>
+    println(s"Section: $section")
+    println(s"Query Key: ${info.getOrElse("queryKey", "")}")
+    println(s"Tin: ${info.getOrElse("tin", "")}")
+    println(s"Tout: ${info.getOrElse("tout", "")}")
+    println()
+  }
+}
