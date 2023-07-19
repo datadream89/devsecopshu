@@ -1,76 +1,63 @@
 from kubernetes import client, config
+import time
 
-def create_job(api_instance, job_name, container_name, unique_value):
-    container = client.V1Container(
-        name=container_name,
-        image="your_container_image_here",
-        env=[client.V1EnvVar(name="UNIQUE_VALUE", value=unique_value)],
-    )
+def create_job_object(namespace, job_name, container_name, value):
+    # Create a Kubernetes job object for a single container
+    job = client.V1Job(api_version="batch/v1", kind="Job", metadata=client.V1ObjectMeta(name=job_name))
+    container = client.V1Container(name=container_name, image="your-container-image")
+    container.env = [client.V1EnvVar(name="VALUE", value=value)]  # Pass the value as an environment variable
+    container_command = ["your-container-command"]
+    container.command = container_command
+    job.spec = client.V1JobSpec(template=client.V1PodTemplateSpec(spec=client.V1PodSpec(restart_policy="Never", containers=[container])))
+    return job
 
-    template = client.V1PodTemplateSpec(
-        metadata=client.V1ObjectMeta(labels={"app": container_name}),
-        spec=client.V1PodSpec(restart_policy="Never", containers=[container]),
-    )
+def create_jobs(namespace, job_base_name, container_name, values):
+    # Create and submit multiple jobs
+    api_instance = client.BatchV1Api()
+    for i, value in enumerate(values):
+        job_name = f"{job_base_name}-{i}"
+        job = create_job_object(namespace, job_name, container_name, value)
+        api_instance.create_namespaced_job(namespace=namespace, body=job)
+        print(f"Job '{job_name}' with value '{value}' submitted.")
 
-    spec = client.V1JobSpec(template=template, backoff_limit=0)
+def are_containers_complete(namespace, job_base_name, num_jobs):
+    # Load the Kubernetes configuration (assuming you are running this code inside a Kubernetes cluster)
+    config.load_incluster_config()
 
-    job = client.V1Job(
-        api_version="batch/v1",
-        kind="Job",
-        metadata=client.V1ObjectMeta(name=job_name),
-        spec=spec,
-    )
+    # Alternatively, if you are running this code outside the cluster, use the following line instead:
+    # config.load_kube_config()
 
-    try:
-        api_instance.create_namespaced_job(namespace="default", body=job)
-        print(f"Job {job_name} created successfully.")
-    except client.ApiException as e:
-        print(f"Error creating Job: {e}")
+    # Create the Kubernetes API client
+    api_instance = client.CoreV1Api()
 
-def main():
-    config.load_kube_config()
-
-    # Replace this list with your unique values
-    unique_values_list = ["value1", "value2", "value3", "value4", "value5", "value6", "value7", "value8", "value9", "value10"]
-
-    num_jobs = 4  # Number of Jobs
-    num_containers_per_job = 2  # Number of Containers per Job
-
+    # Check if all jobs are complete
     for i in range(num_jobs):
-        for j in range(num_containers_per_job):
-            container_name = f"container-{i}-{j}"
-            unique_value = unique_values_list[i * num_containers_per_job + j]
-            job_name = f"job-{i}-{j}"
+        job_name = f"{job_base_name}-{i}"
+        try:
+            job = api_instance.read_namespaced_job(name=job_name, namespace=namespace)
+        except Exception as e:
+            print(f"Error while fetching job '{job_name}': {e}")
+            return False
 
-            create_job(api_instance=client.BatchV1Api(), job_name=job_name, container_name=container_name, unique_value=unique_value)
+        if job.status.succeeded is None or job.status.succeeded == 0:
+            return False
 
+    return True
+
+# Example usage:
 if __name__ == "__main__":
-    main()
+    namespace = "your-namespace"
+    num_jobs = 3
+    num_containers = 5
+    values_list = [f"value{i}" for i in range(num_containers)]
 
-# Install Scala
-ENV SCALA_VERSION=2.12.9
-RUN yum -y install scala-$SCALA_VERSION
+    job_base_name = "your-job-base-name"
+    container_name = "your-container-name"
 
-# Set up Snowpark dependencies
-ENV SNOWPARK_VERSION=0.11.2
-RUN mkdir -p /app/libs && \
-    curl -L https://repo1.maven.org/maven2/org/apache/spark/spark-sql_2.12/3.2.0/spark-sql_2.12-3.2.0.jar -o /app/libs/spark-sql.jar && \
-    curl -L https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.2.0/spark-sql-kafka-0-10_2.12-3.2.0.jar -o /app/libs/spark-sql-kafka.jar && \
-    curl -L https://repo1.maven.org/maven2/org/apache/spark/spark-avro_2.12/3.2.0/spark-avro_2.12-3.2.0.jar -o /app/libs/spark-avro.jar && \
-    curl -L https://repo1.maven.org/maven2/org/scalatest/scalatest_2.12/3.2.10/scalatest_2.12-3.2.10.jar -o /app/libs/scalatest.jar
-
-# Install additional dependencies
-RUN scala -e 'libraryDependencies += "org.scalaj" %% "scalaj-http" % "2.4.2"' && \
-    scala -e 'libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.7.0"' && \
-    scala -e 'libraryDependencies += "org.apache.spark" %% "snowpark" % "$SNOWPARK_VERSION"' && \
-    scala -e 'libraryDependencies += "com.typesafe" % "config" % "1.4.1"'
-
-WORKDIR /app
-
-# Copy your Scala code to the container
-COPY src/main/scala ./src/main/scala
-
-# Build your Snowpark code
-RUN scalac -cp "/app/libs/spark-sql.jar:/app/libs/spark-sql-kafka.jar:/app/libs/spark-avro.jar:/app/libs/scalatest.jar" src/main/scala/*.scala
-
-CMD ["scala", "-cp", "/app/libs/spark-sql.jar:/app/libs/spark-sql-kafka.jar:/app/libs/spark-avro.jar:/app/libs/scalatest.jar", "YourSnowparkCode"]
+    create_jobs(namespace, job_base_name, container_name, values_list)
+    
+    while not are_containers_complete(namespace, job_base_name, num_jobs):
+        print("Containers are still running...")
+        time.sleep(10)
+    
+    print("All containers are complete!")
