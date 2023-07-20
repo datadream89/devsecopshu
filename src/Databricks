@@ -10,14 +10,14 @@ class IniFileParser {
 
     val sectionValues = ini.keySet().toArray.map { sectionName =>
       val section = preferences.node(sectionName.toString)
-      section.keys().toArray.map { key =>
-        key.toString -> section.get(key.toString, "")
-      }.toMap
+      val keyValues = new java.util.LinkedHashMap[String, String]()
+      section.keys().toArray.foreach { key =>
+        keyValues.put(key.toString, section.get(key.toString, ""))
+      }
+      sectionName.toString -> keyValues.toMap
     }
 
-    ini.keySet().toArray.zip(sectionValues).map { case (sectionName, sectionValues) =>
-      sectionName.toString -> sectionValues
-    }.toMap
+    sectionValues.toMap
   }
 
   def retrieveInfoFromIniFiles(folderPath: String): Map[String, Map[String, Map[String, String]]] = {
@@ -33,21 +33,5 @@ class IniFileParser {
     }
 
     infoMap.toMap
-  }
-}
-
-val folderPath = "/path/to/folder" // Specify the folder path containing .ini files
-val parser = new IniFileParser()
-val infoMap = parser.retrieveInfoFromIniFiles(folderPath)
-
-// Print the content of the two sample .ini files
-infoMap.foreach { case (fileName, sections) =>
-  println(s"File: $fileName")
-  sections.foreach { case (section, keyValues) =>
-    println(s"Section: $section")
-    keyValues.foreach { case (key, value) =>
-      println(s"Key: $key, Value: $value")
-    }
-    println()
   }
 }
