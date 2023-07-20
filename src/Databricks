@@ -6,7 +6,9 @@ class IniFileParser {
   def parseIniFile(file: java.io.File): Map[String, Map[String, String]] = {
     val lines = Source.fromFile(file).getLines().toList
     val sections = lines.filter(_.startsWith("["))
-    val sectionValues = sections.zipWithIndex.map { case (section, index) =>
+    var sectionValues = mutable.LinkedHashMap[String, mutable.LinkedHashMap[String, String]]()
+
+    for ((section, index) <- sections.zipWithIndex) {
       val sectionName = section.substring(1, section.length - 1)
       val startLine = lines.indexOf(section)
       val endLine = if (index < sections.length - 1) lines.indexOf(sections(index + 1)) else lines.length
@@ -21,9 +23,10 @@ class IniFileParser {
         }
       }
       println(s"DEBUG: Section '$sectionName', Key-Value pairs: ${keyValues.mkString(", ")}")
-      sectionName -> mutable.LinkedHashMap(keyValues: _*)
+      sectionValues += sectionName -> mutable.LinkedHashMap(keyValues: _*)
     }
-    ListMap(sectionValues: _*).toMap
+
+    ListMap(sectionValues.toSeq: _*).toMap
   }
 
   // ... (rest of the IniFileParser class)
