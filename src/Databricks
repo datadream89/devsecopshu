@@ -1,20 +1,33 @@
-import com.github.daviddenton.inifile.IniFile
+import org.ini4j.{Ini, IniPreferences}
 
-import java.io.File
+import java.io.{File, FileReader}
+import java.util.prefs.Preferences
 import scala.collection.JavaConverters._
-import scala.collection.immutable.ListMap
+import scala.collection.mutable
 
 class IniFileParser {
   def parseIniFile(file: File): Map[String, Map[String, String]] = {
-    val iniFile = IniFile.load(file)
-    val sectionValues = iniFile.sections().asScala.map { sectionName =>
-      val section = iniFile.section(sectionName)
-      val keyValues = section.properties().asScala.map { property =>
-        property.key -> property.value
+    val ini = new Ini(new FileReader(file))
+    val preferences = new IniPreferences(ini)
+
+    val sectionValues = mutable.LinkedHashMap.empty[String, Map[String, String]]
+
+    val keysIterator = ini.keySet().iterator()
+    while (keysIterator.hasNext) {
+      val sectionName = keysIterator.next()
+      val section = preferences.node(sectionName)
+      val keyValues = mutable.LinkedHashMap.empty[String, String]
+
+      val sectionKeysIterator = section.keys().iterator()
+      while (sectionKeysIterator.hasNext) {
+        val key = sectionKeysIterator.next()
+        keyValues.put(key, section.get(key, ""))
       }
-      sectionName -> ListMap(keyValues: _*)
+
+      sectionValues.put(sectionName, keyValues.toMap)
     }
-    ListMap(sectionValues.toSeq: _*)
+
+    sectionValues.toMap
   }
 
   def retrieveInfoFromIniFiles(folderPath: String): Map[String, Map[String, Map[String, String]]] = {
