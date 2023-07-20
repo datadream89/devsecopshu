@@ -1,34 +1,30 @@
 import scala.io.Source
 import scala.collection.mutable
+import scala.collection.immutable.ListMap
 
 class IniFileParser {
   def parseIniFile(file: java.io.File): Map[String, Map[String, String]] = {
     val lines = Source.fromFile(file).getLines().toList
     val sections = lines.filter(_.startsWith("["))
-    val sectionValues = sections.map { section =>
+    val sectionValues = sections.zipWithIndex.map { case (section, index) =>
       val sectionName = section.substring(1, section.length - 1)
-      val sectionLines = lines.dropWhile(_ != section).drop(1).takeWhile(!_.startsWith("["))
+      val startLine = lines.indexOf(section)
+      val endLine = if (index < sections.length - 1) lines.indexOf(sections(index + 1)) else lines.length
+      val sectionLines = lines.slice(startLine + 1, endLine).filter(_.trim.nonEmpty)
       val keyValues = sectionLines.map { line =>
         val keyValue = line.split("=", 2)
-        keyValue(0).trim -> keyValue(1).trim
+        if (keyValue.length == 2) {
+          keyValue(0).trim -> keyValue(1).trim
+        } else {
+          println(s"WARNING: Invalid key-value format in section '$sectionName': $line")
+          "" -> "" // Return empty key-value pair
+        }
       }
+      println(s"DEBUG: Section '$sectionName', Key-Value pairs: ${keyValues.mkString(", ")}")
       sectionName -> mutable.LinkedHashMap(keyValues: _*)
     }
-    mutable.LinkedHashMap(sectionValues: _*).toMap
+    ListMap(sectionValues: _*).toMap
   }
 
-  def retrieveInfoFromIniFiles(folderPath: String): Map[String, Map[String, Map[String, String]]] = {
-    val folder = new java.io.File(folderPath)
-    val iniFiles = folder.listFiles(_.getName.endsWith(".ini"))
-
-    val infoMap = scala.collection.mutable.Map[String, Map[String, Map[String, String]]]()
-
-    iniFiles.foreach { file =>
-      val fileKeyValues = parseIniFile(file)
-      val fileName = file.getName.stripSuffix(".ini")
-      infoMap(fileName) = fileKeyValues
-    }
-
-    infoMap.toMap
-  }
+  // ... (rest of the IniFileParser class)
 }
