@@ -1,20 +1,23 @@
-import java.io.{File, FileInputStream}
-import scala.io.Source
+import org.ini4j.{Ini, IniPreferences}
+
+import java.io.{File, FileReader}
+import java.util.prefs.Preferences
 
 class IniFileParser {
   def parseIniFile(file: File): Map[String, Map[String, String]] = {
-    val lines = Source.fromInputStream(new FileInputStream(file)).getLines().toList
-    val sections = lines.filter(_.startsWith("["))
-    val sectionValues = sections.map { section =>
-      val sectionName = section.substring(1, section.length - 1)
-      val sectionLines = lines.dropWhile(_ != section).drop(1).takeWhile(!_.startsWith("["))
-      val keyValues = sectionLines.map { line =>
-        val keyValue = line.split("=", 2)
-        (keyValue(0).trim, keyValue(1).trim)
-      }
-      (sectionName, keyValues.toMap)
+    val ini = new Ini(new FileReader(file))
+    val preferences = new IniPreferences(ini)
+
+    val sectionValues = ini.keySet().toArray.map { sectionName =>
+      val section = preferences.node(sectionName.toString)
+      section.keys().toArray.map { key =>
+        key.toString -> section.get(key.toString, "")
+      }.toMap
     }
-    sectionValues.toMap
+
+    ini.keySet().toArray.zip(sectionValues).map { case (sectionName, sectionValues) =>
+      sectionName.toString -> sectionValues
+    }.toMap
   }
 
   def retrieveInfoFromIniFiles(folderPath: String): Map[String, Map[String, Map[String, String]]] = {
@@ -25,37 +28,26 @@ class IniFileParser {
 
     iniFiles.foreach { file =>
       val fileKeyValues = parseIniFile(file)
-      val sectionInfoMap = scala.collection.mutable.Map[String, Map[String, String]]()
-
-      fileKeyValues.foreach { case (section, keyValues) =>
-        val queryKey = keyValues.getOrElse("queryKey", "")
-        val tin = keyValues.getOrElse("tin", "")
-        val tout = keyValues.getOrElse("tout", "")
-
-        if (queryKey.nonEmpty || tin.nonEmpty || tout.nonEmpty) {
-          sectionInfoMap.getOrElseUpdate(section, Map.empty) += ("queryKey" -> queryKey, "tin" -> tin, "tout" -> tout)
-        }
-      }
-
-      infoMap(file.getName) = sectionInfoMap.toMap
+      val fileName = file.getName.stripSuffix(".ini")
+      infoMap(fileName) = fileKeyValues
     }
 
     infoMap.toMap
   }
 }
 
-val folderPath = "/path/to/folder"  // Specify the folder path containing .ini files
+val folderPath = "/path/to/folder" // Specify the folder path containing .ini files
 val parser = new IniFileParser()
 val infoMap = parser.retrieveInfoFromIniFiles(folderPath)
 
-// Print the query keys, tin, and tout for each section
-infoMap.foreach { case (fileName, fileSectionInfo) =>
+// Print the content of the two sample .ini files
+infoMap.foreach { case (fileName, sections) =>
   println(s"File: $fileName")
-  fileSectionInfo.foreach { case (section, info) =>
+  sections.foreach { case (section, keyValues) =>
     println(s"Section: $section")
-    println(s"Query Key: ${info.getOrElse("queryKey", "")}")
-    println(s"Tin: ${info.getOrElse("tin", "")}")
-    println(s"Tout: ${info.getOrElse("tout", "")}")
+    keyValues.foreach { case (key, value) =>
+      println(s"Key: $key, Value: $value")
+    }
     println()
   }
 }
