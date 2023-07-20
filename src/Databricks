@@ -1,31 +1,24 @@
-import org.ini4j.{Ini, IniPreferences}
-
-import java.io.File
-import java.util.prefs.Preferences
-import scala.collection.JavaConverters._
+import scala.io.Source
 import scala.collection.mutable
 
 class IniFileParser {
-  def parseIniFile(file: File): Map[String, Map[String, String]] = {
-    val lines = scala.io.Source.fromFile(file).getLines().toList
+  def parseIniFile(file: java.io.File): Map[String, Map[String, String]] = {
+    val lines = Source.fromFile(file).getLines().toList
     val sections = lines.filter(_.startsWith("["))
-    val sectionValues = mutable.LinkedHashMap.empty[String, Map[String, String]]
-
-    sections.foreach { section =>
+    val sectionValues = sections.map { section =>
       val sectionName = section.substring(1, section.length - 1)
       val sectionLines = lines.dropWhile(_ != section).drop(1).takeWhile(!_.startsWith("["))
       val keyValues = sectionLines.map { line =>
         val keyValue = line.split("=", 2)
         keyValue(0).trim -> keyValue(1).trim
       }
-      sectionValues.put(sectionName, keyValues.toMap)
+      sectionName -> mutable.LinkedHashMap(keyValues: _*)
     }
-
-    sectionValues.toMap
+    mutable.LinkedHashMap(sectionValues: _*).toMap
   }
 
   def retrieveInfoFromIniFiles(folderPath: String): Map[String, Map[String, Map[String, String]]] = {
-    val folder = new File(folderPath)
+    val folder = new java.io.File(folderPath)
     val iniFiles = folder.listFiles(_.getName.endsWith(".ini"))
 
     val infoMap = scala.collection.mutable.Map[String, Map[String, Map[String, String]]]()
