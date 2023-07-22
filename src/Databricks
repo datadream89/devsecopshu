@@ -1,33 +1,32 @@
-import scala.io.Source
-import scala.collection.mutable
-import scala.collection.immutable.ListMap
+CREATE OR REPLACE PROCEDURE drop_tables_containing_flat()
+RETURNS STRING
+LANGUAGE JAVASCRIPT
+AS
+$$
+    // JavaScript code to drop tables containing "FLAT"
+    var stmt;
+    var sql_command = '';
 
-class IniFileParser {
-  def parseIniFile(file: java.io.File): Map[String, Map[String, String]] = {
-    val lines = Source.fromFile(file).getLines().toList
-    val sections = lines.filter(_.startsWith("["))
-    var sectionValues = mutable.LinkedHashMap[String, mutable.LinkedHashMap[String, String]]()
+    stmt = snowflake.createStatement({
+        sqlText: "SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE '%FLAT%'"
+    });
 
-    for ((section, index) <- sections.zipWithIndex) {
-      val sectionName = section.substring(1, section.length - 1)
-      val startLine = lines.indexOf(section)
-      val endLine = if (index < sections.length - 1) lines.indexOf(sections(index + 1)) else lines.length
-      val sectionLines = lines.slice(startLine + 1, endLine).filter(_.trim.nonEmpty)
-      val keyValues = sectionLines.map { line =>
-        val keyValue = line.split("=", 2)
-        if (keyValue.length == 2) {
-          keyValue(0).trim -> keyValue(1).trim
-        } else {
-          println(s"WARNING: Invalid key-value format in section '$sectionName': $line")
-          "" -> "" // Return empty key-value pair
-        }
-      }
-      println(s"DEBUG: Section '$sectionName', Key-Value pairs: ${keyValues.mkString(", ")}")
-      sectionValues += sectionName -> mutable.LinkedHashMap(keyValues: _*)
+    var resultSet = stmt.execute();
+
+    while (resultSet.next()) {
+        var tableSchema = resultSet.getColumnValue(1);
+        var tableName = resultSet.getColumnValue(2);
+        sql_command += 'DROP TABLE IF EXISTS "' + tableSchema + '"."' + tableName + '";\n';
     }
 
-    ListMap(sectionValues.toSeq: _*).toMap
-  }
+    // Execute the dynamically generated SQL statements
+    if (sql_command.length > 0) {
+        stmt = snowflake.createStatement({ sqlText: sql_command });
+        stmt.execute();
+    }
 
-  // ... (rest of the IniFileParser class)
-}
+    return 'Tables containing "FLAT" have been dropped.';
+$$;
+
+-- Now, call the stored procedure to drop the tables
+CALL drop_tables_containing_flat();
