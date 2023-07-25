@@ -1,32 +1,71 @@
-CREATE OR REPLACE PROCEDURE drop_tables_containing_flat()
-RETURNS STRING
-LANGUAGE JAVASCRIPT
-AS
-$$
-    // JavaScript code to drop tables containing "FLAT"
-    var stmt;
-    var sql_command = '';
+import scalaj.http.{Http, HttpRequest, HttpResponse}
 
-    stmt = snowflake.createStatement({
-        sqlText: "SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE '%FLAT%'"
-    });
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
-    var resultSet = stmt.execute();
+object SnowflakeAccessTokenExample {
 
-    while (resultSet.next()) {
-        var tableSchema = resultSet.getColumnValue(1);
-        var tableName = resultSet.getColumnValue(2);
-        sql_command += 'DROP TABLE IF EXISTS "' + tableSchema + '"."' + tableName + '";\n';
+  val oauthClientId = "YOUR_OAUTH_CLIENT_ID"
+  val oauthClientSecret = "YOUR_OAUTH_CLIENT_SECRET"
+  val oauthRedirectUri = "YOUR_OAUTH_REDIRECT_URI"
+  val oauthTokenUrl = "https://YOUR_OAUTH_TOKEN_URL"
+
+  def main(args: Array[String]): Unit = {
+    val maxRetries = 3
+    val retryInterval = 5 seconds
+
+    // Get the Snowflake access token using OAuth
+    val snowflakeConfigMap = retryWithBackoff(maxRetries, retryInterval) {
+      getSnowflakeConfigMap()
     }
 
-    // Execute the dynamically generated SQL statements
-    if (sql_command.length > 0) {
-        stmt = snowflake.createStatement({ sqlText: sql_command });
-        stmt.execute();
+    println(s"Snowflake Config Map: $snowflakeConfigMap")
+  }
+
+  def getSnowflakeConfigMap(): Map[String, String] = {
+    val requestBody = s"grant_type=client_credentials&client_id=$oauthClientId&client_secret=$oauthClientSecret&redirect_uri=$oauthRedirectUri"
+
+    val response: HttpResponse[String] = Http(oauthTokenUrl)
+      .header("Content-Type", "application/x-www-form-urlencoded")
+      .postData(requestBody)
+      .asString
+
+    if (response.is2xx) {
+      val jsonResponse = response.body
+      // Parse the JSON response to extract the access token
+      // You should use a JSON parsing library like lift-json or play-json for this step.
+      // For simplicity, let's assume the JSON response is in the format: {"access_token": "YOUR_ACCESS_TOKEN"}
+      val accessToken = "YOUR_ACCESS_TOKEN"
+
+      val snowflakeConfigMap = Map(
+        "url" -> "YOUR_SNOWFLAKE_URL",
+        "authenticator" -> "YOUR_AUTHENTICATOR",
+        "db" -> "YOUR_DATABASE",
+        "schema" -> "YOUR_SCHEMA",
+        "accessToken" -> accessToken
+      )
+
+      snowflakeConfigMap
+    } else {
+      throw new RuntimeException(s"Failed to get Snowflake access token. Response: ${response.body}")
+    }
+  }
+
+  def retryWithBackoff[T](maxRetries: Int, retryInterval: FiniteDuration)(fn: => T): T = {
+    def retry(retriesLeft: Int): T = {
+      try {
+        fn
+      } catch {
+        case ex: Exception if retriesLeft > 0 =>
+          println(s"Error occurred: ${ex.getMessage}. Retrying in $retryInterval...")
+          Thread.sleep(retryInterval.toMillis)
+          retry(retriesLeft - 1)
+        case ex: Exception =>
+          throw ex
+      }
     }
 
-    return 'Tables containing "FLAT" have been dropped.';
-$$;
-
--- Now, call the stored procedure to drop the tables
-CALL drop_tables_containing_flat();
+    retry(maxRetries)
+  }
+}
