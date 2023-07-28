@@ -1,44 +1,24 @@
-import io.snowpark.{Session, DataFrame}
-import io.snowpark.functions._
+import com.typesafe.config.{Config, ConfigFactory}
 
-object SnowparkExample {
+object ConfigParser {
   def main(args: Array[String]): Unit = {
-    // Initialize Snowpark session
-    val session: Session = Session.builder()
-      .appName("Snowpark Example")
-      .master("local[*]") // Change this to your Spark master URL for distributed execution
-      .config("snowflakeURL", "your_snowflake_url")
-      .config("snowflakeUser", "your_snowflake_user")
-      .config("snowflakePassword", "your_snowflake_password")
-      .config("snowflakeRole", "your_snowflake_role")
-      .config("snowflakeWarehouse", "your_snowflake_warehouse")
-      .config("snowflakeDatabase", "your_snowflake_database")
-      .config("snowflakeSchema", "your_snowflake_schema")
-      .config("spark.executor.memory", "2g")
-      .getOrCreateSnowflakeSession()
+    val config1: Config = ConfigFactory.parseResources("config1.conf")
+    val config2: Config = ConfigFactory.parseResources("config2.conf")
 
-    // Assuming your table name is "your_table_name"
-    val tableName = "your_table_name"
+    // Access values from config1
+    val value1: String = config1.getString("section1.key1")
+    val value2: Int = config1.getInt("section1.key2")
 
-    // Check if any columns end with "ts" or "tms" and are of datatype "VARCHAR"
-    val columnsToAlter = session.sql(s"""
-      |SELECT COLUMN_NAME
-      |FROM INFORMATION_SCHEMA.COLUMNS
-      |WHERE TABLE_NAME = '$tableName'
-      |  AND (COLUMN_NAME LIKE '%ts' OR COLUMN_NAME LIKE '%tms')
-      |  AND DATA_TYPE = 'VARCHAR'
-      |""".stripMargin)
-      .collect()
-      .map(row => row.getString(0))
+    // Access values from config2
+    val value3: Boolean = config1.getBoolean("section2.key3")
+    val value4: String = config2.getString("section3.key4")
+    val value5: Double = config2.getDouble("section4.key5")
 
-    // Alter the datatype of columns that end with "ts" or "tms" to "TIMESTAMP"
-    if (columnsToAlter.nonEmpty) {
-      columnsToAlter.foreach { column =>
-        session.sql(s"ALTER TABLE $tableName MODIFY COLUMN $column TIMESTAMP")
-      }
-      println("Columns were altered.")
-    } else {
-      println("No columns need to be altered.")
-    }
+    // Use the values as needed
+    println(s"value1: $value1")
+    println(s"value2: $value2")
+    println(s"value3: $value3")
+    println(s"value4: $value4")
+    println(s"value5: $value5")
   }
 }
