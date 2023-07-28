@@ -1,71 +1,44 @@
-import scalaj.http.{Http, HttpRequest, HttpResponse}
+import io.snowpark.{Session, DataFrame}
+import io.snowpark.functions._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
-
-object SnowflakeAccessTokenExample {
-
-  val oauthClientId = "YOUR_OAUTH_CLIENT_ID"
-  val oauthClientSecret = "YOUR_OAUTH_CLIENT_SECRET"
-  val oauthRedirectUri = "YOUR_OAUTH_REDIRECT_URI"
-  val oauthTokenUrl = "https://YOUR_OAUTH_TOKEN_URL"
-
+object SnowparkExample {
   def main(args: Array[String]): Unit = {
-    val maxRetries = 3
-    val retryInterval = 5 seconds
+    // Initialize Snowpark session
+    val session: Session = Session.builder()
+      .appName("Snowpark Example")
+      .master("local[*]") // Change this to your Spark master URL for distributed execution
+      .config("snowflakeURL", "your_snowflake_url")
+      .config("snowflakeUser", "your_snowflake_user")
+      .config("snowflakePassword", "your_snowflake_password")
+      .config("snowflakeRole", "your_snowflake_role")
+      .config("snowflakeWarehouse", "your_snowflake_warehouse")
+      .config("snowflakeDatabase", "your_snowflake_database")
+      .config("snowflakeSchema", "your_snowflake_schema")
+      .config("spark.executor.memory", "2g")
+      .getOrCreateSnowflakeSession()
 
-    // Get the Snowflake access token using OAuth
-    val snowflakeConfigMap = retryWithBackoff(maxRetries, retryInterval) {
-      getSnowflakeConfigMap()
-    }
+    // Assuming your table name is "your_table_name"
+    val tableName = "your_table_name"
 
-    println(s"Snowflake Config Map: $snowflakeConfigMap")
-  }
+    // Check if any columns end with "ts" or "tms" and are of datatype "VARCHAR"
+    val columnsToAlter = session.sql(s"""
+      |SELECT COLUMN_NAME
+      |FROM INFORMATION_SCHEMA.COLUMNS
+      |WHERE TABLE_NAME = '$tableName'
+      |  AND (COLUMN_NAME LIKE '%ts' OR COLUMN_NAME LIKE '%tms')
+      |  AND DATA_TYPE = 'VARCHAR'
+      |""".stripMargin)
+      .collect()
+      .map(row => row.getString(0))
 
-  def getSnowflakeConfigMap(): Map[String, String] = {
-    val requestBody = s"grant_type=client_credentials&client_id=$oauthClientId&client_secret=$oauthClientSecret&redirect_uri=$oauthRedirectUri"
-
-    val response: HttpResponse[String] = Http(oauthTokenUrl)
-      .header("Content-Type", "application/x-www-form-urlencoded")
-      .postData(requestBody)
-      .asString
-
-    if (response.is2xx) {
-      val jsonResponse = response.body
-      // Parse the JSON response to extract the access token
-      // You should use a JSON parsing library like lift-json or play-json for this step.
-      // For simplicity, let's assume the JSON response is in the format: {"access_token": "YOUR_ACCESS_TOKEN"}
-      val accessToken = "YOUR_ACCESS_TOKEN"
-
-      val snowflakeConfigMap = Map(
-        "url" -> "YOUR_SNOWFLAKE_URL",
-        "authenticator" -> "YOUR_AUTHENTICATOR",
-        "db" -> "YOUR_DATABASE",
-        "schema" -> "YOUR_SCHEMA",
-        "accessToken" -> accessToken
-      )
-
-      snowflakeConfigMap
-    } else {
-      throw new RuntimeException(s"Failed to get Snowflake access token. Response: ${response.body}")
-    }
-  }
-
-  def retryWithBackoff[T](maxRetries: Int, retryInterval: FiniteDuration)(fn: => T): T = {
-    def retry(retriesLeft: Int): T = {
-      try {
-        fn
-      } catch {
-        case ex: Exception if retriesLeft > 0 =>
-          println(s"Error occurred: ${ex.getMessage}. Retrying in $retryInterval...")
-          Thread.sleep(retryInterval.toMillis)
-          retry(retriesLeft - 1)
-        case ex: Exception =>
-          throw ex
+    // Alter the datatype of columns that end with "ts" or "tms" to "TIMESTAMP"
+    if (columnsToAlter.nonEmpty) {
+      columnsToAlter.foreach { column =>
+        session.sql(s"ALTER TABLE $tableName MODIFY COLUMN $column TIMESTAMP")
       }
+      println("Columns were altered.")
+    } else {
+      println("No columns need to be altered.")
     }
-
-    retry(maxRetries)
   }
 }
