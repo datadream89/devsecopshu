@@ -2,23 +2,25 @@ import com.typesafe.config.{Config, ConfigFactory}
 
 object ConfigParser {
   def main(args: Array[String]): Unit = {
-    val config1: Config = ConfigFactory.parseResources("config1.conf")
-    val config2: Config = ConfigFactory.parseResources("config2.conf")
+    val configFiles = List("config1.conf", "config2.conf") // Add more file names as needed
 
-    // Access values from config1
-    val value1: String = config1.getString("section1.key1")
-    val value2: Int = config1.getInt("section1.key2")
+    val configs: List[Config] = configFiles.map(file => ConfigFactory.parseResources(file))
 
-    // Access values from config2
-    val value3: Boolean = config1.getBoolean("section2.key3")
-    val value4: String = config2.getString("section3.key4")
-    val value5: Double = config2.getDouble("section4.key5")
+    // Define the sections you want to access from the config files
+    val sectionsToAccess = List("section1", "section2", "section3", "section4") // Add more section names as needed
 
-    // Use the values as needed
-    println(s"value1: $value1")
-    println(s"value2: $value2")
-    println(s"value3: $value3")
-    println(s"value4: $value4")
-    println(s"value5: $value5")
+    // Access values from each config file and section
+    for {
+      config <- configs
+      section <- sectionsToAccess
+    } {
+      try {
+        val value = config.getString(s"$section.key")
+        println(s"[$section] key: $value")
+      } catch {
+        case _: Exception =>
+          println(s"[$section] key not found in ${config.origin().resource()}")
+      }
+    }
   }
 }
