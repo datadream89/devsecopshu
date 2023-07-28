@@ -1,7 +1,7 @@
 import java.io.File
 import java.nio.file.{Files, Paths}
 
-import com.typesafe.config.{Config, ConfigFactory, ConfigObject}
+import com.typesafe.config.{Config, ConfigFactory}
 
 object ConfigParser {
   def main(args: Array[String]): Unit = {
@@ -12,18 +12,13 @@ object ConfigParser {
     // Parse each config file and extract sections and their keys dynamically
     for (configFile <- configFileNames) {
       val config: Config = ConfigFactory.parseFile(new File(configFile))
-      val rootConfig: ConfigObject = config.root()
 
+      val rootConfig = config.root().unwrapped()
       for {
-        sectionEntry <- rootConfig.entrySet().toArray
-        section <- Option(sectionEntry.asInstanceOf[java.util.Map.Entry[String, ConfigObject]])
-        keyEntry <- section.getValue.entrySet().toArray
-        key <- Option(keyEntry.asInstanceOf[java.util.Map.Entry[String, AnyRef]])
+        (section, sectionValue) <- rootConfig
+        (key, value) <- sectionValue.asInstanceOf[java.util.Map[String, Object]].asScala
       } {
-        val sectionName = section.getKey
-        val keyName = key.getKey
-        val value = key.getValue
-        println(s"[$configFile][$sectionName][$keyName]: $value")
+        println(s"[$configFile][$section][$key]: $value")
       }
     }
   }
