@@ -1,26 +1,37 @@
+import java.io.File
+import java.nio.file.{Files, Paths}
+
 import com.typesafe.config.{Config, ConfigFactory}
 
 object ConfigParser {
   def main(args: Array[String]): Unit = {
-    val configFiles = List("config1.conf", "config2.conf") // Add more file names as needed
+    val folderPath = "configs/" // Update the folder path as needed
 
-    val configs: List[Config] = configFiles.map(file => ConfigFactory.parseResources(file))
+    val configFileNames: List[String] = getListOfConfigFiles(folderPath)
 
-    // Define the sections you want to access from the config files
-    val sectionsToAccess = List("section1", "section2", "section3", "section4") // Add more section names as needed
+    // Parse each config file and extract sections dynamically
+    for (configFile <- configFileNames) {
+      val config: Config = ConfigFactory.parseFile(new File(configFile))
+      val sections: Set[String] = config.root().keySet().toArray.map(_.toString).toSet
 
-    // Access values from each config file and section
-    for {
-      config <- configs
-      section <- sectionsToAccess
-    } {
-      try {
-        val value = config.getString(s"$section.key")
-        println(s"[$section] key: $value")
-      } catch {
-        case _: Exception =>
-          println(s"[$section] key not found in ${config.origin().resource()}")
+      for (section <- sections) {
+        try {
+          val value = config.getString(s"$section.key") // Assuming a common key "key" in each section
+          println(s"[$configFile][$section] key: $value")
+        } catch {
+          case _: Exception =>
+            println(s"[$configFile][$section] key not found")
+        }
       }
+    }
+  }
+
+  def getListOfConfigFiles(folderPath: String): List[String] = {
+    val folder = new File(folderPath)
+    if (folder.exists() && folder.isDirectory) {
+      folder.listFiles().filter(_.isFile).map(_.getAbsolutePath).toList
+    } else {
+      throw new IllegalArgumentException("Invalid folder path")
     }
   }
 }
