@@ -8,35 +8,34 @@ object ConfigParser {
 
     val configFileNames: List[String] = getListOfConfigFiles(folderPath)
 
-    // Parse each config file and extract sections and their values recursively
+    // Parse each config file and extract sections and their values dynamically
     for (configFile <- configFileNames) {
       val config: Config = ConfigFactory.parseFile(new File(configFile))
-      processConfig(config, "")
+      processConfig(config)
     }
   }
 
-  def processConfig(config: Config, currentPath: String): Unit = {
-    val currentSection = if (currentPath.isEmpty) "" else s"$currentPath."
+  def processConfig(config: Config): Unit = {
+    val sections = findSections(config)
+    sections.foreach { section =>
+      val value1 = section.getString("ser")
+      val value2 = section.getString("frt")
+      // Here, you can define your function and process the section and values as needed
+      println(s"Processing section: ${section.origin().filename()} with value1: $value1 and value2: $value2")
+    }
+  }
 
-    config.root().keySet().asScala.foreach { section =>
-      val fullPath = s"$currentSection$section"
+  def findSections(config: Config): List[Config] = {
+    config.root().keySet().asScala.toList.flatMap { section =>
       val value = config.getAnyRef(section)
       value match {
         case obj: com.typesafe.config.ConfigObject =>
           // Handle sections with object values (recursively)
-          processConfig(obj.toConfig, fullPath)
+          findSections(config.getConfig(section))
         case _ =>
-          // Handle other types (skipping)
+          List.empty[Config]
       }
-      processSection(config, fullPath)
     }
-  }
-
-  def processSection(config: Config, section: String): Unit = {
-    val value1 = config.getString(s"$section.ser")
-    val value2 = config.getString(s"$section.frt")
-    // Here, you can define your function and process the section and values as needed
-    println(s"Processing section: $section with value1: $value1 and value2: $value2")
   }
 
   def getListOfConfigFiles(folderPath: String): List[String] = {
