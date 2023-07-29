@@ -11,22 +11,28 @@ object ConfigParser {
     // Parse each config file and extract sections and their values dynamically
     for (configFile <- configFileNames) {
       val config: Config = ConfigFactory.parseFile(new File(configFile))
+      processConfig(config, "")
+    }
+  }
 
-      config.root().keySet().asScala.foreach { section =>
-        val values = config.getStringList(section).asScala.toList
-        if (values.length >= 2) {
-          val secondValue = values(1)
-          processSection(section, secondValue)
-        } else {
-          processSection(section, "No second value")
-        }
+  def processConfig(config: Config, currentPath: String): Unit = {
+    val currentSection = if (currentPath.isEmpty) "" else s"$currentPath."
+
+    config.root().keySet().asScala.foreach { section =>
+      val fullPath = s"$currentSection$section"
+      if (config.getAnyRef(section).isInstanceOf[com.typesafe.config.ConfigObject]) {
+        // Handle sections with object values
+        val obj = config.getObject(section)
+        processConfig(obj.toConfig, fullPath)
+      } else {
+        // Skip other types
       }
     }
   }
 
-  def processSection(section: String, secondValue: String): Unit = {
-    // Here, you can define your function and pass the section and secondValue as arguments
-    println(s"Processing section: $section with second value: $secondValue")
+  def processSection(section: String, value: String): Unit = {
+    // Here, you can define your function and pass the section and value as arguments
+    println(s"Processing section: $section with value: $value")
   }
 
   def getListOfConfigFiles(folderPath: String): List[String] = {
