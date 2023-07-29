@@ -8,7 +8,7 @@ object ConfigParser {
 
     val configFileNames: List[String] = getListOfConfigFiles(folderPath)
 
-    // Parse each config file and extract sections and their values dynamically
+    // Parse each config file and extract sections and their values recursively
     for (configFile <- configFileNames) {
       val config: Config = ConfigFactory.parseFile(new File(configFile))
       processConfig(config, "")
@@ -20,22 +20,23 @@ object ConfigParser {
 
     config.root().keySet().asScala.foreach { section =>
       val fullPath = s"$currentSection$section"
-      if (config.getAnyRef(section).isInstanceOf[com.typesafe.config.ConfigObject]) {
-        // Handle sections with object values
-        val obj = config.getObject(section)
-        obj.keySet().asScala.foreach { key =>
-          val value = obj.get(key).unwrapped().toString
-          processSection(s"$fullPath.$key", value)
-        }
-      } else {
-        // Skip other types
+      val value = config.getAnyRef(section)
+      value match {
+        case obj: com.typesafe.config.ConfigObject =>
+          // Handle sections with object values (recursively)
+          processConfig(obj.toConfig, fullPath)
+        case _ =>
+          // Handle other types (skipping)
       }
+      processSection(config, fullPath)
     }
   }
 
-  def processSection(section: String, value: String): Unit = {
-    // Here, you can define your function and pass the section and value as arguments
-    println(s"Processing section: $section with value: $value")
+  def processSection(config: Config, section: String): Unit = {
+    val value1 = config.getString(s"$section.ser")
+    val value2 = config.getString(s"$section.frt")
+    // Here, you can define your function and process the section and values as needed
+    println(s"Processing section: $section with value1: $value1 and value2: $value2")
   }
 
   def getListOfConfigFiles(folderPath: String): List[String] = {
