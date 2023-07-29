@@ -23,7 +23,10 @@ object ConfigParser {
       if (config.getAnyRef(section).isInstanceOf[com.typesafe.config.ConfigObject]) {
         // Handle sections with object values
         val obj = config.getObject(section)
-        processConfig(obj.toConfig, fullPath)
+        obj.keySet().asScala.foreach { key =>
+          val value = obj.get(key).unwrapped().toString
+          processSection(s"$fullPath.$key", value)
+        }
       } else {
         // Skip other types
       }
