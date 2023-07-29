@@ -16,25 +16,12 @@ object ConfigParser {
   }
 
   def processConfig(config: Config): Unit = {
-    val sections = findSections(config)
-    sections.foreach { section =>
-      val value1 = section.getString("ser")
-      val value2 = section.getString("frt")
+    config.root().keySet().asScala.foreach { section =>
+      val sectionConfig = config.getConfig(section)
+      val value1 = sectionConfig.getString("ser")
+      val value2 = sectionConfig.getString("frt")
       // Here, you can define your function and process the section and values as needed
-      println(s"Processing section: ${section.origin().filename()} with value1: $value1 and value2: $value2")
-    }
-  }
-
-  def findSections(config: Config): List[Config] = {
-    config.root().keySet().asScala.toList.flatMap { section =>
-      val value = config.getAnyRef(section)
-      value match {
-        case obj: com.typesafe.config.ConfigObject =>
-          // Handle sections with object values (recursively)
-          findSections(config.getConfig(section))
-        case _ =>
-          List.empty[Config]
-      }
+      println(s"Processing section: $section with value1: $value1 and value2: $value2")
     }
   }
 
