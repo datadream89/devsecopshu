@@ -1,36 +1,50 @@
-import java.io.File
-import com.typesafe.config.{Config, ConfigFactory}
-import scala.collection.JavaConverters._
+import os
+from datetime import datetime, timedelta
+from kubernetes import client, config
 
-object ConfigParser {
-  def main(args: Array[String]): Unit = {
-    val folderPath = "configs/" // Update the folder path as needed
+# Set up Kubernetes client
+config.load_kube_config()
+batch_v1 = client.BatchV1Api()
 
-    val configFileNames: List[String] = getListOfConfigFiles(folderPath)
+# Namespace and Job name
+namespace = "your_namespace"
+job_name = "your_job_name"
 
-    // Parse each config file and extract sections and their values dynamically
-    for (configFile <- configFileNames) {
-      val config: Config = ConfigFactory.parseFile(new File(configFile))
-      processConfig(config)
-    }
-  }
+def get_job_status(namespace, job_name):
+    return batch_v1.read_namespaced_job(name=job_name, namespace=namespace)
 
-  def processConfig(config: Config): Unit = {
-    config.root().keySet().asScala.foreach { section =>
-      val sectionConfig = config.getConfig(section)
-      val value1 = sectionConfig.getString("ser")
-      val value2 = sectionConfig.getString("frt")
-      // Here, you can define your function and process the section and values as needed
-      println(s"Processing section: $section with value1: $value1 and value2: $value2")
-    }
-  }
+def update_job_status(namespace, job_name, new_status):
+    return batch_v1.patch_namespaced_job(name=job_name, namespace=namespace, body=new_status)
 
-  def getListOfConfigFiles(folderPath: String): List[String] = {
-    val folder = new File(folderPath)
-    if (folder.exists() && folder.isDirectory) {
-      folder.listFiles().filter(_.isFile).map(_.getAbsolutePath).toList
-    } else {
-      throw new IllegalArgumentException("Invalid folder path")
-    }
-  }
-}
+def fail_job_if_elapsed_time_exceeds(job, max_elapsed_time):
+    start_time = job.status.start_time
+    if start_time:
+        elapsed_time = datetime.utcnow() - start_time
+        if elapsed_time > max_elapsed_time:
+            print(f"Job {job_name} has been running for more than one hour. Marking it as failed.")
+            job_status = {
+                "apiVersion": "batch/v1",
+                "kind": "Job",
+                "metadata": {
+                    "name": job_name,
+                    "namespace": namespace
+                },
+                "status": {
+                    "conditions": [
+                        {
+                            "type": "Failed",
+                            "status": "True",
+                            "lastProbeTime": datetime.utcnow().isoformat() + 'Z',
+                            "lastTransitionTime": datetime.utcnow().isoformat() + 'Z',
+                            "reason": "TimeLimitExceeded",
+                            "message": "The job exceeded the allowed time limit."
+                        }
+                    ]
+                }
+            }
+            update_job_status(namespace, job_name, job_status)
+
+if __name__ == "__main__":
+    max_elapsed_time = timedelta(hours=1)
+    job = get_job_status(namespace, job_name)
+    fail_job_if_elapsed_time_exceeds(job, max_elapsed_time)
