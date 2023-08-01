@@ -1,10 +1,14 @@
 WITH date_params AS (
   SELECT start_date, end_date
   FROM dates
+),
+date_range AS (
+  SELECT start_date AS date_value
+  FROM date_params
+  UNION ALL
+  SELECT DATEADD(DAY, 1, date_value)
+  FROM date_range
+  WHERE date_value < (SELECT end_date FROM date_params)
 )
-, date_range AS (
-  SELECT dp.start_date + SEQUENCE_ARRAY(0, DATEDIFF(DAY, dp.start_date, dp.end_date)) AS generated_dates
-  FROM date_params dp
-)
-SELECT generated_date::DATE AS date_value
-FROM date_range, LATERAL FLATTEN(input => generated_dates);
+SELECT date_value
+FROM date_range;
