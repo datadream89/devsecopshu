@@ -1,50 +1,18 @@
-import os
-from datetime import datetime, timedelta
-from kubernetes import client, config
-
-# Set up Kubernetes client
-config.load_kube_config()
-batch_v1 = client.BatchV1Api()
-
-# Namespace and Job name
-namespace = "your_namespace"
-job_name = "your_job_name"
-
-def get_job_status(namespace, job_name):
-    return batch_v1.read_namespaced_job(name=job_name, namespace=namespace)
-
-def update_job_status(namespace, job_name, new_status):
-    return batch_v1.patch_namespaced_job(name=job_name, namespace=namespace, body=new_status)
-
-def fail_job_if_elapsed_time_exceeds(job, max_elapsed_time):
-    start_time = job.status.start_time
-    if start_time:
-        elapsed_time = datetime.utcnow() - start_time
-        if elapsed_time > max_elapsed_time:
-            print(f"Job {job_name} has been running for more than one hour. Marking it as failed.")
-            job_status = {
-                "apiVersion": "batch/v1",
-                "kind": "Job",
-                "metadata": {
-                    "name": job_name,
-                    "namespace": namespace
-                },
-                "status": {
-                    "conditions": [
-                        {
-                            "type": "Failed",
-                            "status": "True",
-                            "lastProbeTime": datetime.utcnow().isoformat() + 'Z',
-                            "lastTransitionTime": datetime.utcnow().isoformat() + 'Z',
-                            "reason": "TimeLimitExceeded",
-                            "message": "The job exceeded the allowed time limit."
-                        }
-                    ]
-                }
-            }
-            update_job_status(namespace, job_name, job_status)
-
-if __name__ == "__main__":
-    max_elapsed_time = timedelta(hours=1)
-    job = get_job_status(namespace, job_name)
-    fail_job_if_elapsed_time_exceeds(job, max_elapsed_time)
+-- Retrieve the start_date and end_date from the 'dates' table
+WITH date_params AS (
+  SELECT
+    start_date,
+    end_date
+  FROM dates
+)
+, date_range AS (
+  -- Use the retrieved start_date and end_date to generate dates
+  SELECT DATEADD(DAY, seq.seq, dp.start_date) AS generated_date
+  FROM date_params dp
+  CROSS JOIN (
+    SELECT ROW_NUMBER() OVER () AS seq
+    FROM TABLE(GENERATOR(ROWCOUNT => DATEDIFF(DAY, dp.start_date, dp.end_date) + 1))
+  ) seq
+)
+SELECT generated_date
+FROM date_range;
