@@ -1,18 +1,10 @@
--- Retrieve the start_date and end_date from the 'dates' table
 WITH date_params AS (
-  SELECT
-    start_date,
-    end_date
+  SELECT start_date, end_date
   FROM dates
 )
 , date_range AS (
-  -- Use the retrieved start_date and end_date to generate dates
-  SELECT DATEADD(DAY, seq.seq, dp.start_date) AS generated_date
+  SELECT dp.start_date + SEQUENCE_ARRAY(0, DATEDIFF(DAY, dp.start_date, dp.end_date)) AS generated_dates
   FROM date_params dp
-  CROSS JOIN (
-    SELECT ROW_NUMBER() OVER () AS seq
-    FROM TABLE(GENERATOR(ROWCOUNT => DATEDIFF(DAY, dp.start_date, dp.end_date) + 1))
-  ) seq
 )
-SELECT generated_date
-FROM date_range;
+SELECT generated_date::DATE AS date_value
+FROM date_range, LATERAL FLATTEN(input => generated_dates);
