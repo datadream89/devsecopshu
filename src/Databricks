@@ -1,14 +1,16 @@
-WITH date_params AS (
-  SELECT start_date, end_date
-  FROM dates
-),
-date_range AS (
-  SELECT start_date AS date_value
-  FROM date_params
-  UNION ALL
-  SELECT DATEADD(DAY, 1, date_value)
-  FROM date_range
-  WHERE date_value < (SELECT end_date FROM date_params)
-)
-SELECT date_value
-FROM date_range;
+
+import re
+
+sql_text = "SELECT orders.id, customers.name FROM orders JOIN customers ON orders.customer_id = customers.id"
+
+join_pattern = re.compile(r'\bJOIN\b\s+(\w+)\s+ON\s+(.+?(?=\s+JOIN|\s+WHERE|\s+GROUP BY|\s+ORDER BY|\s+LIMIT|\s+;|$))', re.IGNORECASE)
+column_pattern = re.compile(r'(\w+)\s*=\s*(\w+)')
+
+joins = join_pattern.findall(sql_text)
+column_values = []
+
+for join in joins:
+    columns = column_pattern.findall(join[1])
+    column_values.extend([col for col_pair in columns for col in col_pair])
+
+print(column_values)
