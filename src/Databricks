@@ -1,16 +1,14 @@
-
 import re
 
 sql_text = "SELECT orders.id, customers.name FROM orders JOIN customers ON orders.customer_id = customers.id"
 
-join_pattern = re.compile(r'\bJOIN\b\s+(\w+)\s+ON\s+(.+?(?=\s+JOIN|\s+WHERE|\s+GROUP BY|\s+ORDER BY|\s+LIMIT|\s+;|$))', re.IGNORECASE)
-column_pattern = re.compile(r'(\w+)\s*=\s*(\w+)')
-
-joins = join_pattern.findall(sql_text)
+column_pattern = re.compile(r'\bON\b\s+(.+?(?=\s+WHERE|\s+GROUP BY|\s+ORDER BY|\s+LIMIT|\s+;|$))', re.IGNORECASE)
 column_values = []
 
-for join in joins:
-    columns = column_pattern.findall(join[1])
-    column_values.extend([col for col_pair in columns for col in col_pair])
+columns = column_pattern.findall(sql_text)
+for column_pair in columns:
+    col_pair_split = re.split(r'\s*=\s*', column_pair)
+    if len(col_pair_split) == 2:  # Ensure it's a valid column pair with an equal sign
+        column_values.extend(col_pair_split)
 
 print(column_values)
