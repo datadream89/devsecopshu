@@ -1,14 +1,33 @@
-import re
+import pandas as pd
 
-sql_text = "SELECT orders.id, customers.name FROM orders JOIN customers ON orders.customer_id = customers.id"
+# Define the start and end strings for extraction
+start_string = "start"
+end_string = "end"
 
-column_pattern = re.compile(r'\bON\b\s+(.+?(?=\s+WHERE|\s+GROUP BY|\s+ORDER BY|\s+LIMIT|\s+;|$))', re.IGNORECASE)
-column_values = []
+# Read the .log file
+with open('your_log_file.log', 'r') as file:
+    lines = file.readlines()
 
-columns = column_pattern.findall(sql_text)
-for column_pair in columns:
-    col_pair_split = re.split(r'\s*=\s*', column_pair)
-    if len(col_pair_split) == 2:  # Ensure it's a valid column pair with an equal sign
-        column_values.extend(col_pair_split)
+# List to store extracted values
+extracted_values = []
 
-print(column_values)
+# Flag to indicate whether we're inside the extraction range
+inside_extraction = False
+
+# Iterate through each line in the log file
+for line in lines:
+    if start_string in line:
+        inside_extraction = True
+        extracted_value = line.split(start_string, 1)[1].strip()
+    elif end_string in line and inside_extraction:
+        inside_extraction = False
+        extracted_value += " " + line.split(end_string, 1)[0].strip()
+        extracted_values.append(extracted_value)
+    elif inside_extraction:
+        extracted_value += " " + line.strip()
+
+# Create a DataFrame with the extracted values
+df = pd.DataFrame({'extracted_values': extracted_values})
+
+# Print the DataFrame
+print(df)
