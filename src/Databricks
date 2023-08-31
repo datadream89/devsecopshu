@@ -1,33 +1,39 @@
-import pandas as pd
+import org.apache.spark.sql._
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.snowpark._
 
-# Define the start and end strings for extraction
-start_string = "start"
-end_string = "end"
+object CombineMultipleTablesExample {
+  def main(args: Array[String]): Unit = {
+    // Initialize the Snowpark session
+    val session = Session.builder.config("snowflakeURL", "<snowflake_url>")
+      .config("snowflakeUser", "<username>")
+      .config("snowflakePassword", "<password>")
+      .config("snowflakeDatabase", "<database>")
+      .config("snowflakeWarehouse", "<warehouse>")
+      .config("snowflakeRole", "<role>")
+      .apply
 
-# Read the .log file
-with open('your_log_file.log', 'r') as file:
-    lines = file.readlines()
+    // List all tables in the database
+    val allTableNames = session.catalog.listTables().map(_.name)
 
-# List to store extracted values
-extracted_values = []
+    // Filter tables with names containing "chain"
+    val chainTableNames = allTableNames.filter(_.contains("chain"))
 
-# Flag to indicate whether we're inside the extraction range
-inside_extraction = False
+    // Load and union all tables with "chain" in their names
+    var combinedTable: DataFrame = null
+    chainTableNames.foreach { tableName =>
+      val table = session.table(tableName)
+      if (combinedTable == null) {
+        combinedTable = table
+      } else {
+        combinedTable = combinedTable.union(table)
+      }
+    }
 
-# Iterate through each line in the log file
-for line in lines:
-    if start_string in line:
-        inside_extraction = True
-        extracted_value = line.split(start_string, 1)[1].strip()
-    elif end_string in line and inside_extraction:
-        inside_extraction = False
-        extracted_value += " " + line.split(end_string, 1)[0].strip()
-        extracted_values.append(extracted_value)
-    elif inside_extraction:
-        extracted_value += " " + line.strip()
-
-# Create a DataFrame with the extracted values
-df = pd.DataFrame({'extracted_values': extracted_values})
-
-# Print the DataFrame
-print(df)
+    // Create a new table called "logs" to store the combined data
+    combinedTable.write
+      .format("snowflake")
+      .option("dbtable", "logs")
+      .save()
+  }
+}
