@@ -1,39 +1,48 @@
-import org.apache.spark.sql._
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.snowpark._
+import net.snowflake.client.jdbc.SnowflakeSQLException
+import scala.util.{Try, Success, Failure}
+import scala.concurrent.duration._
 
-object CombineMultipleTablesExample {
-  def main(args: Array[String]): Unit = {
-    // Initialize the Snowpark session
-    val session = Session.builder.config("snowflakeURL", "<snowflake_url>")
-      .config("snowflakeUser", "<username>")
-      .config("snowflakePassword", "<password>")
-      .config("snowflakeDatabase", "<database>")
-      .config("snowflakeWarehouse", "<warehouse>")
-      .config("snowflakeRole", "<role>")
-      .apply
-
-    // List all tables in the database
-    val allTableNames = session.catalog.listTables().map(_.name)
-
-    // Filter tables with names containing "chain"
-    val chainTableNames = allTableNames.filter(_.contains("chain"))
-
-    // Load and union all tables with "chain" in their names
-    var combinedTable: DataFrame = null
-    chainTableNames.foreach { tableName =>
-      val table = session.table(tableName)
-      if (combinedTable == null) {
-        combinedTable = table
-      } else {
-        combinedTable = combinedTable.union(table)
-      }
-    }
-
-    // Create a new table called "logs" to store the combined data
-    combinedTable.write
-      .format("snowflake")
-      .option("dbtable", "logs")
-      .save()
+// Function to update the table in Snowflake
+def updateTableInSnowflake(): Unit = {
+  // Your code to update the Snowflake table goes here
+  // Replace this with your actual Snowflake update logic
+  // For simplicity, we'll simulate a table lock error
+  if (scala.util.Random.nextBoolean()) {
+    throw new SnowflakeSQLException("Table lock error")
+  } else {
+    println("Table updated successfully")
   }
 }
+
+// Function to retry the update operation with a delay
+def retryUpdateWithDelay(maxRetries: Int, delay: FiniteDuration): Unit = {
+  var retries = 0
+  var success = false
+
+  while (retries < maxRetries && !success) {
+    Try(updateTableInSnowflake()) match {
+      case Success(_) =>
+        success = true
+      case Failure(ex: SnowflakeSQLException) if ex.getMessage.contains("Table lock error") =>
+        println(s"Table lock error encountered. Retrying in ${delay.toSeconds} seconds...")
+        Thread.sleep(delay.toMillis)
+        retries += 1
+      case Failure(ex) =>
+        // Handle other exceptions here
+        println(s"An error occurred: ${ex.getMessage}")
+        retries += 1
+    }
+  }
+
+  if (success) {
+    println("Update operation succeeded after retries.")
+  } else {
+    println(s"Max retries (${maxRetries}) reached. Update operation failed.")
+  }
+}
+
+// Usage
+val maxRetries = 3 // Maximum number of retry attempts
+val retryDelay = 5.seconds // Delay between retries (5 seconds in this example)
+
+retryUpdateWithDelay(maxRetries, retryDelay)
