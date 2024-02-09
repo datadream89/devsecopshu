@@ -1,48 +1,54 @@
-import net.snowflake.client.jdbc.SnowflakeSQLException
-import scala.util.{Try, Success, Failure}
-import scala.concurrent.duration._
+import requests
+import concurrent.futures
 
-// Function to update the table in Snowflake
-def updateTableInSnowflake(): Unit = {
-  // Your code to update the Snowflake table goes here
-  // Replace this with your actual Snowflake update logic
-  // For simplicity, we'll simulate a table lock error
-  if (scala.util.Random.nextBoolean()) {
-    throw new SnowflakeSQLException("Table lock error")
-  } else {
-    println("Table updated successfully")
-  }
-}
-
-// Function to retry the update operation with a delay
-def retryUpdateWithDelay(maxRetries: Int, delay: FiniteDuration): Unit = {
-  var retries = 0
-  var success = false
-
-  while (retries < maxRetries && !success) {
-    Try(updateTableInSnowflake()) match {
-      case Success(_) =>
-        success = true
-      case Failure(ex: SnowflakeSQLException) if ex.getMessage.contains("Table lock error") =>
-        println(s"Table lock error encountered. Retrying in ${delay.toSeconds} seconds...")
-        Thread.sleep(delay.toMillis)
-        retries += 1
-      case Failure(ex) =>
-        // Handle other exceptions here
-        println(s"An error occurred: ${ex.getMessage}")
-        retries += 1
+# Function to submit a job
+def submit_job(job_config):
+    url = "https://<YOUR-DATABRICKS-WORKSPACE-URL>/api/2.0/jobs/runs/submit"
+    headers = {
+        "Authorization": "Bearer <YOUR-ACCESS-TOKEN>",
+        "Content-Type": "application/json"
     }
-  }
+    response = requests.post(url, headers=headers, json=job_config)
+    response_json = response.json()
+    return response_json
 
-  if (success) {
-    println("Update operation succeeded after retries.")
-  } else {
-    println(s"Max retries (${maxRetries}) reached. Update operation failed.")
-  }
-}
+# Define your job configurations
+job_configs = [
+    {
+        "job_id": "<JOB-ID-1>",
+        "notebook_task": {
+            "notebook_path": "/Users/<USERNAME>/<NOTEBOOK-PATH>", # Example notebook path
+            "base_parameters": {
+                "param1": "value1",
+                "param2": "value2"
+            }
+        },
+        "new_cluster": {
+            "spark_version": "7.3.x-scala2.12",
+            "node_type_id": "i3.xlarge",
+            "num_workers": 2,
+            # Add more cluster configurations as needed
+        }
+    },
+    {
+        "job_id": "<JOB-ID-2>",
+        "notebook_task": {
+            "notebook_path": "/Users/<USERNAME>/<NOTEBOOK-PATH>", # Example notebook path
+            "base_parameters": {
+                "param1": "value1",
+                "param2": "value2"
+            }
+        },
+        "existing_cluster_id": "<EXISTING-CLUSTER-ID>"  # Use existing cluster
+    },
+    # Add more job configurations as needed
+]
 
-// Usage
-val maxRetries = 3 // Maximum number of retry attempts
-val retryDelay = 5.seconds // Delay between retries (5 seconds in this example)
+# Submit jobs in parallel
+with concurrent.futures.ThreadPoolExecutor() as executor:
+    futures = [executor.submit(submit_job, job_config) for job_config in job_configs]
+    results = [future.result() for future in concurrent.futures.as_completed(futures)]
 
-retryUpdateWithDelay(maxRetries, retryDelay)
+# Print results
+for result in results:
+    print(result)
