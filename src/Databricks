@@ -1,54 +1,42 @@
-import requests
-import concurrent.futures
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import rand
 
-# Function to submit a job
-def submit_job(job_config):
-    url = "https://<YOUR-DATABRICKS-WORKSPACE-URL>/api/2.0/jobs/runs/submit"
-    headers = {
-        "Authorization": "Bearer <YOUR-ACCESS-TOKEN>",
-        "Content-Type": "application/json"
-    }
-    response = requests.post(url, headers=headers, json=job_config)
-    response_json = response.json()
-    return response_json
+# Create a SparkSession
+spark = SparkSession.builder \
+    .appName("SyntheticDataGeneration") \
+    .getOrCreate()
 
-# Define your job configurations
-job_configs = [
-    {
-        "job_id": "<JOB-ID-1>",
-        "notebook_task": {
-            "notebook_path": "/Users/<USERNAME>/<NOTEBOOK-PATH>", # Example notebook path
-            "base_parameters": {
-                "param1": "value1",
-                "param2": "value2"
-            }
-        },
-        "new_cluster": {
-            "spark_version": "7.3.x-scala2.12",
-            "node_type_id": "i3.xlarge",
-            "num_workers": 2,
-            # Add more cluster configurations as needed
-        }
-    },
-    {
-        "job_id": "<JOB-ID-2>",
-        "notebook_task": {
-            "notebook_path": "/Users/<USERNAME>/<NOTEBOOK-PATH>", # Example notebook path
-            "base_parameters": {
-                "param1": "value1",
-                "param2": "value2"
-            }
-        },
-        "existing_cluster_id": "<EXISTING-CLUSTER-ID>"  # Use existing cluster
-    },
-    # Add more job configurations as needed
-]
+# Load your original dataset
+original_data = spark.read.csv("original_data.csv", header=True, inferSchema=True)
 
-# Submit jobs in parallel
-with concurrent.futures.ThreadPoolExecutor() as executor:
-    futures = [executor.submit(submit_job, job_config) for job_config in job_configs]
-    results = [future.result() for future in concurrent.futures.as_completed(futures)]
+# Calculate the counts for each distinct value in each column
+value_counts = {}
+for column in original_data.columns:
+    value_counts[column] = original_data.groupBy(column).count()
 
-# Print results
-for result in results:
-    print(result)
+# Define the number of records in the synthetic dataset
+desired_record_count = 1000000  # Adjust this number based on your requirements
+
+# Generate synthetic data
+synthetic_data = None
+for column in original_data.columns:
+    # Select values with replacement based on the frequency distribution
+    sampled_values = value_counts[column].sample(withReplacement=True, fraction=desired_record_count/original_data.count(), seed=42)
+    
+    # Select random values from the sampled values for the column
+    synthetic_column = sampled_values.orderBy(rand()).limit(desired_record_count)
+    
+    # Combine the synthetic column with existing synthetic data
+    if synthetic_data is None:
+        synthetic_data = synthetic_column.withColumnRenamed("count", column)
+    else:
+        synthetic_data = synthetic_data.crossJoin(synthetic_column.withColumnRenamed("count", column))
+
+# Shuffle the DataFrame to randomize the order of rows
+synthetic_data = synthetic_data.orderBy(rand())
+
+# Save the synthetic data
+synthetic_data.write.csv("synthetic_data.csv", header=True, mode="overwrite")
+
+# Stop the SparkSession
+spark.stop()
