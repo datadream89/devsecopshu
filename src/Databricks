@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import rand
+from pyspark.sql.functions import col, rand, lit
 
 # Create a SparkSession
 spark = SparkSession.builder \
@@ -9,13 +9,13 @@ spark = SparkSession.builder \
 # Load your original dataset
 original_data = spark.read.csv("original_data.csv", header=True, inferSchema=True)
 
+# Define the number of records in the synthetic dataset
+desired_record_count = 1000000  # Adjust this number based on your requirements
+
 # Calculate the counts for each distinct value in each column
 value_counts = {}
 for column in original_data.columns:
     value_counts[column] = original_data.groupBy(column).count()
-
-# Define the number of records in the synthetic dataset
-desired_record_count = 1000000  # Adjust this number based on your requirements
 
 # Generate synthetic data
 synthetic_data = None
@@ -23,14 +23,18 @@ for column in original_data.columns:
     # Select values with replacement based on the frequency distribution
     sampled_values = value_counts[column].sample(withReplacement=True, fraction=desired_record_count/original_data.count(), seed=42)
     
-    # Select random values from the sampled values for the column
-    synthetic_column = sampled_values.orderBy(rand()).limit(desired_record_count)
+    # Replicate the sampled values to match the desired record count
+    synthetic_column = sampled_values.select(col(column)).limit(desired_record_count)
     
-    # Combine the synthetic column with existing synthetic data
+    # Add an index column for joining
+    synthetic_column = synthetic_column.withColumn("index", rand())
+    original_data = original_data.withColumn("index", rand())
+    
+    # Join synthetic values with the original data based on the index column
     if synthetic_data is None:
-        synthetic_data = synthetic_column.withColumnRenamed("count", column)
+        synthetic_data = original_data.join(synthetic_column, on="index").drop("index")
     else:
-        synthetic_data = synthetic_data.crossJoin(synthetic_column.withColumnRenamed("count", column))
+        synthetic_data = synthetic_data.join(synthetic_column, on="index").drop("index")
 
 # Shuffle the DataFrame to randomize the order of rows
 synthetic_data = synthetic_data.orderBy(rand())
