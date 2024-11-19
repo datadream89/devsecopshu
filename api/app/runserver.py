@@ -44,4 +44,22 @@ if response.status_code == 200:
     print(response.json())  # You can inspect the updated job details here
 else:
     print(f"Failed to add notebook task. Status code: {response.status_code}")
-    print(response.text)
+    print(response.text)   
+# API endpoint to reset an existing job
+API_URL = f'{DATABRICKS_URL}/api/2.1/jobs/reset'
+
+# Get the existing job configuration (this is optional if you already know the job config)
+existing_job_id = 12345  # Replace with your existing job ID
+current_job_config = {
+    "job_id": existing_job_id,
+    "new_tasks": [
+        new_task  # Add the new task to the list
+    ]
+}
+
+response = requests.post(API_URL, headers=headers, data=json.dumps(current_job_config))
+
+if response.status_code == 200:
+    print(f"Task added successfully to Job ID: {existing_job_id}")
+else:
+    print(f"Failed to add task: {response.status_code}, {response.text}")
