@@ -1,46 +1,74 @@
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, rand, lit
+import requests
+import json
+import time
 
-# Create a SparkSession
-spark = SparkSession.builder \
-    .appName("SyntheticDataGeneration") \
-    .getOrCreate()
+# Databricks configuration
+DATABRICKS_INSTANCE = "<databricks-instance>"  # Example: adb-1234567890.1.azuredatabricks.net
+TOKEN = "<your-api-token>"                     # Replace with your Databricks personal access token
+CLUSTER_ID = "<your-cluster-id>"               # Replace with your existing cluster ID
 
-# Load your original dataset
-original_data = spark.read.csv("original_data.csv", header=True, inferSchema=True)
+# API base URL
+url = f"https://{DATABRICKS_INSTANCE}/api/2.0/jobs/runs/submit"
 
-# Define the number of records in the synthetic dataset
-desired_record_count = 1000000  # Adjust this number based on your requirements
+# SQL query to execute
+sql_query = """
+SELECT * FROM my_table LIMIT 10
+"""
 
-# Calculate the counts for each distinct value in each column
-value_counts = {}
-for column in original_data.columns:
-    value_counts[column] = original_data.groupBy(column).count()
+# Prepare the payload
+payload = {
+    "run_name": "Execute SQL Query",  # Name for the job run
+    "new_cluster": {  # Cluster configuration (optional if using an existing cluster)
+        "spark_version": "8.3.x-scala2.12",
+        "node_type_id": "i3.xlarge",
+        "num_workers": 2
+    },
+    "existing_cluster_id": CLUSTER_ID,  # Use your existing cluster ID here
+    "notebook_task": {
+        "notebook_path": "/Users/<your-username>/query_notebook"  # Optional if using a notebook
+    },
+    "spark_submit_task": {
+        "parameters": [
+            "spark.sql", sql_query
+        ]
+    }
+}
 
-# Generate synthetic data
-synthetic_data = None
-for column in original_data.columns:
-    # Select values with replacement based on the frequency distribution
-    sampled_values = value_counts[column].sample(withReplacement=True, fraction=desired_record_count/original_data.count(), seed=42)
+# Set headers for authentication
+headers = {
+    "Authorization": f"Bearer {TOKEN}",
+    "Content-Type": "application/json"
+}
+
+# Submit the job to run the SQL query
+response = requests.post(url, headers=headers, json=payload)
+
+# Check the response
+if response.status_code == 200:
+    print("SQL query execution submitted successfully.")
+    run_id = response.json()['run_id']
+    print(f"Run ID: {run_id}")
     
-    # Replicate the sampled values to match the desired record count
-    synthetic_column = sampled_values.select(col(column)).limit(desired_record_count)
-    
-    # Add an index column for joining
-    synthetic_column = synthetic_column.withColumn("index", rand())
-    original_data = original_data.withColumn("index", rand())
-    
-    # Join synthetic values with the original data based on the index column
-    if synthetic_data is None:
-        synthetic_data = original_data.join(synthetic_column, on="index").drop("index")
-    else:
-        synthetic_data = synthetic_data.join(synthetic_column, on="index").drop("index")
+    # Wait for the job to complete
+    while True:
+        # Check the job's status
+        status_url = f"https://{DATABRICKS_INSTANCE}/api/2.0/jobs/runs/get?run_id={run_id}"
+        status_response = requests.get(status_url, headers=headers)
+        
+        if status_response.status_code == 200:
+            status = status_response.json()
+            state = status['state']['life_cycle_state']
+            if state == "TERMINATED":
+                print(f"Job terminated with state: {status['state']['result_state']}")
+                break
+            elif state == "INTERNAL_ERROR":
+                print("Job failed due to internal error.")
+                break
+        else:
+            print("Error checking job status.")
+            break
 
-# Shuffle the DataFrame to randomize the order of rows
-synthetic_data = synthetic_data.orderBy(rand())
-
-# Save the synthetic data
-synthetic_data.write.csv("synthetic_data.csv", header=True, mode="overwrite")
-
-# Stop the SparkSession
-spark.stop()
+        # Wait before checking again
+        time.sleep(5)
+else:
+    print(f"Error submitting job: {response.text}")
