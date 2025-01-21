@@ -1,74 +1,21 @@
-import requests
-import json
-import time
+# Sample list of tuples
+data = [
+    (1, 'John Doe', 'johndoe@example.com'),
+    (2, 'Jane Smith', 'janesmith@example.com'),
+    (3, 'Sam Wilson', 'samwilson@example.com')
+]
 
-# Databricks configuration
-DATABRICKS_INSTANCE = "<databricks-instance>"  # Example: adb-1234567890.1.azuredatabricks.net
-TOKEN = "<your-api-token>"                     # Replace with your Databricks personal access token
-CLUSTER_ID = "<your-cluster-id>"               # Replace with your existing cluster ID
+# Table name
+table_name = "user_table"
 
-# API base URL
-url = f"https://{DATABRICKS_INSTANCE}/api/2.0/jobs/runs/submit"
+# Generate the SQL insert statement
+insert_statements = []
+for record in data:
+    values = ', '.join([f"'{str(value)}'" if isinstance(value, str) else str(value) for value in record])
+    insert_statements.append(f"INSERT INTO {table_name} VALUES ({values});")
 
-# SQL query to execute
-sql_query = """
-SELECT * FROM my_table LIMIT 10
-"""
+# Join all statements into a single SQL script
+sql_script = "\n".join(insert_statements)
 
-# Prepare the payload
-payload = {
-    "run_name": "Execute SQL Query",  # Name for the job run
-    "new_cluster": {  # Cluster configuration (optional if using an existing cluster)
-        "spark_version": "8.3.x-scala2.12",
-        "node_type_id": "i3.xlarge",
-        "num_workers": 2
-    },
-    "existing_cluster_id": CLUSTER_ID,  # Use your existing cluster ID here
-    "notebook_task": {
-        "notebook_path": "/Users/<your-username>/query_notebook"  # Optional if using a notebook
-    },
-    "spark_submit_task": {
-        "parameters": [
-            "spark.sql", sql_query
-        ]
-    }
-}
-
-# Set headers for authentication
-headers = {
-    "Authorization": f"Bearer {TOKEN}",
-    "Content-Type": "application/json"
-}
-
-# Submit the job to run the SQL query
-response = requests.post(url, headers=headers, json=payload)
-
-# Check the response
-if response.status_code == 200:
-    print("SQL query execution submitted successfully.")
-    run_id = response.json()['run_id']
-    print(f"Run ID: {run_id}")
-    
-    # Wait for the job to complete
-    while True:
-        # Check the job's status
-        status_url = f"https://{DATABRICKS_INSTANCE}/api/2.0/jobs/runs/get?run_id={run_id}"
-        status_response = requests.get(status_url, headers=headers)
-        
-        if status_response.status_code == 200:
-            status = status_response.json()
-            state = status['state']['life_cycle_state']
-            if state == "TERMINATED":
-                print(f"Job terminated with state: {status['state']['result_state']}")
-                break
-            elif state == "INTERNAL_ERROR":
-                print("Job failed due to internal error.")
-                break
-        else:
-            print("Error checking job status.")
-            break
-
-        # Wait before checking again
-        time.sleep(5)
-else:
-    print(f"Error submitting job: {response.text}")
+# Print the result
+print(sql_script)
