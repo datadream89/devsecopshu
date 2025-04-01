@@ -20,15 +20,20 @@ msg["From"] = SENDER
 msg["To"] = RECIPIENT
 msg["Subject"] = SUBJECT
 
-# Email Body with Embedded Image
+# Email Body with Centered Box Design
 html_body = f"""
 <html>
-<body>
-    <img src="cid:{CID}" style="position: absolute; top: 10px; left: 10px; width: 100px;">
-    <p>Hello Bala,</p>
-    <p>This is a test email with an embedded image at the top left corner.</p>
-    <p>Best Regards,</p>
-    <p>Your Name</p>
+<body style="background-color: #f0f0f0; padding: 50px; text-align: center;">
+    <div style="display: inline-block; background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); text-align: left; max-width: 400px;">
+        <div style="text-align: center;">
+            <img src="cid:{CID}" width="100" height="100" style="display: block; margin: 0 auto;">
+        </div>
+        <div style="border-top: 0.5px solid #ccc; margin: 10px 0;"></div>
+        <p>Hello Bala,</p>
+        <p>This is a test email with an embedded image centered in a white box.</p>
+        <p>Best Regards,</p>
+        <p>Your Name</p>
+    </div>
 </body>
 </html>
 """
@@ -52,18 +57,7 @@ raw_message = msg.as_string()
 ses_client = boto3.client("ses", region_name=AWS_REGION)
 response = ses_client.send_raw_email(Source=SENDER, Destinations=[RECIPIENT], RawMessage={"Data": raw_message})
 
-print("Email sent! Message ID:", response["MessageId"])
-new_task = {
-    "task_key": "new_task_key",
-    "notebook_task": {
-        "notebook_path": "/Workspace/Users/your_notebook",
-        "base_parameters": {"param1": "value1"}
-    },
-    "existing_cluster_id": "<your-cluster-id>",  # Use an existing cluster
-    "depends_on": [{"task_key": "previous_task_key"}]  # Optional dependency
-}
-
-# Append the new task to the job's existing tasks
+print("Email sent! Message ID:", response["MessageId"]) Append the new task to the job's existing tasks
 job_details["settings"]["tasks"].append(new_task)
 
 # Update the job with the new configuration
