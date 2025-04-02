@@ -20,17 +20,17 @@ msg["From"] = SENDER
 msg["To"] = RECIPIENT
 msg["Subject"] = SUBJECT
 
-# Email Body with Image in Top-Left Corner & Centered Box
+# Email Body with Properly Centered Box
 html_body = f"""
 <html>
-<body style="background-color: #f0f0f0; padding: 50px; text-align: center;">
-    <div style="display: inline-block; background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); text-align: left; max-width: 400px; position: relative;">
-        <div style="display: flex; align-items: start;">
-            <img src="cid:{CID}" width="50" height="50" style="display: block; margin-right: 10px;">
+<body style="background-color: #f0f0f0; padding: 0; margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center;">
+    <div style="background-color: white; padding: 40px 60px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); text-align: left; max-width: 400px;">
+        <div style="display: flex; align-items: center;">
+            <img src="cid:{CID}" width="50" height="50" style="display: block; margin-right: 15px;">
             <h2 style="margin: 0; font-size: 18px; font-weight: bold;">Hello Bala,</h2>
         </div>
-        <div style="border-top: 0.5px solid #ccc; margin: 10px 0;"></div>
-        <p>This is a test email with an embedded image at the top-left corner of a centered box.</p>
+        <div style="border-top: 0.5px solid #ccc; margin: 20px 0;"></div>
+        <p>This is a test email with an embedded image at the top-left corner of a perfectly centered box.</p>
         <p>Best Regards,</p>
         <p>Your Name</p>
     </div>
