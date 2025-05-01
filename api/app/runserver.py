@@ -1,60 +1,88 @@
-import boto3
-import base64
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
 
-# AWS SES Configuration
-AWS_REGION = "us-east-1"  # Change to your AWS region
-SENDER = "your_email@example.com"
-RECIPIENT = "recipient_email@example.com"
-SUBJECT = "Email with Embedded Image from AWS SES"
+import teradatasql
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import length, max as spark_max
+from datetime import datetime
 
-# Load Image
-IMAGE_PATH = "path/to/your/image.jpg"  # Update the path to your image
-CID = "myimage"  # Content-ID to reference in HTML
+# Teradata connection info
+td_conn_params = {
+    'host': '<TERADATA_HOST>',
+    'user': '<USERNAME>',
+    'password': '<PASSWORD>',
+    'database': '<DATABASE>'
+}
+table_name = 'your_table'
 
-# Create a multipart email
-msg = MIMEMultipart("related")
-msg["From"] = SENDER
-msg["To"] = RECIPIENT
-msg["Subject"] = SUBJECT
-
-# Email Body with Properly Centered Box
-html_body = f"""
-<html>
-<body style="background-color: #f0f0f0; padding: 0; margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center;">
-    <div style="background-color: white; padding: 40px 60px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); text-align: left; max-width: 400px;">
-        <div style="display: flex; align-items: center;">
-            <img src="cid:{CID}" width="50" height="50" style="display: block; margin-right: 15px;">
-            <h2 style="margin: 0; font-size: 18px; font-weight: bold;">Hello Bala,</h2>
-        </div>
-        <div style="border-top: 0.5px solid #ccc; margin: 20px 0;"></div>
-        <p>This is a test email with an embedded image at the top-left corner of a perfectly centered box.</p>
-        <p>Best Regards,</p>
-        <p>Your Name</p>
-    </div>
-</body>
-</html>
+# Step 1: Fetch Teradata metadata
+query = f"""
+SELECT ColumnName, ColumnType
+FROM DBC.Columns
+WHERE DatabaseName = '{td_conn_params['database'].upper()}'
+  AND TableName = '{table_name.upper()}'
+ORDER BY ColumnId;
 """
 
-# Attach HTML Content
-msg.attach(MIMEText(html_body, "html"))
+with teradatasql.connect(
+    host=td_conn_params['host'],
+    user=td_conn_params['user'],
+    password=td_conn_params['password']
+) as con:
+    with con.cursor() as cur:
+        cur.execute(query)
+        columns_meta = cur.fetchall()
 
-# Read and Embed Image
-with open(IMAGE_PATH, "rb") as img_file:
-    img_data = img_file.read()
+# Step 2: Spark session
+spark = SparkSession.builder.appName("TD-Ingest").getOrCreate()
 
-image_part = MIMEImage(img_data, name="image.jpg")
-image_part.add_header("Content-ID", f"<{CID}>")  # Reference for cid
-image_part.add_header("Content-Disposition", "inline", filename="image.jpg")
-msg.attach(image_part)
+df_raw = spark.read \
+    .format("jdbc") \
+    .option("url", f"jdbc:teradata://{td_conn_params['host']}/DATABASE={td_conn_params['database']}") \
+    .option("user", td_conn_params['user']) \
+    .option("password", td_conn_params['password']) \
+    .option("dbtable", table_name) \
+    .load()
 
-# Convert message to string
-raw_message = msg.as_string()
+# Step 3: Infer dynamic types
+cast_expressions = []
 
-# Send Email using AWS SES
-ses_client = boto3.client("ses", region_name=AWS_REGION)
-response = ses_client.send_raw_email(Source=SENDER, Destinations=[RECIPIENT], RawMessage={"Data": raw_message})
+for col_name, td_type in columns_meta:
+    td_type_clean = td_type.strip().upper()
 
-print("Email sent! Message ID:", response["MessageId"])
+    if td_type_clean in ['CF', 'CV']:  # Variable/Fixed character
+        max_len = df_raw.select(spark_max(length(col_name))).collect()[0][0] or 1
+        max_len = max(1, max_len)  # avoid VARCHAR(0)
+        spark_type = f"VARCHAR({max_len})"
+
+    elif td_type_clean == 'D':  # Decimal
+        stats = df_raw.selectExpr(
+            f"MAX(LENGTH(CAST(`{col_name}` AS STRING))) AS len",
+            f"MAX(LENGTH(SPLIT(CAST(`{col_name}` AS STRING), '\\.')[0])) AS int_part",
+            f"MAX(LENGTH(SPLIT(CAST(`{col_name}` AS STRING), '\\.')[1])) AS frac_part"
+        ).collect()[0]
+        p = (stats.int_part or 1) + (stats.frac_part or 0)
+        s = stats.frac_part or 0
+        spark_type = f"DECIMAL({p}, {s})"
+
+    elif td_type_clean == 'I':
+        spark_type = 'INT'
+    elif td_type_clean == 'I1':
+        spark_type = 'BYTE'
+    elif td_type_clean == 'I2':
+        spark_type = 'SMALLINT'
+    elif td_type_clean == 'I8':
+        spark_type = 'BIGINT'
+    elif td_type_clean == 'DA':
+        spark_type = 'DATE'
+    elif td_type_clean == 'TS':
+        spark_type = 'TIMESTAMP'
+    else:
+        print(f"Unknown type '{td_type_clean}' for column '{col_name}', defaulting to STRING")
+        spark_type = 'STRING'
+
+    cast_expressions.append(f"CAST(`{col_name}` AS {spark_type}) AS `{col_name}`")
+
+# Step 4: Cast and write
+df_casted = df_raw.selectExpr(*cast_expressions)
+
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+df_casted.write.format("delta").mode("overwrite").save(f"/mnt/delta/{table_name}_{timestamp}")
