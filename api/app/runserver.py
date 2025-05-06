@@ -1,35 +1,42 @@
-from langchain.document_loaders import Docx2txtLoader
+from langchain_community.document_loaders import UnstructuredWordDocumentLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.chains import RetrievalQA
 from langchain.llms import Ollama
+import re
 
-# Step 1: Load Word document
-loader = Docx2txtLoader("your_file.docx")
-documents = loader.load()
+# Step 1: Load Word Document
+loader = UnstructuredWordDocumentLoader("your_file.docx")
+raw_docs = loader.load()
 
-# Step 2: Split into chunks
+# Step 2: Simulate Page Number Stamping
+# Assume 3000 characters ≈ 1 page (you can tune this per document)
+page_size = 3000
+updated_docs = []
+for i, doc in enumerate(raw_docs):
+    text = doc.page_content
+    chunks = [text[j:j+page_size] for j in range(0, len(text), page_size)]
+    for idx, chunk in enumerate(chunks):
+        page_number = idx + 1
+        updated_docs.append(f"[Page {page_number}] {chunk}")
+
+# Step 3: Split Text for Embedding
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-texts = text_splitter.split_documents(documents)
+split_docs = text_splitter.create_documents(updated_docs)
 
-# Step 3: Create embeddings
+# Step 4: Embed and Store in Chroma
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+vectorstore = Chroma.from_documents(split_docs, embedding=embeddings)
 
-# Step 4: Store vectors in Chroma (in-memory)
-vectorstore = Chroma.from_documents(documents=texts, embedding=embeddings)
-
-# Step 5: Setup retriever
+# Step 5: Create Retriever and QA Chain
 retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-
-# Step 6: Initialize Ollama model
 llm = Ollama(model="mistral")
 
-# Step 7: Create RAG chain
 qa = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
 
-# Step 8: Ask a question
-query = "What are the main points discussed in the document?"
-answer = qa.run(query)
+# Step 6: Ask Question
+query = "What does the document say about project deadlines?"
+response = qa.run(query)
 
-print("Answer:", answer)
+print("Answer:", response)
