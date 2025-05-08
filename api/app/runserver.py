@@ -1,34 +1,19 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <style>
-      body { margin: 0; overflow: auto; }
-      #pdf-viewer canvas { margin: auto; display: block; }
-    </style>
-  </head>
-  <body>
-    <div id="pdf-viewer"></div>
-    <script>
-      const pdfViewer = document.getElementById("pdf-viewer");
-      const url = new URLSearchParams(window.location.search).get("pdf_url");
+# webapp/pdf_viewer/__init__.py
 
-      const renderPDF = async (url) => {
-        const pdf = await pdfjsLib.getDocument(url).promise;
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          const page = await pdf.getPage(pageNum);
-          const canvas = document.createElement("canvas");
-          const context = canvas.getContext("2d");
-          const viewport = page.getViewport({ scale: 1.5 });
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
+import streamlit.components.v1 as components
+import os
+import tempfile
+import shutil
 
-          await page.render({ canvasContext: context, viewport }).promise;
-          pdfViewer.appendChild(canvas);
-        }
-      };
+def view_pdf(pdf_file_path):
+    component_dir = os.path.dirname(__file__)
+    index_path = os.path.join(component_dir, "pdf_component.html")
 
-      renderPDF(url);
-    </script>
-  </body>
-</html>
+    tmp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    shutil.copy(pdf_file_path, tmp_pdf.name)
+    pdf_url = f"file://{tmp_pdf.name}"
+
+    with open(index_path) as f:
+        html_content = f.read().replace("pdf_url", f"{pdf_url}")
+
+    components.html(html_content, height=800, scrolling=True)
