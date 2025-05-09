@@ -1,48 +1,102 @@
-import os
+from collections import Counter
+import fitz  # PyMuPDF
 import json
-import streamlit as st
-from ai_logic.ai_backend import generate_output
+from langchain_community.llms import Ollama
+from langchain_core.prompts import PromptTemplate
+from langchain.chains import LLMChain
 
-st.set_page_config(layout="wide")
-st.title("Multi-File PDF QA with LLM")
+llm = Ollama(model="llama3")
 
-uploaded_pdfs = st.file_uploader("Upload PDF files", type="pdf", accept_multiple_files=True)
-uploaded_refs = st.file_uploader("Upload reference JSONs", type="json", accept_multiple_files=True)
-uploaded_prompts = st.file_uploader("Upload prompt JSONs", type="json", accept_multiple_files=True)
+template = """
+You are a helpful assistant. Answer the question based on the text below.
 
-if st.button("Run Analysis"):
-    os.makedirs("pdfs", exist_ok=True)
-    os.makedirs("prompts", exist_ok=True)
-    os.makedirs("references", exist_ok=True)
-    os.makedirs("outputs", exist_ok=True)
+Text:
+{context}
 
-    for pdf_file, ref_file, prompt_file in zip(uploaded_pdfs, uploaded_refs, uploaded_prompts):
-        pdf_path = os.path.join("pdfs", pdf_file.name)
-        ref_path = os.path.join("references", ref_file.name)
-        prompt_path = os.path.join("prompts", prompt_file.name)
-        output_path = os.path.join("outputs", ref_file.name.replace(".json", "_outcome.json"))
+Question:
+{question}
 
-        with open(pdf_path, "wb") as f:
-            f.write(pdf_file.getbuffer())
-        with open(ref_path, "wb") as f:
-            f.write(ref_file.getbuffer())
-        with open(prompt_path, "wb") as f:
-            f.write(prompt_file.getbuffer())
+Only answer 'Yes' or 'No' as your final output.
+"""
 
-        generate_output(pdf_path, ref_path, prompt_path, output_path)
+prompt = PromptTemplate(template=template, input_variables=["context", "question"])
+chain = LLMChain(llm=llm, prompt=prompt)
 
-    st.success("Outputs generated successfully!")
+def get_pdf_text_with_pages(pdf_path):
+    doc = fitz.open(pdf_path)
+    pages = []
+    for i, page in enumerate(doc):
+        text = page.get_text()
+        pages.append({"page_number": i + 1, "text": text})
+    return pages
 
-# Viewer section
-output_files = [f for f in os.listdir("outputs") if f.endswith("_outcome.json")]
-if output_files:
-    selected_file = st.selectbox("Select PSCRF Output", output_files)
-    with open(os.path.join("outputs", selected_file)) as f:
-        results = json.load(f)
+def majority_vote(answers):
+    count = Counter(answers)
+    return count.most_common(1)[0]
 
-    index = st.session_state.get("index", 0)
-    if st.button("Next"):
-        st.session_state.index = (index + 1) % len(results)
+def generate_output(pdf_path, ref_path, prompt_path, output_path, n_votes=3):
+    with open(ref_path) as ref_file:
+        ref_data = json.load(ref_file)
+    with open(prompt_path) as prompt_file:
+        prompt_data = json.load(prompt_file)
 
-    current_result = results[st.session_state.get("index", 0)]
-    st.json(current_result)
+    pscrf_id = ref_data["pscrfId"]
+    scenarios = ref_data["scenarios"]
+    prompts = prompt_data["prompts"]
+
+    page_texts = get_pdf_text_with_pages(pdf_path)
+    results = []
+
+    question_lookup = {
+        item["questionRefId"]: item["prompt"]
+        for item in prompts
+    }
+
+    for scenario in scenarios:
+        scenario_id = scenario["scenarioId"]
+        for question in scenario["questions"]:
+            question_id = question["questionId"]
+            question_ref_id = question["questionRefId"]
+            answer_data_type = question["answerDataType"]
+            question_text = question_lookup[question_ref_id]
+
+            votes = []
+            for page in page_texts:
+                page_num = page["page_number"]
+                context = page["text"]
+
+                answers = []
+                for _ in range(n_votes):
+                    result = chain.run({"context": context, "question": question_text}).strip().lower()
+                    if "yes" in result:
+                        answers.append("Yes")
+                    elif "no" in result:
+                        answers.append("No")
+
+                if answers:
+                    voted_answer, count = majority_vote(answers)
+                    accuracy = round(count / n_votes, 2)
+                    is_valid = "Yes" if accuracy >= 0.66 else "No"
+
+                    if any(voted_answer in s for s in context.lower().split(".")):
+                        snippet = next((s for s in context.split(".") if voted_answer.lower() in s.lower()), "")
+                    else:
+                        snippet = ""
+
+                    results.append({
+                        "pscrfId": pscrf_id,
+                        "scenarioId": scenario_id,
+                        "questionId": question_id,
+                        "questionRefId": question_ref_id,
+                        "question": question_text.split("?")[0] + "?",
+                        "filename": pdf_path.split("/")[-1],
+                        "pageNumber": page_num,
+                        "answer": voted_answer,
+                        "accuracy": accuracy,
+                        "isValid": is_valid,
+                        "snippet": snippet.strip()
+                    })
+                    break  # Stop on first relevant page
+
+    with open(output_path, "w") as out_file:
+        json.dump(results, out_file, indent=2)
