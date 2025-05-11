@@ -1,36 +1,78 @@
-if st.session_state.get("submitted") and st.session_state.get("selected_pscrf_id"):
-    pscrf_id = st.session_state["selected_pscrf_id"]
+import streamlit as st
+import os
+import json
 
-    # Match files using PSCRF ID
-    matched_pdf = next((f for f in os.listdir("pdfs") if f.endswith(f"{pscrf_id}.pdf")), None)
-    matched_reference = next((f for f in os.listdir("references") if f.endswith(f"{pscrf_id}.json")), None)
+# Setup folders
+os.makedirs("pdfs", exist_ok=True)
+os.makedirs("references", exist_ok=True)
+os.makedirs("prompts", exist_ok=True)
 
-    if matched_pdf and matched_reference:
-        pdf_path = os.path.join("pdfs", matched_pdf)
-        reference_path = os.path.join("references", matched_reference)
-        prompt_path = os.path.join("prompts", st.session_state["prompt_filename"])
+# Page state
+if "step" not in st.session_state:
+    st.session_state.step = "upload"
 
-        with open(reference_path, "r") as ref_file:
-            reference_data = json.load(ref_file)
+# Button actions
+def go_home():
+    st.session_state.step = "upload"
 
-        with open(prompt_path, "r") as prompt_file:
-            prompt_data = json.load(prompt_file)
+def proceed_to_select():
+    st.session_state.step = "select"
 
-        from ai_logic.ai_backend import process_pdf_with_questions
+st.title("PSCRF QA Frontend")
 
-        results = process_pdf_with_questions(
-            pdf_path,
-            prompt_data,
-            reference_data,
-            reference_name=matched_reference
-        )
+# --- Step 1: Upload Section ---
+if st.session_state.step == "upload":
+    st.header("Step 1: Upload Files")
 
-        # Write to output JSON
-        output_data = {"results": results}
-        output_path = os.path.join("outputs", f"{matched_reference.split('.')[0]}_outcome.json")
-        with open(output_path, "w") as out_file:
-            json.dump(output_data, out_file, indent=2)
+    uploaded_pdfs = st.file_uploader("Upload PDFs", type="pdf", accept_multiple_files=True)
+    uploaded_references = st.file_uploader("Upload Reference JSONs", type="json", accept_multiple_files=True)
+    uploaded_prompt = st.file_uploader("Upload Prompt JSON", type="json")
 
-        # Save results in session state for later rendering
-        st.session_state["results"] = results
-        st.session_state["current_index"] = 0
+    if st.button("Submit"):
+        pscrf_ids = set()
+
+        # Save PDFs
+        for pdf in uploaded_pdfs:
+            path = os.path.join("pdfs", pdf.name)
+            with open(path, "wb") as f:
+                f.write(pdf.read())
+            id_part = os.path.splitext(pdf.name)[0].split("_")[-1]
+            if id_part.isdigit():
+                pscrf_ids.add(id_part)
+
+        # Save References
+        for ref in uploaded_references:
+            path = os.path.join("references", ref.name)
+            with open(path, "wb") as f:
+                f.write(ref.read())
+            id_part = os.path.splitext(ref.name)[0].split("_")[-1]
+            if id_part.isdigit():
+                pscrf_ids.add(id_part)
+
+        # Save Prompt
+        if uploaded_prompt:
+            prompt_path = os.path.join("prompts", uploaded_prompt.name)
+            with open(prompt_path, "wb") as f:
+                f.write(uploaded_prompt.read())
+            st.session_state["prompt_filename"] = uploaded_prompt.name
+
+        st.session_state["pscrf_ids"] = sorted(list(pscrf_ids))
+        proceed_to_select()
+        st.experimental_rerun()
+
+# --- Step 2: Select PSCRF ID ---
+if st.session_state.step == "select":
+    st.header("Step 2: Select PSCRF ID")
+
+    selected_id = st.selectbox("PSCRF ID", st.session_state.get("pscrf_ids", []), key="selected_pscrf_id")
+
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("Home"):
+            go_home()
+            st.experimental_rerun()
+
+    with col2:
+        if st.button("Submit"):
+            st.session_state.step = "process"
+            st.experimental_rerun()
