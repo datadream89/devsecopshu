@@ -1,55 +1,36 @@
-import streamlit as st
-import os
-import re
+if st.session_state.get("submitted") and st.session_state.get("selected_pscrf_id"):
+    pscrf_id = st.session_state["selected_pscrf_id"]
 
-# Set up directories
-os.makedirs("pdfs", exist_ok=True)
-os.makedirs("prompts", exist_ok=True)
-os.makedirs("references", exist_ok=True)
+    # Match files using PSCRF ID
+    matched_pdf = next((f for f in os.listdir("pdfs") if f.endswith(f"{pscrf_id}.pdf")), None)
+    matched_reference = next((f for f in os.listdir("references") if f.endswith(f"{pscrf_id}.json")), None)
 
-st.title("PSCRF File Upload")
+    if matched_pdf and matched_reference:
+        pdf_path = os.path.join("pdfs", matched_pdf)
+        reference_path = os.path.join("references", matched_reference)
+        prompt_path = os.path.join("prompts", st.session_state["prompt_filename"])
 
-# File upload inside a form
-with st.form(key="upload_form"):
-    uploaded_pdfs = st.file_uploader("Upload PDF(s)", type="pdf", accept_multiple_files=True)
-    uploaded_prompt = st.file_uploader("Upload Prompt JSON", type="json")
-    uploaded_references = st.file_uploader("Upload Reference JSON(s)", type="json", accept_multiple_files=True)
-    
-    submit_button = st.form_submit_button(label="Submit Files")
+        with open(reference_path, "r") as ref_file:
+            reference_data = json.load(ref_file)
 
-# File saving logic after submission
-if submit_button:
-    if uploaded_pdfs:
-        for pdf in uploaded_pdfs:
-            with open(os.path.join("pdfs", pdf.name), "wb") as f:
-                f.write(pdf.read())
-        st.success(f"Saved {len(uploaded_pdfs)} PDF(s)")
+        with open(prompt_path, "r") as prompt_file:
+            prompt_data = json.load(prompt_file)
 
-    if uploaded_prompt:
-        with open(os.path.join("prompts", uploaded_prompt.name), "wb") as f:
-            f.write(uploaded_prompt.read())
-        st.success("Saved Prompt JSON")
+        from ai_logic.ai_backend import process_pdf_with_questions
 
-    if uploaded_references:
-        for ref in uploaded_references:
-            with open(os.path.join("references", ref.name), "wb") as f:
-                f.write(ref.read())
-        st.success(f"Saved {len(uploaded_references)} Reference JSON(s)")
+        results = process_pdf_with_questions(
+            pdf_path,
+            prompt_data,
+            reference_data,
+            reference_name=matched_reference
+        )
 
-    st.session_state["uploaded"] = True
+        # Write to output JSON
+        output_data = {"results": results}
+        output_path = os.path.join("outputs", f"{matched_reference.split('.')[0]}_outcome.json")
+        with open(output_path, "w") as out_file:
+            json.dump(output_data, out_file, indent=2)
 
-# Step 2: Show dropdown for PSCRF ID after submit
-if st.session_state.get("uploaded", False):
-    reference_files = os.listdir("references")
-
-    # Extract PSCRF IDs from filenames like 'prompt_dict_101.json' -> '101'
-    pscrf_ids = []
-    for filename in reference_files:
-        match = re.search(r"(\d+)", filename)
-        if match:
-            pscrf_ids.append(match.group(1))
-
-    pscrf_ids = sorted(set(pscrf_ids))  # remove duplicates
-
-    selected_id = st.selectbox("PSCRF ID", pscrf_ids)
-    st.session_state["selected_pscrf_id"] = selected_id
+        # Save results in session state for later rendering
+        st.session_state["results"] = results
+        st.session_state["current_index"] = 0
