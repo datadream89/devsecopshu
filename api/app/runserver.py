@@ -1,69 +1,36 @@
-import streamlit as st
-import uuid
-import os
+import fitz  # PyMuPDF
+from rapidfuzz import process, fuzz
+import re
 
-# Sample path to the generated highlighted PDF
-highlighted_pdf_path = "pdfs/highlighted_example.pdf"
+def extract_sentences(text):
+    # Simple sentence splitter (can be improved with NLP if needed)
+    return re.split(r'(?<=[.!?]) +', text)
 
-# PDF.js code to display the PDF with highlights
-pdf_js_code = f"""
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
-    <div style="width: 100%; height: 600px;">
-        <canvas id="pdf-canvas" style="width: 100%; height: 100%;"></canvas>
-    </div>
-    <script>
-        var url = '{highlighted_pdf_path}';
-        var pdfjsLib = window['pdfjs-dist/build/pdf'];
+def search_fuzzy_sentence(pdf_path, search_query):
+    doc = fitz.open(pdf_path)
+    results = []
+
+    for page_num, page in enumerate(doc, start=1):
+        text = page.get_text()
+        sentences = extract_sentences(text)
+        if not sentences:
+            continue
         
-        // Specify the workerSrc
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+        # Get the closest match
+        match, score, _ = process.extractOne(search_query, sentences, scorer=fuzz.token_set_ratio)
+        results.append({
+            "page": page_num,
+            "match": match,
+            "score": score
+        })
 
-        var pdfDoc = null,
-            pageNum = 1,
-            pageRendering = false,
-            pageNumPending = null,
-            scale = 1.5,
-            canvas = document.getElementById('pdf-canvas'),
-            ctx = canvas.getContext('2d');
+    # Return the best overall match
+    best_match = max(results, key=lambda x: x["score"], default=None)
+    return best_match
 
-        // Render the page
-        function renderPage(num) {
-            pageRendering = true;
-            pdfDoc.getPage(num).then(function(page) {
-                var viewport = page.getViewport({ scale: scale });
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
+# Example usage
+pdf_path = "your_document.pdf"
+query = "How can I reset my password?"
 
-                var renderContext = {
-                    canvasContext: ctx,
-                    viewport: viewport
-                };
-                page.render(renderContext).promise.then(function() {
-                    pageRendering = false;
-                    if (pageNumPending !== null) {
-                        renderPage(pageNumPending);
-                        pageNumPending = null;
-                    }
-                });
-            });
-        }
-
-        // Get document
-        pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
-            pdfDoc = pdfDoc_;
-            renderPage(pageNum);
-        });
-    </script>
-"""
-
-# Inject the custom HTML and JavaScript into the Streamlit app
-st.markdown(pdf_js_code, unsafe_allow_html=True)
-
-# Optional: Provide a download button
-with open(highlighted_pdf_path, "rb") as pdf_file:
-    st.download_button(
-        label="Download Highlighted PDF",
-        data=pdf_file,
-        file_name="highlighted_output.pdf",
-        mime="application/pdf"
-    )
+result = search_fuzzy_sentence(pdf_path, query)
+print(result)
