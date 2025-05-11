@@ -1,42 +1,69 @@
-import fitz  # PyMuPDF
+import streamlit as st
 import uuid
 import os
 
-def highlight_pdf(pdf_path, snippets):
-    """
-    Highlight the snippets in the PDF and create a new PDF with only the highlighted pages.
+# Sample path to the generated highlighted PDF
+highlighted_pdf_path = "pdfs/highlighted_example.pdf"
 
-    :param pdf_path: Path to the input PDF file
-    :param snippets: List of dictionaries containing matched snippets with page numbers and highlighted text
-    :return: Path to the newly saved PDF with highlighted pages
-    """
-    doc = fitz.open(pdf_path)
-    highlighted_pages = []
-
-    for snippet in snippets:
-        page_num = snippet["pageNumber"] - 1  # Page numbers in PyMuPDF are 0-based
-        matched_snippet = snippet["matchedSnippet"]
+# PDF.js code to display the PDF with highlights
+pdf_js_code = f"""
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <div style="width: 100%; height: 600px;">
+        <canvas id="pdf-canvas" style="width: 100%; height: 100%;"></canvas>
+    </div>
+    <script>
+        var url = '{highlighted_pdf_path}';
+        var pdfjsLib = window['pdfjs-dist/build/pdf'];
         
-        if len(matched_snippet) > 10:  # Ensure we have a valid snippet to highlight
-            page = doc.load_page(page_num)
-            for part in matched_snippet.split(". "):
-                part = part.strip()
-                if part in page.get_text():
-                    for area in page.search_for(part):
-                        highlight = page.add_highlight_annot(area)
-                        highlight.update()
-            
-            if page_num not in highlighted_pages:
-                highlighted_pages.append(page_num)
+        // Specify the workerSrc
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
 
-    # Save the newly created highlighted PDF with only the pages containing highlights
-    unique_name = f"highlighted_{uuid.uuid4().hex[:8]}.pdf"
-    highlighted_path = os.path.join("pdfs", unique_name)
-    
-    # Create a new document with only highlighted pages
-    highlighted_doc = fitz.open()
-    for page_num in highlighted_pages:
-        highlighted_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
+        var pdfDoc = null,
+            pageNum = 1,
+            pageRendering = false,
+            pageNumPending = null,
+            scale = 1.5,
+            canvas = document.getElementById('pdf-canvas'),
+            ctx = canvas.getContext('2d');
 
-    highlighted_doc.save(highlighted_path)
-    return highlighted_path
+        // Render the page
+        function renderPage(num) {
+            pageRendering = true;
+            pdfDoc.getPage(num).then(function(page) {
+                var viewport = page.getViewport({ scale: scale });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                var renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+                page.render(renderContext).promise.then(function() {
+                    pageRendering = false;
+                    if (pageNumPending !== null) {
+                        renderPage(pageNumPending);
+                        pageNumPending = null;
+                    }
+                });
+            });
+        }
+
+        // Get document
+        pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+            pdfDoc = pdfDoc_;
+            renderPage(pageNum);
+        });
+    </script>
+"""
+
+# Inject the custom HTML and JavaScript into the Streamlit app
+st.markdown(pdf_js_code, unsafe_allow_html=True)
+
+# Optional: Provide a download button
+with open(highlighted_pdf_path, "rb") as pdf_file:
+    st.download_button(
+        label="Download Highlighted PDF",
+        data=pdf_file,
+        file_name="highlighted_output.pdf",
+        mime="application/pdf"
+    )
