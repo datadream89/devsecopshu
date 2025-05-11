@@ -1,89 +1,131 @@
 import streamlit as st
-import json
 import os
-import re
-import base64
+import json
+import uuid
+from ai_logic.ai_backend import process_pdf_with_questions
 
-# Utility to extract digits from filename
-def extract_id(filename):
-    match = re.search(r'(\d+)', filename)
-    return match.group(1) if match else None
+# Create folders if not exists
+for folder in ["pdfs", "prompts", "references", "outputs"]:
+    os.makedirs(folder, exist_ok=True)
 
-# Load available outputs
-output_dir = "outputs"
-output_files = [f for f in os.listdir(output_dir) if f.endswith("_outcome.json")]
-pscrf_ids = [extract_id(f) for f in output_files]
+st.set_page_config(layout="wide")
+st.title("PSCRF QA Explorer")
 
-st.title("PSCRF Review Panel")
+# Session control
+if "page" not in st.session_state:
+    st.session_state.page = "upload"
 
-if "step" not in st.session_state:
-    st.session_state.step = 1
-if "selected_pscrf" not in st.session_state:
-    st.session_state.selected_pscrf = None
-if "current_index" not in st.session_state:
-    st.session_state.current_index = 0
+def go_home():
+    st.session_state.page = "upload"
 
-if st.session_state.step == 1:
-    st.subheader("Step 1: Choose PSCRF ID")
-    selected = st.selectbox("Select PSCRF ID", pscrf_ids)
-    col1, col2 = st.columns(2)
-    if col1.button("Submit"):
-        st.session_state.selected_pscrf = selected
-        st.session_state.step = 2
-        st.session_state.current_index = 0
-        st.rerun()
-    if col2.button("Home"):
-        st.session_state.step = 1
-        st.rerun()
+def go_to_select():
+    st.session_state.page = "select"
 
-elif st.session_state.step == 2:
-    st.subheader(f"Results for PSCRF ID: {st.session_state.selected_pscrf}")
+def go_to_output():
+    st.session_state.page = "output"
+    st.session_state.idx = 0
 
-    # Load output
-    filename = f"prompt_dict_{st.session_state.selected_pscrf}_outcome.json"
-    with open(os.path.join("outputs", filename), "r") as f:
-        data = json.load(f)["results"]
+# Step 1: Upload files
+if st.session_state.page == "upload":
+    st.subheader("Step 1: Upload Files")
 
-    idx = st.session_state.current_index
-    entry = data[idx]
+    pdfs = st.file_uploader("Upload PDF(s)", type="pdf", accept_multiple_files=True)
+    prompts = st.file_uploader("Upload Prompt JSON", type="json")
+    references = st.file_uploader("Upload Reference JSON(s)", type="json", accept_multiple_files=True)
 
-    st.write(f"**Scenario ID**: {entry['scenarioId']}")
-    st.write(f"**Question ID**: {entry['questionId']}")
-    st.write(f"**Question**: {entry['question']}")
-    st.write(f"**Answer**: {entry['answer']}")
-    st.write(f"**Accuracy**: {entry['accuracyLevel']}%")
-    st.write(f"**Valid**: {entry['isValid']}")
+    if st.button("Submit Uploads"):
+        if prompts:
+            with open(os.path.join("prompts", prompts.name), "wb") as f:
+                f.write(prompts.read())
 
-    st.text_area("Matched Snippet", entry["matchedSnippet"], height=200)
+        for pdf in pdfs or []:
+            with open(os.path.join("pdfs", pdf.name), "wb") as f:
+                f.write(pdf.read())
 
-    # PDF rendering with highlight
-    def render_pdf_with_highlight(pdf_path, text):
-        import fitz  # PyMuPDF
-        doc = fitz.open(pdf_path)
-        highlight_pages = []
-        for page_num, page in enumerate(doc):
-            if text in page.get_text():
-                highlight_pages.append(page_num)
-                areas = page.search_for(text)
-                for area in areas:
+        for ref in references or []:
+            with open(os.path.join("references", ref.name), "wb") as f:
+                f.write(ref.read())
+
+        go_to_select()
+
+# Step 2: Choose PSCRF ID
+elif st.session_state.page == "select":
+    st.subheader("Step 2: Select PSCRF ID")
+
+    reference_files = [f for f in os.listdir("references") if f.endswith(".json")]
+    pscrf_ids = [os.path.splitext(f)[0] for f in reference_files]
+
+    selected_id = st.selectbox("PSCRF ID", pscrf_ids)
+
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("Home"):
+            go_home()
+    with col2:
+        if st.button("Submit"):
+            prompt_path = next((os.path.join("prompts", f) for f in os.listdir("prompts") if f.endswith(".json")), None)
+            reference_path = os.path.join("references", f"{selected_id}.json")
+            pdf_path = next((os.path.join("pdfs", f) for f in os.listdir("pdfs") if selected_id in f), None)
+
+            if prompt_path and os.path.exists(reference_path) and os.path.exists(pdf_path):
+                with open(prompt_path) as f:
+                    prompt_data = json.load(f)
+                with open(reference_path) as f:
+                    reference_data = json.load(f)
+
+                results = process_pdf_with_questions(pdf_path, prompt_data, reference_data, selected_id)
+                output_file = os.path.join("outputs", f"{selected_id}_outcome.json")
+                with open(output_file, "w") as f:
+                    json.dump({"results": results}, f, indent=2)
+
+                st.session_state.selected_id = selected_id
+                st.session_state.output_data = results
+                st.session_state.pdf_path = pdf_path
+                go_to_output()
+
+# Step 3: Display Results
+elif st.session_state.page == "output":
+    st.subheader(f"Results for PSCRF ID: {st.session_state.selected_id}")
+
+    output = st.session_state.output_data
+    idx = st.session_state.idx
+    if idx >= len(output):
+        idx = 0
+    q = output[idx]
+
+    # Highlighted PDF
+    import fitz
+    doc = fitz.open(st.session_state.pdf_path)
+    snippet_parts = q["matchedSnippet"].split(". ")
+    for page in doc:
+        for part in snippet_parts:
+            part = part.strip()
+            if len(part) > 10 and part in page.get_text():
+                for area in page.search_for(part):
                     highlight = page.add_highlight_annot(area)
                     highlight.update()
-        output_path = os.path.join("pdfs", "highlighted_temp.pdf")
-        doc.save(output_path)
-        return output_path
+    unique_name = f"highlighted_{uuid.uuid4().hex[:8]}.pdf"
+    highlighted_path = os.path.join("pdfs", unique_name)
+    doc.save(highlighted_path)
 
-    input_pdf_path = os.path.join("pdfs", entry["filename"])
-    highlighted_pdf = render_pdf_with_highlight(input_pdf_path, entry["matchedSnippet"])
+    st.markdown(f'<iframe src="pdfs/{unique_name}" width="100%" height="600px"></iframe>', unsafe_allow_html=True)
 
-    with open(highlighted_pdf, "rb") as f:
-        base64_pdf = base64.b64encode(f.read()).decode("utf-8")
-        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600px" type="application/pdf"></iframe>'
-        st.markdown(pdf_display, unsafe_allow_html=True)
+    st.markdown(f"**Scenario ID:** {q['scenarioId']}")
+    st.markdown(f"**QuestionRef ID:** {q['questionRefId']}")
+    st.markdown(f"**Question:** {q['question']}")
+    st.markdown(f"**Answer:** {q['answer']}")
+    st.markdown(f"**Page Number:** {q['pageNumber']}")
+    st.markdown(f"**Accuracy:** {q['accuracyLevel']}%")
+    st.markdown(f"**Valid:** {q['isValid']}")
+    st.text_area("Snippet:", q["matchedSnippet"], height=200)
 
-    col1, col2 = st.columns(2)
-    if col1.button("Previous") and idx > 0:
-        st.session_state.current_index -= 1
-        st.rerun()
-    if col2.button("Next") and idx < len(data) - 1:
-        st.session_state.current_index += 1
-        st.rerun()
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col1:
+        if st.button("Previous") and idx > 0:
+            st.session_state.idx -= 1
+    with col2:
+        if st.button("Home"):
+            go_home()
+    with col3:
+        if st.button("Next") and idx < len(output) - 1:
+            st.session_state.idx += 1
