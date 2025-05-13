@@ -1,51 +1,68 @@
 import fitz  # PyMuPDF
-import spacy
-from rapidfuzz import process, fuzz
+import requests
+import sys
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
-# Load spaCy NLP model
-nlp = spacy.load("en_core_web_sm")
+# Load sentence embedding model
+model_embed = SentenceTransformer("all-MiniLM-L6-v2")
 
-def extract_sentences_with_page(pdf_path):
+def extract_pages(pdf_path):
     doc = fitz.open(pdf_path)
-    sentence_data = []
+    return [{'page': i + 1, 'text': doc[i].get_text().strip()} for i in range(len(doc))]
 
-    for page_num, page in enumerate(doc, start=1):
-        text = page.get_text()
-        if not text.strip():
-            continue
+def rank_pages_by_similarity(sentence, pages, top_k=3):
+    sentence_vec = model_embed.encode([sentence])
+    page_vecs = model_embed.encode([page['text'] for page in pages])
 
-        spacy_doc = nlp(text)
-        for sent in spacy_doc.sents:
-            clean_sent = sent.text.strip()
-            if clean_sent:
-                sentence_data.append({
-                    "page": page_num,
-                    "text": clean_sent
-                })
+    similarities = cosine_similarity(sentence_vec, page_vecs)[0]
+    ranked_pages = sorted(zip(pages, similarities), key=lambda x: x[1], reverse=True)
+    return [item[0] for item in ranked_pages[:top_k]]
 
-    return sentence_data
+def ask_ollama_for_page(sentence, pages, model='llama3'):
+    for page in pages:
+        prompt = f"""
+You are given a page from a PDF.
 
-def search_best_match(pdf_path, search_query, max_words=None):
-    sentences = extract_sentences_with_page(pdf_path)
+Your task is to determine if the following sentence appears on this page, either exactly or with similar meaning.
 
-    if not sentences:
-        return None
+Sentence:
+"{sentence}"
 
-    # Prepare list for matching
-    search_list = [s["text"] for s in sentences]
-    best_text, score, idx = process.extractOne(search_query, search_list, scorer=fuzz.token_set_ratio)
+Page {page['page']} content:
+\"\"\"
+{page['text']}
+\"\"\"
 
-    match = sentences[idx]
-    truncated_text = ' '.join(match["text"].split()[:max_words]) + ('...' if max_words and len(match["text"].split()) > max_words else '') if max_words else match["text"]
+If this page contains the sentence, respond with: Page {page['page']}
+If not, respond with: Not this page.
+"""
+        response = requests.post(
+            'http://localhost:11434/api/generate',
+            json={
+                "model": model,
+                "prompt": prompt,
+                "stream": False
+            }
+        )
+        reply = response.json()['response'].strip().lower()
+        if f"page {page['page']}" in reply:
+            return page['page']
+    return None
 
-    return {
-        "page": match["page"],
-        "match": truncated_text,
-        "score": score
-    }
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Usage: python hybrid_llm_with_embeddings.py <pdf_path> <sentence>")
+        sys.exit(1)
 
-# Example usage
-pdf_path = "your_document.pdf"
-query = "How do I reset my password?"
-result = search_best_match(pdf_path, query, max_words=25)
-print(result)
+    pdf_path = sys.argv[1]
+    sentence = sys.argv[2]
+
+    pages = extract_pages(pdf_path)
+    top_pages = rank_pages_by_similarity(sentence, pages, top_k=3)
+    result = ask_ollama_for_page(sentence, top_pages)
+
+    if result:
+        print(f"Sentence found on page {result}")
+    else:
+        print("Sentence not found in the document.")
