@@ -14,69 +14,64 @@ with open("sentence.json") as f:
 pdf_path = "document.pdf"
 llm = Ollama(model="llama3")
 
-# Extract all pages
-def get_pdf_pages(path):
-    doc = fitz.open(path)
-    return [{"pageNumber": i + 1, "text": doc.load_page(i).get_text()} for i in range(len(doc))]
-
-# Extract clean sentences
-def extract_sentences(text):
-    text = re.sub(r"\s+", " ", text.strip())
-    return re.split(r'(?<=[.!?]) +', text)
-
-# LLM prompts
-page_score_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You rate how relevant a PDF page is to a statement."),
+# Prompt: First find most related sentence, then judge support vs contradiction
+match_prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are an auditor. Find the most relevant sentence from the page for the given statement. Then decide if it supports or contradicts the statement."),
     ("human", """
-Statement: {statement}
-
-Rate the relevance of this PDF page on a scale of 1 (irrelevant) to 5 (very relevant).
-
-Page {pageNumber}:
-{pageContent}
-
-Respond in JSON:
-{{ "pageNumber": {pageNumber}, "score": 1–5 }}
-""")
-])
-
-sentence_match_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You evaluate if any sentence supports the statement."),
-    ("human", """
-Statement:
+Target Statement:
 {statement}
 
-Sentences from Page {pageNumber}:
+Page Sentences:
 {sentences}
+
+Steps:
+1. Identify the sentence that most directly relates to the target statement.
+2. Check whether it supports or contradicts the target statement.
+3. Return:
+- match: true or false (is a relevant sentence found?)
+- answer: "Yes" (if it supports), "No" (if it contradicts), or "Uncertain"
+- supportingSentence: the most related sentence
 
 Respond in JSON:
 {{
   "match": true or false,
   "answer": "Yes" or "No" or "Uncertain",
-  "supportingSentence": "Matching sentence or empty if none"
+  "supportingSentence": "..."
 }}
 """)
 ])
 
-# Build outcomes
+# PDF tools
+def get_pdf_pages(path):
+    doc = fitz.open(path)
+    return [{"pageNumber": i + 1, "text": doc.load_page(i).get_text()} for i in range(len(doc))]
+
+def extract_sentences(text):
+    return re.split(r'(?<=[.!?])\s+', text.strip())
+
+def score_page(statement, text):
+    words = re.findall(r'\w+', statement.lower())
+    text = text.lower()
+    return sum(1 for w in words if w in text)
+
+# Load PDF
 pages = get_pdf_pages(pdf_path)
-outcomes = []
 
-# Build lookup from sentence.json
+# Sentence lookup by questionRefId
 sentence_lookup = {q["questionRefId"]: q for q in sentence_data["questions"]}
+outcome = []
 
+# Process each question
 for scenario in pscrf_data["scenarios"]:
-    for question in scenario["questions"]:
-        qref = question["questionRefId"]
-        qdesc = sentence_lookup.get(qref, {}).get("questionDesc", "")
-        statements = sentence_lookup.get(qref, {}).get("statements", [])
-        answer_type = question.get("answerDataType", "")
-        answer_text = question.get("answerText", "")
+    for q in scenario["questions"]:
+        qref = q["questionRefId"]
+        qdesc = sentence_lookup[qref]["questionDesc"]
+        statements = sentence_lookup[qref]["statements"]
 
         entry = {
             "pscrfId": pscrf_data["pscrfId"],
             "scenarioId": scenario["scenarioId"],
-            "questionId": question["questionId"],
+            "questionId": q["questionId"],
             "questionRefId": qref,
             "questionDesc": qdesc,
             "pdfFileName": pdf_path,
@@ -84,47 +79,42 @@ for scenario in pscrf_data["scenarios"]:
         }
 
         for stmt in statements:
-            scores = []
-            for page in pages:
-                prompt = page_score_prompt.format_messages(
-                    statement=stmt,
-                    pageNumber=page["pageNumber"],
-                    pageContent=page["text"][:1000]
-                )
-                try:
-                    resp = llm.invoke(prompt)
-                    score = json.loads(resp.strip()).get("score", 0)
-                    scores.append((score, page))
-                except:
-                    continue
+            # Get top 2 likely pages by word match
+            scored_pages = sorted(
+                [(score_page(stmt, p["text"]), p) for p in pages],
+                key=lambda x: x[0],
+                reverse=True
+            )[:2]
 
-            top_pages = sorted(scores, key=lambda x: x[0], reverse=True)[:3]
+            for _, page in scored_pages:
+                sentences = extract_sentences(page["text"])[:10]
+                snippet = "\n".join(f"- {s}" for s in sentences if s.strip())
 
-            for _, page in top_pages:
-                sents = extract_sentences(page["text"])
-                prompt = sentence_match_prompt.format_messages(
+                prompt = match_prompt.format_messages(
                     statement=stmt,
-                    pageNumber=page["pageNumber"],
-                    sentences="\n".join(f"- {s}" for s in sents[:10])  # first 10 sentences
+                    sentences=snippet
                 )
+
                 try:
-                    resp = llm.invoke(prompt)
-                    parsed = json.loads(resp.strip())
+                    response = llm.invoke(prompt)
+                    parsed = json.loads(response.strip())
+
                     if parsed.get("match"):
                         entry["results"].append({
                             "pageNumber": page["pageNumber"],
-                            "excerpt": parsed.get("supportingSentence", ""),
-                            "answer": parsed.get("answer", ""),
+                            "excerpt": parsed["supportingSentence"],
+                            "answer": parsed["answer"],
                             "statement": stmt
                         })
-                        break
-                except:
+                        break  # stop after first match
+                except Exception as e:
+                    print(f"Error parsing LLM response: {e}")
                     continue
 
-        outcomes.append(entry)
+        outcome.append(entry)
 
-# Write output
+# Save output
 with open("outcome.json", "w") as f:
-    json.dump({"results": outcomes}, f, indent=2)
+    json.dump({"results": outcome}, f, indent=2)
 
-print("outcome.json created.")
+print("✅ outcome.json created.")
