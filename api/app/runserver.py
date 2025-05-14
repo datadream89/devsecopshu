@@ -45,7 +45,7 @@ Instructions:
 2. Decide if it supports or contradicts the target statement.
 3. Respond as JSON:
 {
-  \"match\": true or false,
+  \"isMatch\": true or false,
   \"answer\": \"Yes\" or \"No\" or \"Uncertain\",
   \"supportingSentence\": \"...\"
 }
@@ -110,7 +110,7 @@ for scenario in pscrf_data["scenarios"]:
             try:
                 response = llm.invoke(prompt)
                 parsed = json.loads(response.strip())
-                if parsed.get("match"):
+                if parsed.get("isMatch"):
                     entry["results"].append({
                         "pageNumber": result["pageNumber"],
                         "excerpt": parsed.get("supportingSentence", result["excerpt"]),
