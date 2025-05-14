@@ -4,9 +4,9 @@ import re
 from collections import Counter
 from langchain_community.llms import Ollama
 from langchain_core.prompts import ChatPromptTemplate
-from transformers import AutoTokenizer, AutoModel
-import torch
-import torch.nn.functional as F
+from langchain_community.embeddings import OllamaEmbeddings
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
 # Initialize PDF reader
 pdf_path = "document.pdf"
@@ -20,39 +20,26 @@ with open("sentence.json") as f:
 
 sentence_lookup = {q["questionRefId"]: q for q in sentence_data["questions"]}
 
-# Load lightweight embedding model
-tokenizer = AutoTokenizer.from_pretrained("intfloat/e5-small-v2")
-model = AutoModel.from_pretrained("intfloat/e5-small-v2")
-model.eval()
+# Initialize Ollama embeddings
+embedding_model = OllamaEmbeddings(model="llama3")
 
-# Load PDF
-def get_pdf_pages(path):
-    doc = fitz.open(path)
-    return [{"pageNumber": i + 1, "text": doc.load_page(i).get_text()} for i in range(len(doc))]
-
-# Extract sentences
-def extract_sentences(text):
-    return re.split(r'(?<=[.!?])\s+', text.strip())
-
-# Embedding utilities
-def get_embedding(text):
-    text = "query: " + text
-    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
-    with torch.no_grad():
-        outputs = model(**inputs)
-    embedding = outputs.last_hidden_state.mean(dim=1)
-    return F.normalize(embedding, p=2, dim=1).squeeze().numpy()
-
-def get_embeddings(texts):
-    return [get_embedding(text) for text in texts]
-
-def cosine_similarity(vec1, vec2):
-    return F.cosine_similarity(torch.tensor([vec1]), torch.tensor([vec2])).item()
+def get_tokenized_vector(text):
+    try:
+        vec = embedding_model.embed_query(text)
+        return np.array(vec).reshape(1, -1)
+    except Exception as e:
+        print(f"Embedding error: {e}")
+        return np.zeros((1, 4096))
 
 # Deduplication
 def deduplicate_statements(statements):
     seen = set()
-    return [s for s in statements if s not in seen and not seen.add(s)]
+    deduped = []
+    for s in statements:
+        if s not in seen:
+            seen.add(s)
+            deduped.append(s)
+    return deduped
 
 # LLM setup
 llm = Ollama(model="llama3")
@@ -78,7 +65,19 @@ Instructions:
 """)
 ])
 
-# Match sentences from PDF to statements
+# Load PDF
+
+def get_pdf_pages(path):
+    doc = fitz.open(path)
+    return [{"pageNumber": i + 1, "text": doc.load_page(i).get_text()} for i in range(len(doc))]
+
+# Extract sentences
+
+def extract_sentences(text):
+    return re.split(r'(?<=[.!?])\s+', text.strip())
+
+# Match statements from PDF to statements
+
 def match_statements_with_pdf(statements, pages):
     all_sentences = []
     for page in pages:
@@ -86,21 +85,24 @@ def match_statements_with_pdf(statements, pages):
         all_sentences.extend([(page["pageNumber"], s) for s in sentences])
 
     pdf_sentences = [s[1] for s in all_sentences]
-    pdf_embeddings = get_embeddings(pdf_sentences)
+    pdf_vectors = np.vstack([get_tokenized_vector(text) for text in pdf_sentences])
 
     matched_results = []
     for stmt in statements:
-        stmt_vec = get_embedding(stmt)
-        sims = [cosine_similarity(stmt_vec, vec) for vec in pdf_embeddings]
-        top_idx = sorted(range(len(sims)), key=lambda i: sims[i], reverse=True)[:3]
+        stmt_vec = get_tokenized_vector(stmt)
+        sims = cosine_similarity(stmt_vec, pdf_vectors)[0]
+        top_idx = sims.argsort()[-3:][::-1]
 
+        seen_sentences = set()
         for idx in top_idx:
             page_num, sentence = all_sentences[idx]
-            matched_results.append({
-                "pageNumber": page_num,
-                "excerpt": sentence,
-                "statement": stmt
-            })
+            if sentence not in seen_sentences:
+                seen_sentences.add(sentence)
+                matched_results.append({
+                    "pageNumber": page_num,
+                    "excerpt": sentence,
+                    "statement": stmt
+                })
     return matched_results
 
 # Main pipeline
@@ -140,7 +142,6 @@ for scenario in pscrf_data["scenarios"]:
                         "answer": parsed.get("answer", "Uncertain"),
                         "statement": result["statement"]
                     })
-                    break
             except Exception as e:
                 print("LLM error:", e)
                 continue
