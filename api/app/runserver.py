@@ -4,8 +4,9 @@ import re
 from collections import Counter
 from langchain_community.llms import Ollama
 from langchain_core.prompts import ChatPromptTemplate
-import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
+import numpy as np
 
 # Load input files
 with open("pscrf.json") as f:
@@ -40,6 +41,9 @@ Instructions:
 """)
 ])
 
+# Initialize Sentence-BERT model
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
 def get_pdf_pages(path):
     doc = fitz.open(path)
     return [{"pageNumber": i + 1, "text": doc.load_page(i).get_text()} for i in range(len(doc))]
@@ -48,13 +52,8 @@ def extract_sentences(text):
     return re.split(r'(?<=[.!?])\s+', text.strip())
 
 def sentence_embeddings(texts):
-    """ Get embeddings of sentences using LLM-based model (Ollama) """
-    embeddings = []
-    for text in texts:
-        response = llm.invoke(f"Generate an embedding for the following text: '{text}'")
-        embeddings.append(np.array(json.loads(response.strip())))
-
-    return np.array(embeddings)
+    """ Get embeddings of sentences using Sentence-BERT """
+    return model.encode(texts, show_progress_bar=False)
 
 def deduplicate_statements(statements):
     """ Removes duplicate statements tied to the same questionRefId """
@@ -62,7 +61,7 @@ def deduplicate_statements(statements):
     return [stmt for stmt in statements if stmt not in seen and not seen.add(stmt)]
 
 def match_statements_with_pdf(statements, pages):
-    """ Finds top matching sentences from the PDF """
+    """ Finds top matching sentences from the PDF using Sentence-BERT embeddings """
     all_sentences = []
     for page in pages:
         sentences = extract_sentences(page["text"])
@@ -166,7 +165,7 @@ for scenario in pscrf_data["scenarios"]:
         outcome.append(entry)
 
 # Save output
-with open("outcome_with_embeddings.json", "w") as f:
+with open("outcome_with_sbert.json", "w") as f:
     json.dump({"results": outcome}, f, indent=2)
 
-print("✅ outcome_with_embeddings.json created with aggregateAnswer and accuracyLevel.")
+print("✅ outcome_with_sbert.json created with aggregateAnswer and accuracyLevel.")
