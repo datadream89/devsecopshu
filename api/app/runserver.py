@@ -1,10 +1,9 @@
 import json
 import fitz  # PyMuPDF
-from langchain_core.messages import HumanMessage
 from langchain_community.llms import Ollama
 from langchain_core.prompts import ChatPromptTemplate
 
-# Load JSON files
+# Load input data
 with open("sentence.json") as f:
     sentence_data = json.load(f)
 
@@ -13,18 +12,35 @@ with open("pscrf.json") as f:
 
 pdf_path = "document.pdf"
 
-# Extract text from each page of the PDF using Fitz
+# Load PDF with fitz
 def extract_pdf_text(pdf_path):
     doc = fitz.open(pdf_path)
-    pages = [{"pageNumber": i + 1, "text": doc.load_page(i).get_text()} for i in range(doc.page_count)]
-    return pages
+    return [{"pageNumber": i + 1, "text": doc.load_page(i).get_text()} for i in range(doc.page_count)]
 
-# LangChain LLaMA LLM setup
+pages = extract_pdf_text(pdf_path)
+
+# Load LLaMA model
 llm = Ollama(model="llama3")
 
-# LangChain prompt template
-prompt_template = ChatPromptTemplate.from_messages([
-    ("system", "You are a compliance analyst reviewing whether a statement is supported by content from a PDF page."),
+# Prompt to select top N relevant pages for a statement
+selector_prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are helping match a statement to the most relevant pages of a PDF."),
+    ("human", """
+Given the following statement and PDF pages, identify the top 3 most relevant page numbers.
+
+Statement: {statement}
+
+PDF Pages:
+{page_list}
+
+Respond only with a list of the 3 most relevant page numbers in JSON format, like this:
+{{ "top_pages": [3, 5, 9] }}
+""")
+])
+
+# Prompt to verify if a specific page supports the statement
+verify_prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a compliance analyst evaluating if a statement is supported by a PDF page."),
     ("human", """
 Given the following statement and page content, determine if the page supports the statement.
 
@@ -45,17 +61,29 @@ Respond in JSON:
 
 outcome_list = []
 
-# Process each question in pscrf.json
+# Create string of pages for LLM
+def format_pages_for_llm(pages, max_chars=10000):
+    chunks = []
+    chunk = ""
+    for page in pages:
+        entry = f"Page {page['pageNumber']}: {page['text'].strip()[:800]}"
+        if len(chunk) + len(entry) > max_chars:
+            chunks.append(chunk)
+            chunk = ""
+        chunk += entry + "\n\n"
+    chunks.append(chunk)
+    return chunks
+
+formatted_chunks = format_pages_for_llm(pages)
+
+# Main loop
 for scenario in pscrf_data["scenarios"]:
     for question in scenario["questions"]:
         qref = question["questionRefId"]
-
-        # Match with sentence in sentence.json
         sentence_entry = next((q for q in sentence_data["questions"] if q["questionRefId"] == qref), None)
         if not sentence_entry:
             continue
 
-        # Prepare outcome entry for this question
         outcome_entry = {
             "pscrfId": pscrf_data["pscrfId"],
             "scenarioId": scenario["scenarioId"],
@@ -66,41 +94,45 @@ for scenario in pscrf_data["scenarios"]:
             "results": []
         }
 
-        # Extract text from PDF pages
-        pages = extract_pdf_text(pdf_path)
-
-        # Evaluate each statement against each page
         for statement in sentence_entry["statements"]:
-            for page in pages:
-                # Prepare the prompt for LLaMA
-                message = prompt_template.format_messages(
+            # Ask LLM to pick top N pages
+            response = llm.invoke(selector_prompt.format_messages(statement=statement, page_list=formatted_chunks[0]))
+            try:
+                page_numbers = json.loads(response.strip())["top_pages"]
+            except:
+                continue
+
+            # Evaluate selected pages
+            for pnum in page_numbers:
+                page = next((p for p in pages if p["pageNumber"] == pnum), None)
+                if not page:
+                    continue
+
+                msg = verify_prompt.format_messages(
                     statement=statement,
                     pageNumber=page["pageNumber"],
-                    pageContent=page["text"][:4000] if page["text"] else ""  # limit text size to prevent overflow
+                    pageContent=page["text"][:4000]
                 )
-                
-                # Get response from LLaMA
-                response = llm.invoke(message)
 
                 try:
-                    parsed = json.loads(response.strip())
+                    resp = llm.invoke(msg)
+                    parsed = json.loads(resp.strip())
                     if parsed.get("match"):
-                        # Add the result if match is found
                         outcome_entry["results"].append({
                             "pageNumber": page["pageNumber"],
                             "excerpt": parsed.get("excerpt", ""),
                             "answer": parsed.get("answer", ""),
                             "statement": statement
                         })
-                        break  # only keep the first matching page for this statement
+                        break
                 except Exception as e:
-                    print(f"Parse error: {e}\nResponse: {response}")
+                    print(f"Failed on statement: {statement}\nResponse: {resp}\nError: {e}")
                     continue
 
         outcome_list.append(outcome_entry)
 
-# Write the final outcome.json file
+# Write outcome.json
 with open("outcome.json", "w") as f:
     json.dump({"results": outcome_list}, f, indent=2)
 
-print("outcome.json successfully created using LangChain + LLaMA 3.2 + Fitz.")
+print("Generated outcome.json using LLaMA 3.2 and fitz without embeddings.")
