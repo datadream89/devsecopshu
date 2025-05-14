@@ -70,9 +70,11 @@ def extract_sentences(text):
 
 # Rank top N pages with LLM
 def rank_pages_with_llm(statement, pages, top_n=3):
-    page_snippets = "\n\n".join([f"Page {p['pageNumber']}: {p['text'][:300].replace('\\n', ' ')}..." for p in pages])
-    prompt = rank_prompt.format_messages(statement=statement, pages=page_snippets)
     try:
+        page_snippets = "\n\n".join([
+            f"Page {p['pageNumber']}: {p['text'][:300].replace('\n', ' ')}..." for p in pages
+        ])
+        prompt = rank_prompt.format_messages(statement=statement, pages=page_snippets)
         response = llm.invoke(prompt)
         ranked = json.loads(response.strip())
         return ranked[:top_n] if isinstance(ranked, list) else []
@@ -112,13 +114,10 @@ for scenario in pscrf_data["scenarios"]:
                     response = llm.invoke(prompt)
                     parsed = json.loads(response.strip())
                     if parsed.get("match"):
-                        ans = parsed.get("answer", "No")
-                        if ans not in ["Yes", "No"]:
-                            ans = "No"
                         entry["results"].append({
                             "pageNumber": page["pageNumber"],
                             "excerpt": parsed.get("supportingSentence", ""),
-                            "answer": ans,
+                            "answer": "Yes" if parsed.get("answer") == "Yes" else "No",
                             "statement": stmt
                         })
                 except Exception as e:
