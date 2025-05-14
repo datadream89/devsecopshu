@@ -43,12 +43,10 @@ Page Sentences:
 Instructions:
 1. Pick the sentence that most directly relates to the target statement.
 2. Decide if it supports or contradicts the target statement.
-3. Respond as JSON:
-{
-  \"isMatch\": true or false,
-  \"answer\": \"Yes\" or \"No\" or \"Uncertain\",
-  \"supportingSentence\": \"...\"
-}
+3. Respond in plain text format with lines:
+match: true or false
+answer: Yes or No or Uncertain
+supportingSentence: <sentence>
 """)
 ])
 
@@ -80,6 +78,19 @@ def match_statements_with_pdf(statements, pages):
             })
     return matched_results
 
+# Parse LLM plain text response
+def parse_response(text):
+    result = {"match": False, "answer": "Uncertain", "supportingSentence": ""}
+    lines = text.strip().splitlines()
+    for line in lines:
+        if line.startswith("match:"):
+            result["match"] = line.split(":", 1)[1].strip().lower() == "true"
+        elif line.startswith("answer:"):
+            result["answer"] = line.split(":", 1)[1].strip()
+        elif line.startswith("supportingSentence:"):
+            result["supportingSentence"] = line.split(":", 1)[1].strip()
+    return result
+
 # Main pipeline
 pages = get_pdf_pages(pdf_path)
 outcome = []
@@ -109,8 +120,8 @@ for scenario in pscrf_data["scenarios"]:
             )
             try:
                 response = llm.invoke(prompt)
-                parsed = json.loads(response.strip())
-                if parsed.get("isMatch"):
+                parsed = parse_response(response)
+                if parsed.get("match"):
                     entry["results"].append({
                         "pageNumber": result["pageNumber"],
                         "excerpt": parsed.get("supportingSentence", result["excerpt"]),
