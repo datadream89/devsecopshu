@@ -4,6 +4,12 @@ import re
 from collections import Counter
 from langchain_community.llms import Ollama
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import OllamaEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 # Load files
 pdf_path = "document.pdf"
@@ -14,59 +20,53 @@ with open("sentence.json") as f:
 
 sentence_lookup = {q["questionRefId"]: q for q in sentence_data["questions"]}
 
-# Deduplicate statements
-def deduplicate_statements(statements):
-    return list(dict.fromkeys(statements))
-
 # LLM setup
 llm = Ollama(model="llama3")
+embedding_model = OllamaEmbeddings(model="llama3")
 
-# Prompts
 match_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You're an AI auditor. Determine if the statement is supported by the page."),
+    ("system", "You're an AI auditor. Determine if the statement is supported by the document page chunks."),
     ("human", """
 Statement:
 {statement}
 
-Page Sentences:
-{sentences}
+Chunks:
+{text}
 
 Instructions:
-- Identify the most relevant supporting or contradicting sentence.
-- Respond in JSON: {{"match": true/false, "answer": "Yes"/"No", "supportingSentence": "..."}}
+- Identify if any chunk clearly supports or contradicts the statement.
+- Respond in JSON: {\"match\": true/false, \"answer\": \"Yes\"/\"No\", \"supportingSentence\": \"...\", \"pageNumber\": number}
 """)
 ])
 
-# Load PDF and extract text per page
-def get_pdf_pages(path):
+# Load and chunk PDF
+
+def get_pdf_chunks(path):
     doc = fitz.open(path)
-    return [{"pageNumber": i + 1, "text": doc.load_page(i).get_text()} for i in range(len(doc))]
+    pages = []
+    for i in range(len(doc)):
+        text = doc.load_page(i).get_text()
+        pages.append(Document(page_content=text, metadata={"page": i+1}))
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=80)
+    return text_splitter.split_documents(pages)
 
-def extract_sentences(text):
-    return re.split(r'(?<=[.!?])\s+', text.strip())
+# Build vector store
+chunks = get_pdf_chunks(pdf_path)
+store = FAISS.from_documents(chunks, embedding_model)
 
-# Smarter ranking using frequency + term weighting
-def rank_pages_by_overlap(statement, pages, top_n=5):
-    statement_words = set(re.findall(r'\w+', statement.lower()))
-    scores = []
-    for page in pages:
-        page_words = re.findall(r'\w+', page["text"].lower())
-        match_count = sum(1 for word in page_words if word in statement_words)
-        density = match_count / (len(page_words) + 1)
-        scores.append((page["pageNumber"], density))
-    ranked = sorted(scores, key=lambda x: x[1], reverse=True)
-    return [p for p, _ in ranked[:top_n]]
+# Deduplicate statements
+def deduplicate_statements(stmts):
+    seen = set()
+    return [s for s in stmts if not (s in seen or seen.add(s))]
 
-# Main pipeline
-pages = get_pdf_pages(pdf_path)
 outcome = []
 
 for scenario in pscrf_data["scenarios"]:
     for q in scenario["questions"]:
         qref = q["questionRefId"]
-        question_meta = sentence_lookup.get(qref, {})
-        qdesc = question_meta.get("questionDesc", "")
-        statements = deduplicate_statements(question_meta.get("statements", []))
+        qmeta = sentence_lookup.get(qref, {})
+        qdesc = qmeta.get("questionDesc", "")
+        stmts = deduplicate_statements(qmeta.get("statements", []))
 
         entry = {
             "pscrfId": pscrf_data["pscrfId"],
@@ -78,25 +78,26 @@ for scenario in pscrf_data["scenarios"]:
             "results": []
         }
 
-        for stmt in statements:
-            top_pages = [p for p in pages if p["pageNumber"] in rank_pages_by_overlap(stmt, pages, top_n=4)]
-
+        for stmt in stmts:
+            top_chunks = store.similarity_search(stmt, k=5)
+            best_score = -1
             best_result = None
-            for page in top_pages:
-                context = "\n".join(extract_sentences(page["text"]))
-                prompt = match_prompt.format_messages(statement=stmt, sentences=context)
+
+            for chunk in top_chunks:
+                prompt = match_prompt.format_messages(statement=stmt, text=chunk.page_content)
                 try:
-                    response = llm.invoke(prompt)
-                    parsed = json.loads(response.strip())
-                    sent = parsed.get("supportingSentence", "")
-                    if parsed.get("match") and len(sent.split()) >= 5:
-                        best_result = {
-                            "pageNumber": page["pageNumber"],
-                            "excerpt": sent,
-                            "answer": parsed.get("answer", "No"),
-                            "statement": stmt
-                        }
-                        break  # take best early match
+                    res = llm.invoke(prompt)
+                    parsed = json.loads(res.strip())
+                    if parsed.get("match") and len(parsed.get("supportingSentence", "").split()) >= 5:
+                        overlap = len(set(re.findall(r'\w+', stmt.lower())) & set(re.findall(r'\w+', parsed["supportingSentence"].lower())))
+                        if overlap > best_score:
+                            best_score = overlap
+                            best_result = {
+                                "pageNumber": parsed.get("pageNumber", chunk.metadata.get("page", 0)),
+                                "excerpt": parsed["supportingSentence"],
+                                "answer": parsed["answer"],
+                                "statement": stmt
+                            }
                 except Exception as e:
                     print("LLM error:", e)
 
