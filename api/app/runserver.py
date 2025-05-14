@@ -4,21 +4,17 @@ import re
 from collections import Counter
 from langchain_community.llms import Ollama
 from langchain_core.prompts import ChatPromptTemplate
-from rapidfuzz import fuzz
-
-# Initialize PDF reader
-pdf_path = "document.pdf"
 
 # Load files
+pdf_path = "document.pdf"
 with open("pscrf.json") as f:
     pscrf_data = json.load(f)
-
 with open("sentence.json") as f:
     sentence_data = json.load(f)
 
 sentence_lookup = {q["questionRefId"]: q for q in sentence_data["questions"]}
 
-# Deduplication
+# Deduplicate statements
 def deduplicate_statements(statements):
     seen = set()
     deduped = []
@@ -31,26 +27,39 @@ def deduplicate_statements(statements):
 # LLM setup
 llm = Ollama(model="llama3")
 
-match_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are an auditor. Identify if a statement is supported or contradicted by the page."),
+# Prompts
+rank_prompt = ChatPromptTemplate.from_messages([
+    ("system", "You're a smart auditor. Given a statement and page snippets, rank pages most likely to contain the statement."),
     ("human", """
-Target Statement:
+Statement:
+{statement}
+
+Page Snippets:
+{pages}
+
+Respond with JSON array of ranked page numbers in decreasing order of relevance.
+Output:
+[<int>, <int>, ...]
+""")
+])
+
+match_prompt = ChatPromptTemplate.from_messages([
+    ("system", "You're an AI auditor. Identify if the statement is supported by the page."),
+    ("human", """
+Statement:
 {statement}
 
 Page Sentences:
 {sentences}
 
 Instructions:
-1. Pick the sentence that most directly relates to the target statement.
-2. Decide if it supports or contradicts the target statement.
-3. Respond in plain text format with lines:
-match: true or false
-answer: Yes or No or Uncertain
-supportingSentence: <sentence>
+- Find the most related sentence.
+- State if it supports or contradicts the statement.
+- Respond in JSON with fields: match (bool), answer (Yes/No), supportingSentence (str)
 """)
 ])
 
-# Load PDF
+# Load PDF pages
 def get_pdf_pages(path):
     doc = fitz.open(path)
     return [{"pageNumber": i + 1, "text": doc.load_page(i).get_text()} for i in range(len(doc))]
@@ -59,37 +68,17 @@ def get_pdf_pages(path):
 def extract_sentences(text):
     return re.split(r'(?<=[.!?])\s+', text.strip())
 
-# Match statements with PDF using fuzzy match
-def match_statements_with_pdf(statements, pages):
-    all_sentences = []
-    for page in pages:
-        sentences = extract_sentences(page["text"])
-        for s in sentences:
-            all_sentences.append({"pageNumber": page["pageNumber"], "sentence": s})
-
-    matched_results = []
-    for stmt in statements:
-        ranked = sorted(all_sentences, key=lambda x: fuzz.token_set_ratio(x["sentence"], stmt), reverse=True)[:3]
-        for match in ranked:
-            matched_results.append({
-                "pageNumber": match["pageNumber"],
-                "excerpt": match["sentence"],
-                "statement": stmt
-            })
-    return matched_results
-
-# Parse LLM plain text response
-def parse_response(text):
-    result = {"match": False, "answer": "Uncertain", "supportingSentence": ""}
-    lines = text.strip().splitlines()
-    for line in lines:
-        if line.startswith("match:"):
-            result["match"] = line.split(":", 1)[1].strip().lower() == "true"
-        elif line.startswith("answer:"):
-            result["answer"] = line.split(":", 1)[1].strip()
-        elif line.startswith("supportingSentence:"):
-            result["supportingSentence"] = line.split(":", 1)[1].strip()
-    return result
+# Rank top N pages with LLM
+def rank_pages_with_llm(statement, pages, top_n=3):
+    page_snippets = "\n\n".join([f"Page {p['pageNumber']}: {p['text'][:300].replace('\\n', ' ')}..." for p in pages])
+    prompt = rank_prompt.format_messages(statement=statement, pages=page_snippets)
+    try:
+        response = llm.invoke(prompt)
+        ranked = json.loads(response.strip())
+        return ranked[:top_n] if isinstance(ranked, list) else []
+    except Exception as e:
+        print("Ranking LLM error:", e)
+        return list(range(1, top_n + 1))
 
 # Main pipeline
 pages = get_pdf_pages(pdf_path)
@@ -111,34 +100,33 @@ for scenario in pscrf_data["scenarios"]:
             "results": []
         }
 
-        matched = match_statements_with_pdf(statements, pages)
+        for stmt in statements:
+            top_page_nums = rank_pages_with_llm(stmt, pages)
+            relevant_pages = [p for p in pages if p["pageNumber"] in top_page_nums]
 
-        for result in matched:
-            prompt = match_prompt.format_messages(
-                statement=result["statement"],
-                sentences=result["excerpt"]
-            )
-            try:
-                response = llm.invoke(prompt)
-                parsed = parse_response(response)
-                if parsed.get("match"):
-                    entry["results"].append({
-                        "pageNumber": result["pageNumber"],
-                        "excerpt": parsed.get("supportingSentence", result["excerpt"]),
-                        "answer": parsed.get("answer", "Uncertain"),
-                        "statement": result["statement"]
-                    })
-            except Exception as e:
-                print("LLM error:", e)
-                continue
+            for page in relevant_pages:
+                sentences = extract_sentences(page["text"])
+                context = "\n".join(sentences[:15])
+                prompt = match_prompt.format_messages(statement=stmt, sentences=context)
+                try:
+                    response = llm.invoke(prompt)
+                    parsed = json.loads(response.strip())
+                    if parsed.get("match"):
+                        ans = parsed.get("answer", "No")
+                        if ans not in ["Yes", "No"]:
+                            ans = "No"
+                        entry["results"].append({
+                            "pageNumber": page["pageNumber"],
+                            "excerpt": parsed.get("supportingSentence", ""),
+                            "answer": ans,
+                            "statement": stmt
+                        })
+                except Exception as e:
+                    print("LLM match error:", e)
 
         answers = [r["answer"] for r in entry["results"]]
         count = Counter(answers)
-        if count:
-            agg = count.most_common(1)[0][0]
-        else:
-            agg = "Uncertain"
-
+        agg = count.most_common(1)[0][0] if count else "No"
         entry["aggregateAnswer"] = agg
         entry["accuracyLevel"] = (
             "High" if count[agg] == len(answers) else
