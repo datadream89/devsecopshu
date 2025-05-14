@@ -28,21 +28,6 @@ def deduplicate_statements(statements):
 llm = Ollama(model="llama3")
 
 # Prompts
-rank_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You're a smart auditor. Given a statement and page snippets, rank pages most likely to contain the statement."),
-    ("human", """
-Statement:
-{statement}
-
-Page Snippets:
-{pages}
-
-Respond with JSON array of ranked page numbers in decreasing order of relevance.
-Output:
-[<int>, <int>, ...]
-""")
-])
-
 match_prompt = ChatPromptTemplate.from_messages([
     ("system", "You're an AI auditor. Identify if the statement is supported by the page."),
     ("human", """
@@ -68,19 +53,18 @@ def get_pdf_pages(path):
 def extract_sentences(text):
     return re.split(r'(?<=[.!?])\s+', text.strip())
 
-# Rank top N pages with LLM
-def rank_pages_with_llm(statement, pages, top_n=3):
-    try:
-        page_snippets = "\n\n".join([
-            f"Page {p['pageNumber']}: {p['text'][:300].replace('\n', ' ')}..." for p in pages
-        ])
-        prompt = rank_prompt.format_messages(statement=statement, pages=page_snippets)
-        response = llm.invoke(prompt)
-        ranked = json.loads(response.strip())
-        return ranked[:top_n] if isinstance(ranked, list) else []
-    except Exception as e:
-        print("Ranking LLM error:", e)
-        return list(range(1, top_n + 1))
+# Heuristic ranking: keyword overlap
+def keyword_overlap_rank(statement, pages, top_n=5):
+    keywords = set(re.findall(r'\w+', statement.lower()))
+    page_scores = []
+
+    for page in pages:
+        page_words = set(re.findall(r'\w+', page["text"].lower()))
+        score = len(keywords & page_words)
+        page_scores.append((page["pageNumber"], score))
+
+    ranked = sorted(page_scores, key=lambda x: x[1], reverse=True)
+    return [page_num for page_num, _ in ranked[:top_n]]
 
 # Main pipeline
 pages = get_pdf_pages(pdf_path)
@@ -103,7 +87,7 @@ for scenario in pscrf_data["scenarios"]:
         }
 
         for stmt in statements:
-            top_page_nums = rank_pages_with_llm(stmt, pages)
+            top_page_nums = keyword_overlap_rank(stmt, pages, top_n=5)
             relevant_pages = [p for p in pages if p["pageNumber"] in top_page_nums]
 
             for page in relevant_pages:
@@ -117,7 +101,7 @@ for scenario in pscrf_data["scenarios"]:
                         entry["results"].append({
                             "pageNumber": page["pageNumber"],
                             "excerpt": parsed.get("supportingSentence", ""),
-                            "answer": "Yes" if parsed.get("answer") == "Yes" else "No",
+                            "answer": parsed.get("answer", "No"),
                             "statement": stmt
                         })
                 except Exception as e:
