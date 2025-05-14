@@ -4,9 +4,7 @@ import re
 from collections import Counter
 from langchain_community.llms import Ollama
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.embeddings import OllamaEmbeddings
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
+from rapidfuzz import fuzz
 
 # Initialize PDF reader
 pdf_path = "document.pdf"
@@ -19,17 +17,6 @@ with open("sentence.json") as f:
     sentence_data = json.load(f)
 
 sentence_lookup = {q["questionRefId"]: q for q in sentence_data["questions"]}
-
-# Initialize Ollama embeddings
-embedding_model = OllamaEmbeddings(model="llama3")
-
-def get_tokenized_vector(text):
-    try:
-        vec = embedding_model.embed_query(text)
-        return np.array(vec).reshape(1, -1)
-    except Exception as e:
-        print(f"Embedding error: {e}")
-        return np.zeros((1, 4096))
 
 # Deduplication
 def deduplicate_statements(statements):
@@ -66,43 +53,31 @@ Instructions:
 ])
 
 # Load PDF
-
 def get_pdf_pages(path):
     doc = fitz.open(path)
     return [{"pageNumber": i + 1, "text": doc.load_page(i).get_text()} for i in range(len(doc))]
 
 # Extract sentences
-
 def extract_sentences(text):
     return re.split(r'(?<=[.!?])\s+', text.strip())
 
-# Match statements from PDF to statements
-
+# Match statements with PDF using fuzzy match
 def match_statements_with_pdf(statements, pages):
     all_sentences = []
     for page in pages:
         sentences = extract_sentences(page["text"])
-        all_sentences.extend([(page["pageNumber"], s) for s in sentences])
-
-    pdf_sentences = [s[1] for s in all_sentences]
-    pdf_vectors = np.vstack([get_tokenized_vector(text) for text in pdf_sentences])
+        for s in sentences:
+            all_sentences.append({"pageNumber": page["pageNumber"], "sentence": s})
 
     matched_results = []
     for stmt in statements:
-        stmt_vec = get_tokenized_vector(stmt)
-        sims = cosine_similarity(stmt_vec, pdf_vectors)[0]
-        top_idx = sims.argsort()[-3:][::-1]
-
-        seen_sentences = set()
-        for idx in top_idx:
-            page_num, sentence = all_sentences[idx]
-            if sentence not in seen_sentences:
-                seen_sentences.add(sentence)
-                matched_results.append({
-                    "pageNumber": page_num,
-                    "excerpt": sentence,
-                    "statement": stmt
-                })
+        ranked = sorted(all_sentences, key=lambda x: fuzz.token_set_ratio(x["sentence"], stmt), reverse=True)[:3]
+        for match in ranked:
+            matched_results.append({
+                "pageNumber": match["pageNumber"],
+                "excerpt": match["sentence"],
+                "statement": stmt
+            })
     return matched_results
 
 # Main pipeline
@@ -138,7 +113,7 @@ for scenario in pscrf_data["scenarios"]:
                 if parsed.get("match"):
                     entry["results"].append({
                         "pageNumber": result["pageNumber"],
-                        "excerpt": parsed.get("supportingSentence", ""),
+                        "excerpt": parsed.get("supportingSentence", result["excerpt"]),
                         "answer": parsed.get("answer", "Uncertain"),
                         "statement": result["statement"]
                     })
