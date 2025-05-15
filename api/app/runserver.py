@@ -36,7 +36,7 @@ Chunks:
 
 Instructions:
 - Identify if any chunk clearly supports or contradicts the statement.
-- Respond in JSON: {\"match\": true/false, \"answer\": \"Yes\"/\"No\", \"supportingSentence\": \"...\", \"pageNumber\": number}
+- Respond in JSON: {\"match\": true/false, \"answer\": \"Yes\"/\"No\", \"supportingSentence\": \"...\", \"pageNumber\": number, \"section\": \"...\"}
 """)
 ])
 
@@ -95,7 +95,8 @@ for scenario in pscrf_data["scenarios"]:
                                     "pageNumber": parsed.get("pageNumber", chunk.metadata.get("page", 0)),
                                     "excerpt": parsed["supportingSentence"],
                                     "answer": parsed.get("answer", "No"),
-                                    "statement": stmt
+                                    "statement": stmt,
+                                    "section": parsed.get("section", "")
                                 }
                     except Exception as e:
                         print("LLM error:", e)
@@ -107,12 +108,16 @@ for scenario in pscrf_data["scenarios"]:
         else:
             for ref_key in refs:
                 ref_entry = ref_lookup.get(ref_key, {})
-                section_text = ""
+                best_match_section = ""
+                best_score = 0
                 for page_num in range(len(pdf_doc)):
                     page_text = pdf_doc[page_num].get_text()
-                    if ref_key.lower() in page_text.lower():
-                        section_text = page_text
-                        break
+                    score = len(set(ref_key.lower().split()) & set(page_text.lower().split()))
+                    if score > best_score:
+                        best_score = score
+                        best_match_section = page_text
+                section_text = best_match_section if best_match_section else ref_key
+
                 for src in ref_entry.get("source", []):
                     for val in src.get("values", []):
                         prompt = match_prompt.format_messages(statement=section_text, text=val)
@@ -126,7 +131,8 @@ for scenario in pscrf_data["scenarios"]:
                                     "answer": parsed.get("answer", "No"),
                                     "statement": section_text,
                                     "referenceKey": ref_key,
-                                    "sourceKey": src["key"]
+                                    "sourceKey": src["key"],
+                                    "section": parsed.get("section", "")
                                 })
                         except Exception as e:
                             print("LLM error:", e)
