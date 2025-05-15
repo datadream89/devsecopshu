@@ -108,15 +108,17 @@ for scenario in pscrf_data["scenarios"]:
         else:
             for ref_key in refs:
                 ref_entry = ref_lookup.get(ref_key, {})
-                best_match_section = ""
+                best_match_paragraph = ""
                 best_score = 0
                 for page_num in range(len(pdf_doc)):
-                    page_text = pdf_doc[page_num].get_text()
-                    score = len(set(ref_key.lower().split()) & set(page_text.lower().split()))
-                    if score > best_score:
-                        best_score = score
-                        best_match_section = page_text
-                section_text = best_match_section if best_match_section else ref_key
+                    text = pdf_doc[page_num].get_text("text")
+                    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+                    for para in paragraphs:
+                        score = len(set(ref_key.lower().split()) & set(para.lower().split()))
+                        if score > best_score:
+                            best_score = score
+                            best_match_paragraph = para
+                section_text = best_match_paragraph if best_match_paragraph else ref_key
 
                 for src in ref_entry.get("source", []):
                     for val in src.get("values", []):
