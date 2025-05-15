@@ -1,28 +1,52 @@
-import fitz  # PyMuPDF
-import os
+import fitz
 
-def split_pdf_by_blocks(pdf_path, output_dir):
-    os.makedirs(output_dir, exist_ok=True)
+def find_closest_paragraph_string_to_term(pdf_path, para1, para2, target_term):
     doc = fitz.open(pdf_path)
 
-    para_count = 0
+    paras = [para1.strip(), para2.strip()]
+    para_matches = []
+
+    # Step 1: Find positions of both paragraphs in the PDF
     for page_num in range(len(doc)):
         page = doc.load_page(page_num)
-        blocks = page.get_text("blocks")  # returns list of (x0, y0, x1, y1, "text", block_no, block_type)
-
+        blocks = page.get_text("blocks")
         for block in blocks:
             text = block[4].strip()
-            if not text:
-                continue
-            # Optional: filter out headers/footers or non-text blocks
-            para_doc = fitz.open()
-            para_page = para_doc.new_page()
-            para_page.insert_text((72, 72), text, fontsize=11)
-            para_doc.save(os.path.join(output_dir, f"paragraph_{para_count:03}.pdf"))
-            para_doc.close()
-            para_count += 1
+            for para in paras:
+                if para in text:
+                    para_matches.append({
+                        "text": para,
+                        "page": page_num,
+                        "bbox": block[:4]
+                    })
 
-    print(f"Saved {para_count} blocks in '{output_dir}'")
+    # Step 2: Find all blocks containing the target term
+    target_locs = []
+    for page_num in range(len(doc)):
+        page = doc.load_page(page_num)
+        blocks = page.get_text("blocks")
+        for block in blocks:
+            if target_term.lower() in block[4].lower():
+                target_locs.append({
+                    "page": page_num,
+                    "bbox": block[:4]
+                })
 
-# Example usage
-split_pdf_by_blocks("example.pdf", "output_blocks")
+    # Step 3: Find closest paragraph to target term
+    def get_distance(b1, b2):
+        cx1, cy1 = (b1[0] + b1[2]) / 2, (b1[1] + b1[3]) / 2
+        cx2, cy2 = (b2[0] + b2[2]) / 2, (b2[1] + b2[3]) / 2
+        return ((cx1 - cx2) ** 2 + (cy1 - cy2) ** 2) ** 0.5
+
+    closest_para = None
+    min_distance = float("inf")
+
+    for para in para_matches:
+        for target in target_locs:
+            if para["page"] == target["page"]:
+                dist = get_distance(para["bbox"], target["bbox"])
+                if dist < min_distance:
+                    min_distance = dist
+                    closest_para = {**para, "distance": round(dist, 2)}
+
+    return closest_para
