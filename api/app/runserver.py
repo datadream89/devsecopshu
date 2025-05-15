@@ -18,8 +18,8 @@ with open("statements.json") as f:
 with open("references.json") as f:
     reference_data = json.load(f)
 
-reference_lookup = {ref["key"]: ref for ref in reference_data["references"]}
 statement_lookup = {q["questionRefId"]: q for q in statement_data["questions"]}
+ref_lookup = {ref["key"]: ref for ref in reference_data["references"]}
 
 # LLM setup
 llm = Ollama(model="llama3")
@@ -41,72 +41,59 @@ Instructions:
 ])
 
 # Load and chunk PDF
-
 def get_pdf_chunks(path):
     doc = fitz.open(path)
     pages = []
     for i in range(len(doc)):
         text = doc.load_page(i).get_text()
-        pages.append(Document(page_content=text, metadata={"page": i + 1}))
+        pages.append(Document(page_content=text, metadata={"page": i+1}))
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=80)
-    return text_splitter.split_documents(pages), pages
+    return text_splitter.split_documents(pages), doc
 
-chunks, pages = get_pdf_chunks(pdf_path)
+chunks, pdf_doc = get_pdf_chunks(pdf_path)
 store = Chroma.from_documents(chunks, embedding_model)
-
-# PDF paragraph lookup for reference keys
-def find_paragraph_for_key(key):
-    for page in pages:
-        if key.lower() in page.page_content.lower():
-            return page.page_content.strip(), page.metadata["page"]
-    return "", 0
-
-# Deduplicate statements
-def deduplicate_statements(stmts):
-    seen = set()
-    return [s for s in stmts if not (s in seen or seen.add(s))]
 
 outcome = []
 
 for scenario in pscrf_data["scenarios"]:
     for q in scenario["questions"]:
         qref = q["questionRefId"]
-        question_entry = statement_lookup.get(qref, {})
-        references = question_entry.get("references", [])
+        qmeta = statement_lookup.get(qref, {})
+        qdesc = qmeta.get("questionDesc", "")
+        refs = qmeta.get("references", [])
+        answer_type = qmeta.get("answerDataType", "YN")
 
         entry = {
             "pscrfId": pscrf_data["pscrfId"],
             "scenarioId": scenario["scenarioId"],
             "questionId": q["questionId"],
             "questionRefId": qref,
-            "questionDesc": question_entry.get("questionDesc", ""),
+            "questionDesc": qdesc,
             "pdfFileName": pdf_path,
+            "answerDataType": answer_type,
             "results": []
         }
 
-        if not references:
-            stmts = deduplicate_statements(question_entry.get("statements", []))
-            for stmt in stmts:
+        # Case 1: use regular statements
+        if not refs:
+            statements = qmeta.get("statements", [])
+            for stmt in statements:
                 top_chunks = store.similarity_search(stmt, k=5)
                 best_score = -1
                 best_result = None
 
                 for chunk in top_chunks:
-                    prompt = match_prompt.format_messages(
-                        statement=stmt,
-                        text=json.dumps({"text": chunk.page_content})
-                    )
+                    prompt = match_prompt.format_messages(statement=stmt, text=chunk.page_content)
                     try:
                         res = llm.invoke(prompt)
                         parsed = json.loads(res.strip())
                         if parsed.get("match") and len(parsed.get("supportingSentence", "").split()) >= 5:
-                            overlap = len(set(re.findall(r'\w+', stmt.lower())) &
-                                           set(re.findall(r'\w+', parsed["supportingSentence"].lower())))
+                            overlap = len(set(re.findall(r'\w+', stmt.lower())) & set(re.findall(r'\w+', parsed["supportingSentence"].lower())))
                             if overlap > best_score:
                                 best_score = overlap
                                 best_result = {
                                     "pageNumber": parsed.get("pageNumber", chunk.metadata.get("page", 0)),
-                                    "excerpt": parsed.get("supportingSentence", ""),
+                                    "excerpt": parsed["supportingSentence"],
                                     "answer": parsed.get("answer", "No"),
                                     "statement": stmt
                                 }
@@ -116,31 +103,33 @@ for scenario in pscrf_data["scenarios"]:
                 if best_result:
                     entry["results"].append(best_result)
 
+        # Case 2: use references
         else:
-            for ref_key in references:
-                paragraph, page = find_paragraph_for_key(ref_key)
-                if paragraph:
-                    ref_entry = reference_lookup.get(ref_key, {})
-                    for source in ref_entry.get("source", []):
-                        for value in source.get("values", []):
-                            prompt = match_prompt.format_messages(
-                                statement=paragraph,
-                                text=json.dumps({"text": value})
-                            )
-                            try:
-                                res = llm.invoke(prompt)
-                                parsed = json.loads(res.strip())
-                                if parsed.get("match") and len(parsed.get("supportingSentence", "").split()) >= 5:
-                                    overlap = len(set(re.findall(r'\w+', paragraph.lower())) &
-                                                   set(re.findall(r'\w+', parsed["supportingSentence"].lower())))
-                                    entry["results"].append({
-                                        "pageNumber": parsed.get("pageNumber", page),
-                                        "excerpt": parsed.get("supportingSentence", ""),
-                                        "answer": parsed.get("answer", "No"),
-                                        "statement": paragraph
-                                    })
-                            except Exception as e:
-                                print("LLM error:", e)
+            for ref_key in refs:
+                ref_entry = ref_lookup.get(ref_key, {})
+                section_text = ""
+                for page_num in range(len(pdf_doc)):
+                    page_text = pdf_doc[page_num].get_text()
+                    if ref_key.lower() in page_text.lower():
+                        section_text = page_text
+                        break
+                for src in ref_entry.get("source", []):
+                    for val in src.get("values", []):
+                        prompt = match_prompt.format_messages(statement=section_text, text=val)
+                        try:
+                            res = llm.invoke(prompt)
+                            parsed = json.loads(res.strip())
+                            if parsed.get("match") and len(parsed.get("supportingSentence", "").split()) >= 5:
+                                entry["results"].append({
+                                    "pageNumber": parsed.get("pageNumber", 0),
+                                    "excerpt": parsed["supportingSentence"],
+                                    "answer": parsed.get("answer", "No"),
+                                    "statement": section_text,
+                                    "referenceKey": ref_key,
+                                    "sourceKey": src["key"]
+                                })
+                        except Exception as e:
+                            print("LLM error:", e)
 
         answers = [r["answer"] for r in entry["results"]]
         count = Counter(answers)
