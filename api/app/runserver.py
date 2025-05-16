@@ -1,192 +1,40 @@
-import json
-import fitz
-import re
-from collections import Counter
-from langchain_community.llms import Ollama
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.embeddings import OllamaEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
-from langchain.vectorstores import Chroma
+FROM amazonlinux:2023
 
-def normalize_text(text):
-    # Basic normalization: replace smart quotes, newlines, multiple spaces
-    text = text.replace('\u201c', '"').replace('\u201d', '"').replace('\u2019', "'")
-    text = text.replace('\n', ' ').replace('\r', ' ')
-    text = re.sub(r'\s+', ' ', text)
-    return text.strip()
+# Install build tools and dependencies
+RUN yum groupinstall -y "Development Tools" && \
+    yum install -y \
+    gcc gcc-c++ gcc-gfortran \
+    readline-devel \
+    zlib-devel \
+    bzip2-devel \
+    xz-devel \
+    libcurl-devel \
+    libpng-devel \
+    libjpeg-devel \
+    cairo-devel \
+    pango-devel \
+    freetype-devel \
+    tcl-devel \
+    tk-devel \
+    texinfo \
+    tar \
+    curl \
+    make \
+    openssl-devel \
+    libX11-devel \
+    libXt-devel
 
-# Load files
-pdf_path = "document.pdf"
-with open("pscrf.json") as f:
-    pscrf_data = json.load(f)
-with open("statements.json") as f:
-    statement_data = json.load(f)
-with open("references.json") as f:
-    reference_data = json.load(f)
+# Download and install R from source
+ENV R_VERSION=4.3.1
+RUN curl -O https://cran.r-project.org/src/base/R-4/R-${R_VERSION}.tar.gz && \
+    tar -xzf R-${R_VERSION}.tar.gz && \
+    cd R-${R_VERSION} && \
+    ./configure --enable-R-shlib && \
+    make && make install && \
+    cd .. && rm -rf R-${R_VERSION}*
 
-statement_lookup = {q["questionRefId"]: q for q in statement_data["questions"]}
-ref_lookup = {ref["key"]: ref for ref in reference_data["references"]}
+# Install a sample R package
+RUN Rscript -e "install.packages('ggplot2', repos='https://cloud.r-project.org')"
 
-# LLM setup
-llm = Ollama(model="llama3")
-embedding_model = OllamaEmbeddings(model="llama3")
-
-match_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You're an AI auditor. Determine if the statement is supported by the document page chunks."),
-    ("human", """
-Statement:
-{statement}
-
-Chunks:
-{text}
-
-Instructions:
-- Identify if any chunk clearly supports or contradicts the statement.
-- Respond in JSON: {{"match": true/false, "answer": "Yes"/"No", "supportingSentence": "..."}}
-""")
-])
-
-definition_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are an AI assistant that extracts definitions."),
-    ("human", """
-Given the following paragraph from a document:
-
-{paragraph}
-
-Please extract the definition of the term "{term}" if present. If no definition is found, respond with "No definition found."
-
-Respond in JSON format:
-{{"definition": "..."}}
-""")
-])
-
-# Load and chunk PDF
-def get_pdf_chunks(path):
-    doc = fitz.open(path)
-    pages = []
-    for i in range(len(doc)):
-        text = doc.load_page(i).get_text()
-        pages.append(Document(page_content=text, metadata={"page": i+1}))
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=80)
-    return text_splitter.split_documents(pages), doc
-
-chunks, pdf_doc = get_pdf_chunks(pdf_path)
-store = Chroma.from_documents(chunks, embedding_model)
-
-outcome = []
-
-for scenario in pscrf_data["scenarios"]:
-    for q in scenario["questions"]:
-        qref = q["questionRefId"]
-        qmeta = statement_lookup.get(qref, {})
-        qdesc = qmeta.get("questionDesc", "")
-        refs = qmeta.get("references", [])
-        answer_type = qmeta.get("answerDataType", "YN")
-
-        entry = {
-            "pscrfId": pscrf_data["pscrfId"],
-            "scenarioId": scenario["scenarioId"],
-            "questionId": q["questionId"],
-            "questionRefId": qref,
-            "questionDesc": qdesc,
-            "pdfFileName": pdf_path,
-            "answerDataType": answer_type,
-            "results": []
-        }
-
-        # Case 1: use regular statements (no references)
-        if not refs:
-            statements = qmeta.get("statements", [])
-            for stmt in statements:
-                top_chunks = store.similarity_search(stmt, k=5)
-                best_score = -1
-                best_result = None
-
-                for chunk in top_chunks:
-                    prompt = match_prompt.format_messages(statement=stmt, text=chunk.page_content)
-                    try:
-                        res = llm.invoke(prompt)
-                        parsed = json.loads(res.strip())
-                        if parsed.get("match") and len(parsed.get("supportingSentence", "").split()) >= 5:
-                            overlap = len(set(re.findall(r'\w+', stmt.lower())) & set(re.findall(r'\w+', parsed["supportingSentence"].lower())))
-                            if overlap > best_score:
-                                best_score = overlap
-                                best_result = {
-                                    "pageNumber": chunk.metadata.get("page", 0),
-                                    "excerpt": parsed["supportingSentence"],
-                                    "answer": parsed.get("answer", "No"),
-                                    "statement": stmt
-                                }
-                    except Exception as e:
-                        print("LLM error:", e)
-
-                if best_result:
-                    entry["results"].append(best_result)
-
-        # Case 2: references populated — get paragraph & extract definition
-        else:
-            for ref_key in refs:
-                ref_entry = ref_lookup.get(ref_key, {})
-
-                # Find paragraph in PDF best matching the ref_key
-                best_match_paragraph = ""
-                best_page = 0
-                best_score = 0
-                for page_num in range(len(pdf_doc)):
-                    text = pdf_doc[page_num].get_text("text")
-                    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
-                    for para in paragraphs:
-                        # Simple token overlap scoring
-                        score = len(set(ref_key.lower().split()) & set(para.lower().split()))
-                        if score > best_score:
-                            best_score = score
-                            best_match_paragraph = para
-                            best_page = page_num + 1
-
-                if not best_match_paragraph:
-                    best_match_paragraph = ref_key
-
-                # Get definition from paragraph
-                try:
-                    def_prompt = definition_prompt.format_messages(paragraph=best_match_paragraph, term=ref_key)
-                    def_res = llm.invoke(def_prompt)
-                    def_parsed = json.loads(def_res.strip())
-                    definition = def_parsed.get("definition", "No definition found.")
-                    normalized_def = normalize_text(definition)
-                except Exception as e:
-                    print("LLM error getting definition:", e)
-                    normalized_def = "No definition found."
-
-                # For each source value, run match prompt with definition as statement
-                for src in ref_entry.get("source", []):
-                    for val in src.get("values", []):
-                        prompt = match_prompt.format_messages(statement=normalized_def, text=val)
-                        try:
-                            res = llm.invoke(prompt)
-                            parsed = json.loads(res.strip())
-                            if parsed.get("match") and len(parsed.get("supportingSentence", "").split()) >= 5:
-                                entry["results"].append({
-                                    "pageNumber": best_page,
-                                    "excerpt": parsed["supportingSentence"],
-                                    "answer": parsed.get("answer", "No"),
-                                    "statement": normalized_def
-                                })
-                        except Exception as e:
-                            print("LLM error:", e)
-
-        answers = [r["answer"] for r in entry["results"]]
-        count = Counter(answers)
-        agg = count.most_common(1)[0][0] if count else "No"
-        entry["aggregateAnswer"] = agg
-        entry["accuracyLevel"] = (
-            "High" if count[agg] == len(answers) else
-            "Medium" if count[agg] > 1 else "Low"
-        )
-
-        outcome.append(entry)
-
-with open("outcome.json", "w") as f:
-    json.dump({"results": outcome}, f, indent=2)
-
-print(json.dumps({"results": outcome}, indent=2))
+# Default command
+CMD ["Rscript", "-e", "print('Hello from R on Amazon Linux!')"]
