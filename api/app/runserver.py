@@ -2,55 +2,58 @@ import pdfplumber
 import re
 import json
 
-def extract_sections_by_paragraphs(pdf_path):
-    # Pattern to match numbered section headers: "1", "1.1", "2.3.4 Title"
-    section_pattern = re.compile(r'^\s*(\d+(\.\d+)*\.?)\s+(.+)')
+def extract_sections(pdf_path):
+    # Match section identifiers like 1., 1.1, (a), A), "Title", etc.
+    section_pattern = re.compile(
+        r'^\s*(\(?[a-zA-Z0-9]+\)?)[\.\):]?\s*(["\']?.+?["\']?)?\s*$'
+    )
 
     sections = {}
-    current_section = None
+    current_section_number = None
     buffer = []
 
     def flush_section():
-        """Process and store buffered lines into paragraphs for the current section."""
-        if current_section and buffer:
-            # Combine lines into a block and split on blank lines or multiple newlines
+        """Flush the buffered lines into paragraphs under the current section."""
+        if current_section_number and buffer:
             raw_text = "\n".join(buffer).strip()
             paragraphs = [p.strip() for p in re.split(r'\n\s*\n', raw_text) if p.strip()]
-            sections[current_section]["paragraphs"].extend(paragraphs)
+            sections[current_section_number]["paragraphs"].extend(paragraphs)
 
     with pdfplumber.open(pdf_path) as pdf:
         for page_num, page in enumerate(pdf.pages, start=1):
             lines = (page.extract_text() or '').split('\n')
 
             for line in lines:
-                match = section_pattern.match(line)
+                match = section_pattern.match(line.strip())
                 if match:
-                    # Flush previous section
                     flush_section()
                     buffer = []
 
-                    # Start new section
-                    section_number = match.group(1).strip()
-                    section_title = match.group(3).strip()
-                    current_section = f"{section_number} {section_title}"
+                    raw_number = match.group(1).strip("(). ")
+                    raw_title = match.group(2)
+                    title = raw_title.strip("\"' ") if raw_title else ""
 
-                    if current_section not in sections:
-                        sections[current_section] = {
+                    current_section_number = raw_number
+
+                    if current_section_number not in sections:
+                        sections[current_section_number] = {
+                            "section_title": title,
                             "pages": [page_num],
                             "paragraphs": [],
                             "tables": []
                         }
-                elif current_section:
+                elif current_section_number:
                     buffer.append(line)
-                    if page_num not in sections[current_section]["pages"]:
-                        sections[current_section]["pages"].append(page_num)
+                    if page_num not in sections[current_section_number]["pages"]:
+                        sections[current_section_number]["pages"].append(page_num)
 
-            # Tables from the current page
-            tables = page.extract_tables()
-            if current_section and tables:
-                sections[current_section]["tables"].extend(tables)
+            # Capture tables for this page
+            if current_section_number:
+                tables = page.extract_tables()
+                if tables:
+                    sections[current_section_number]["tables"].extend(tables)
 
-    # Final flush
+    # Final section
     flush_section()
     return sections
 
@@ -58,12 +61,11 @@ def save_to_json(data, output_path):
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
-# ====== USAGE ======
+# ==== USAGE ====
 if __name__ == "__main__":
-    pdf_file = "your_file.pdf"                 # Replace with your PDF path
-    output_file = "sections_with_paragraphs.json"
+    pdf_file = "your_file.pdf"               # Replace with your PDF file
+    output_file = "final_sectioned_output.json"
 
-    sections = extract_sections_by_paragraphs(pdf_file)
-    save_to_json(sections, output_file)
-
-    print(f"Done! Output saved to: {output_file}")
+    data = extract_sections(pdf_file)
+    save_to_json(data, output_file)
+    print(f"Extraction complete. Output saved to: {output_file}")
