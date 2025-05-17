@@ -1,21 +1,31 @@
 import pdfplumber
 import re
 import json
-import os
+
 def extract_nested_sections(pdf_path):
+    # Matches numeric (1, 1.2), alphabetic (a, A), and parenthesized (a), (1)
     section_pattern = re.compile(
         r"""^\s*
         (?P<section>
-            \d+(?:\.\d+)*        # 1, 1.1, 2.3.4
-            | [a-zA-Z]           # a, A, b, B
-            | \([a-zA-Z0-9]+\)   # (a), (1), (i)
+            (?:\d+(?:\.\d+)*)
+            | [a-zA-Z]
+            | \([a-zA-Z0-9]+\)
         )
-        [\.\):]?\s*              # Optional punctuation after section
-        (?P<title>["']?.+?["']?)?  # Optional title
+        [\.\):]?\s+
+        (?P<title>["']?.+?["']?)?
         \s*$""", re.VERBOSE
     )
 
     root = {}
+
+    def clean_section_id(section_str):
+        return section_str.strip().strip("().")
+
+    def get_path(section_id):
+        if "." in section_id:
+            return section_id.split(".")
+        else:
+            return [section_id]
 
     def insert_into_tree(path, title, page):
         node = root
@@ -50,44 +60,14 @@ def extract_nested_sections(pdf_path):
             for line in lines:
                 match = section_pattern.match(line.strip())
                 if match:
-                    # Flush current section text
+                    # Flush previous section
                     if current_section:
                         flush_buffer(current_section, buffer)
 
-                    section_id = match.group("section").strip("().")
+                    raw_id = match.group("section")
+                    section_id = clean_section_id(raw_id)
                     title = (match.group("title") or "").strip("\"' ")
 
-                    # Build the path for nesting
-                    path_parts = section_id.split(".")
-                    current_path = path_parts
-                    current_section = insert_into_tree(current_path, title, page_num)
-                elif current_section:
-                    buffer.append(line)
-
-            # Extract tables for current section
-            if current_section:
-                tables = page.extract_tables()
-                if tables:
-                    current_section["tables"].extend(tables)
-
-        # Final flush
-        if current_section:
-            flush_buffer(current_section, buffer)
-
-    return root
-
-
-def save_to_json(data, output_path):
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
-
-# ========== Example Usage ==========
-if __name__ == "__main__":
-    pdf_path = "your_file.pdf"  # Replace with your actual file
-    output_path = "nested_sections.json"
-
-    result = extract_nested_sections(pdf_path)
-    save_to_json(result, output_path)
-
-    print(f"Done! Output saved to {output_path}")
+                    path = get_path(section_id)
+                    current_path = path
+                    current_section = insert_
