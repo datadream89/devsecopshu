@@ -1,7 +1,7 @@
 import pdfplumber
 import re
 import json
-import os
+
 # Quote pairs for matching different double-quote styles
 QUOTE_PAIRS = [
     ('"', '"'), ('“', '”'), ('„', '“'), ('«', '»'), ('‹', '›'), ('‟', '”'),
@@ -86,4 +86,15 @@ def extract_sections(pdf_path):
     return sections
 
 def save_to_json(data, output_path):
-    with open(output_path, "w", encoding="utf-_
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+# ======= Example Usage =======
+if __name__ == "__main__":
+    pdf_path = "your_file.pdf"  # Replace with actual PDF
+    output_path = "structured_sections.json"
+
+    structured_sections = extract_sections(pdf_path)
+    save_to_json(structured_sections, output_path)
+
+    print(f"Done. Output saved to {output_path}")
