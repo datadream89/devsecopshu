@@ -1,40 +1,46 @@
-FROM amazonlinux:2023
+import pdfplumber
+import re
 
-# Install build tools and dependencies
-RUN yum groupinstall -y "Development Tools" && \
-    yum install -y \
-    gcc gcc-c++ gcc-gfortran \
-    readline-devel \
-    zlib-devel \
-    bzip2-devel \
-    xz-devel \
-    libcurl-devel \
-    libpng-devel \
-    libjpeg-devel \
-    cairo-devel \
-    pango-devel \
-    freetype-devel \
-    tcl-devel \
-    tk-devel \
-    texinfo \
-    tar \
-    curl \
-    make \
-    openssl-devel \
-    libX11-devel \
-    libXt-devel
+def extract_sections_with_tables(pdf_path):
+    section_pattern = re.compile(r'^\s*(\d+(\.\d+)*\.?)\s+([A-Z][^\n]{2,})')
+    sections = {}
+    current_section = None
 
-# Download and install R from source
-ENV R_VERSION=4.3.1
-RUN curl -O https://cran.r-project.org/src/base/R-4/R-${R_VERSION}.tar.gz && \
-    tar -xzf R-${R_VERSION}.tar.gz && \
-    cd R-${R_VERSION} && \
-    ./configure --enable-R-shlib && \
-    make && make install && \
-    cd .. && rm -rf R-${R_VERSION}*
+    with pdfplumber.open(pdf_path) as pdf:
+        for page_num, page in enumerate(pdf.pages, start=1):
+            text = page.extract_text() or ''
+            lines = text.split('\n')
 
-# Install a sample R package
-RUN Rscript -e "install.packages('ggplot2', repos='https://cloud.r-project.org')"
+            for line in lines:
+                match = section_pattern.match(line)
+                if match:
+                    section_number = match.group(1).strip()
+                    section_title = match.group(3).strip()
+                    current_section = f"{section_number} {section_title}"
+                    sections[current_section] = {
+                        "pages": [page_num],
+                        "text": line,
+                        "tables": []
+                    }
+                elif current_section:
+                    sections[current_section]["text"] += "\n" + line
+                    if page_num not in sections[current_section]["pages"]:
+                        sections[current_section]["pages"].append(page_num)
 
-# Default command
-CMD ["Rscript", "-e", "print('Hello from R on Amazon Linux!')"]
+            # Extract tables from this page
+            tables = page.extract_tables()
+            if current_section and tables:
+                for table in tables:
+                    sections[current_section]["tables"].append(table)
+
+    return sections
+
+# Example usage
+pdf_file = "your_file.pdf"
+sections = extract_sections_with_tables(pdf_file)
+
+# Display extracted content
+for title, data in sections.items():
+    print(f"\nSection: {title} (Pages: {data['pages']})")
+    print("Text Preview:", data["text"][:200], "...")
+    print("Tables Found:", len(data["tables"]))
