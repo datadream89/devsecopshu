@@ -61,17 +61,21 @@ def insert_section(root, section_numbers, section_data):
     for i, part in enumerate(section_numbers):
         if "children" not in current:
             current["children"] = {}
-        if part not in current["children"]:
-            # Create new nested section node
-            current["children"][part] = {
+
+        if i == 0:
+            # Unique key for top-level section includes page number
+            key = f"{part}_page_{section_data['page']}"
+        else:
+            key = part
+
+        if key not in current["children"]:
+            current["children"][key] = {
                 "section_header": part + ('.' if not part.endswith('.') else ''),
                 "paragraph": "",
             }
-        current = current["children"][part]
+        current = current["children"][key]
 
-        # At last part, update section_data keys
         if i == len(section_numbers) - 1:
-            # Merge info (page, topic, section_title, paragraph)
             for k, v in section_data.items():
                 if k == "paragraph":
                     current[k] += (v + "\n")
