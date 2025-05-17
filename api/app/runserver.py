@@ -2,100 +2,75 @@ import pdfplumber
 import re
 import json
 
-def extract_nested_sections(pdf_path):
-    # Matches numeric (1, 1.2), alphabetic (a, A), and parenthesized (a), (1)
-    section_pattern = re.compile(
-        r"""^\s*
-        (?P<section>
-            (?:\d+(?:\.\d+)*)
-            | [a-zA-Z]
-            | \([a-zA-Z0-9]+\)
+def is_probable_title(text):
+    # Heuristic: title if short + quoted/uppercase-ish/keyword-like
+    return (
+        len(text.split()) <= 8 and (
+            text.startswith('"') and text.endswith('"') or
+            text.startswith("'") and text.endswith("'") or
+            text.isupper() or
+            text.istitle()
         )
-        [\.\):]?\s+
-        (?P<title>["']?.+?["']?)?
-        \s*$""", re.VERBOSE
     )
 
-    root = {}
+def extract_sections(pdf_path):
+    # Match section headers
+    section_pattern = re.compile(
+        r"""^\s*
+        (?P<header>
+            (?:\d+(?:\.\d+)*\.)     # 1., 1.1., 2.3.4.
+            | [a-zA-Z]\.            # a., B., z.
+            | \([a-zA-Z0-9]+\)      # (a), (1), (B)
+        )
+        \s*
+        (?P<title>.*)?             # Optional trailing title
+        $""", re.VERBOSE
+    )
 
-    def clean_section_id(section_str):
-        return section_str.strip().strip("().")
+    sections = []
+    current = None
+    buffer = []
 
-    def get_path(section_id):
-        if "." in section_id:
-            return section_id.split(".")
-        else:
-            return [section_id]
-
-    def insert_into_tree(path, title, page):
-        node = root
-        for i, part in enumerate(path):
-            if part not in node:
-                node[part] = {
-                    "section_title": "" if i < len(path) - 1 else title,
-                    "pages": [],
-                    "paragraphs": [],
-                    "tables": [],
-                    "subsections": {}
-                }
-            node[part]["pages"] = sorted(set(node[part]["pages"] + [page]))
-            if i < len(path) - 1:
-                node = node[part]["subsections"]
-        return node[path[-1]]
-
-    def flush_buffer(section_node, buffer):
-        if buffer:
-            text = "\n".join(buffer).strip()
-            paragraphs = [p.strip() for p in re.split(r'\n\s*\n', text) if p.strip()]
-            section_node["paragraphs"].extend(paragraphs)
+    def flush():
+        if current and buffer:
+            current["paragraph"] = "\n".join(buffer).strip()
+            sections.append(current.copy())
             buffer.clear()
 
     with pdfplumber.open(pdf_path) as pdf:
-        current_path = []
-        current_section = None
-        buffer = []
-
         for page_num, page in enumerate(pdf.pages, start=1):
-            lines = (page.extract_text() or "").split("\n")
+            text = page.extract_text() or ""
+            lines = text.split("\n")
             for line in lines:
-                match = section_pattern.match(line.strip())
+                line = line.strip()
+                match = section_pattern.match(line)
                 if match:
-                    # Flush previous section
-                    if current_section:
-                        flush_buffer(current_section, buffer)
-
-                    raw_id = match.group("section")
-                    section_id = clean_section_id(raw_id)
-                    title = (match.group("title") or "").strip("\"' ")
-
-                    path = get_path(section_id)
-                    current_path = path
-                    current_section = insert_into_tree(current_path, title, page_num)
-                elif current_section:
+                    flush()
+                    header = match.group("header").strip()
+                    maybe_title = (match.group("title") or "").strip()
+                    current = {
+                        "page": page_num,
+                        "section_header": header
+                    }
+                    if maybe_title and is_probable_title(maybe_title):
+                        current["title"] = maybe_title
+                elif current:
                     buffer.append(line)
 
-            if current_section:
-                tables = page.extract_tables()
-                if tables:
-                    current_section["tables"].extend(tables)
+        flush()
 
-        if current_section:
-            flush_buffer(current_section, buffer)
-
-    return root
-
+    return sections
 
 def save_to_json(data, output_path):
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
-
-# ========== Example Usage ==========
+# ======= Example usage =======
 if __name__ == "__main__":
-    pdf_path = "your_file.pdf"  # Replace this
-    output_path = "nested_sections.json"
+    pdf_path = "your_file.pdf"  # Replace with your input file
+    output_path = "sections_with_titles.json"
 
-    nested = extract_nested_sections(pdf_path)
-    save_to_json(nested, output_path)
+    results = extract_sections(pdf_path)
+    save_to_json(results, output_path)
 
-    print(f"Done! Saved to {output_path}")
+    print(f"Done. Results saved to {output_path}")
