@@ -2,23 +2,33 @@ import pdfplumber
 import re
 import json
 import os
+# Quote pairs for matching different double-quote styles
+QUOTE_PAIRS = [
+    ('"', '"'), ('“', '”'), ('„', '“'), ('«', '»'), ('‹', '›'), ('‟', '”'),
+    ('❝', '❞'), ('〝', '〞'), ('＂', '＂')
+]
+
 def extract_title_and_rest(text):
-    # Extract quoted or uppercase or underlined-like (--- below it) parts as title
+    text = text.strip()
     title = None
-    remainder = text.strip()
+    remainder = text
 
-    # Double quoted title
-    quote_match = re.search(r'"([^"]+)"', text)
-    if quote_match:
-        title = quote_match.group(1)
-        remainder = text.replace(quote_match.group(0), "").strip()
+    for open_q, close_q in QUOTE_PAIRS:
+        pattern = re.escape(open_q) + r'(.+?)' + re.escape(close_q)
+        match = re.search(pattern, text)
+        if match:
+            title = match.group(1).strip()
+            remainder = text.replace(match.group(0), '').strip()
+            return title, remainder
 
-    # ALL CAPS title
-    elif text.isupper() or text.istitle() and len(text.split()) <= 6:
-        title = text
-        remainder = ""
+    # If not quoted, consider short all caps or titlecased string as title
+    if text and (text.isupper() or (text.istitle() and len(text.split()) <= 6)):
+        return text, ""
 
-    return title, remainder
+    return None, remainder
+
+def is_top_level_section(header):
+    return bool(re.match(r"^\d+\.$", header))  # e.g., 1., 2.
 
 def extract_sections(pdf_path):
     section_pattern = re.compile(
@@ -29,7 +39,7 @@ def extract_sections(pdf_path):
             | \([a-zA-Z0-9]+\)      # (a), (1)
         )
         \s*
-        (?P<rest>.*)?$             # rest of the line
+        (?P<rest>.*)?$
         """, re.VERBOSE
     )
 
@@ -39,9 +49,7 @@ def extract_sections(pdf_path):
 
     def flush():
         if current and buffer:
-            if "paragraph" not in current:
-                current["paragraph"] = ""
-            current["paragraph"] += "\n".join(buffer).strip()
+            current["paragraph"] = "\n".join(buffer).strip()
             sections.append(current.copy())
             buffer.clear()
 
@@ -64,7 +72,10 @@ def extract_sections(pdf_path):
 
                     title, rest = extract_title_and_rest(rest_of_line)
                     if title:
-                        current["section_title"] = title
+                        if is_top_level_section(header):
+                            current["topic"] = title
+                        else:
+                            current["section_title"] = title
                     if rest:
                         buffer.append(rest)
                 elif current:
@@ -75,15 +86,4 @@ def extract_sections(pdf_path):
     return sections
 
 def save_to_json(data, output_path):
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
-# ========== Example Usage ==========
-if __name__ == "__main__":
-    pdf_path = "your_file.pdf"  # Replace with your PDF
-    output_path = "sections_with_titles_and_paragraphs.json"
-
-    sections = extract_sections(pdf_path)
-    save_to_json(sections, output_path)
-
-    print(f"Done. Output saved to {output_path}")
+    with open(output_path, "w", encoding="utf-_
