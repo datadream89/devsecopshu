@@ -1,6 +1,10 @@
 import pdfplumber
 import re
 import json
+import chromadb
+from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
+
+# ---------- PDF Extraction and Nested Section Parsing ----------
 
 QUOTE_PAIRS = [
     ('"', '"'), ('“', '”'), ('„', '“'), ('«', '»'), ('‹', '›'), ('‟', '”'),
@@ -20,14 +24,11 @@ def extract_title_and_rest(text):
             remainder = text.replace(match.group(0), '').strip()
             return title, remainder
 
-    # Consider uppercase or titlecase short text as title
     if text and (text.isupper() or (text.istitle() and len(text.split()) <= 6)):
         return text, ""
 
     return None, remainder
 
-# Regex to match full section headers:
-# e.g. 1.  1.1.  2.6.4.  a.  (a)
 section_header_re = re.compile(
     r"""^\s*
     (?P<header>
@@ -44,14 +45,10 @@ def is_top_level_section(header):
     return bool(re.match(r"^\d+\.$", header))
 
 def split_section_numbers(header):
-    # Remove trailing dot, then split by dot
-    # "1.2.3." -> ['1','2','3']
     h = header.rstrip('.')
     if header.startswith('(') and header.endswith(')'):
-        # e.g. (a) keep as one part
         return [header]
     if re.match(r"^[a-zA-Z]\.$", header):
-        # e.g. a. keep as one part
         return [header]
     parts = h.split('.')
     return parts
@@ -63,7 +60,6 @@ def insert_section(root, section_numbers, section_data):
             current["children"] = {}
 
         if i == 0:
-            # Unique key for top-level section includes page number
             key = f"{part}_page_{section_data['page']}"
         else:
             key = part
@@ -82,8 +78,7 @@ def insert_section(root, section_numbers, section_data):
                 else:
                     current[k] = v
 
-def flatten_tree(tree):
-    # Convert nested dict children into list with sorted keys
+def flatten_tree(node):
     def helper(node):
         res = {}
         for k in ("page", "section_header", "topic", "section_title", "paragraph"):
@@ -97,7 +92,7 @@ def flatten_tree(tree):
             for key in sorted(node["children"].keys(), key=lambda x: (len(x), x)):
                 res["children"].append(helper(node["children"][key]))
         return res
-    return helper(tree)
+    return helper(node)
 
 def extract_sections(pdf_path):
     root = {
@@ -128,7 +123,6 @@ def extract_sections(pdf_path):
                 match = section_header_re.match(line)
                 if match:
                     flush()
-
                     header = match.group("header").strip()
                     rest_of_line = match.group("rest") or ""
 
@@ -152,20 +146,74 @@ def extract_sections(pdf_path):
 
         flush()
 
-    # Flatten root children to list/tree structure
     return flatten_tree(root)
+
+# ---------- Chunk Generation ----------
+
+def generate_chunks(node, parent_metadata=None):
+    chunks = []
+    parent_metadata = parent_metadata or {}
+
+    metadata = parent_metadata.copy()
+    for key in ("page", "section_title", "topic"):
+        if key in node:
+            metadata[key] = node[key]
+
+    paragraph = node.get("paragraph", "").strip()
+    if paragraph:
+        chunks.append({
+            "data": paragraph,
+            "metadata": metadata
+        })
+
+    for child in node.get("children", []):
+        chunks.extend(generate_chunks(child, metadata))
+
+    return chunks
 
 def save_to_json(data, output_path):
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
+# ---------- Main Flow ----------
 
-# === Example usage ===
 if __name__ == "__main__":
-    pdf_path = "your_file.pdf"  # Replace with your PDF file path
-    output_path = "nested_sections.json"
+    pdf_path = "your_file.pdf"  # Replace with your actual PDF path
+    nested_output_path = "nested_sections.json"
+    chunks_output_path = "chunks.json"
 
+    # Step 1: Extract nested sections
     nested_sections = extract_sections(pdf_path)
-    save_to_json(nested_sections, output_path)
+    save_to_json(nested_sections, nested_output_path)
+    print(f"Nested sections saved to {nested_output_path}")
 
-    print(f"Done. Nested output saved to {output_path}")
+    # Step 2: Generate paragraph chunks
+    chunks = generate_chunks(nested_sections)
+    save_to_json(chunks, chunks_output_path)
+    print(f"Paragraph chunks saved to {chunks_output_path}")
+
+    # Step 3: Use Chroma with Ollama embeddings
+    client = chromadb.Client()
+    embedding_fn = OllamaEmbeddingFunction(model_name="nomic-embed-text")  # You can change model if needed
+
+    collection_name = "pdf_chunks"
+    documents = [chunk["data"] for chunk in chunks]
+    metadatas = [chunk["metadata"] for chunk in chunks]
+    ids = [str(i) for i in range(len(documents))]
+
+    collection = client.create_collection(name=collection_name, embedding_function=embedding_fn)
+    collection.add(documents=documents, metadatas=metadatas, ids=ids)
+    print(f"Added {len(documents)} chunks to Chroma DB")
+
+    # Step 4: Interactive search
+    while True:
+        query = input("\nSearch for: ").strip()
+        if query.lower() == "exit":
+            break
+
+        results = collection.query(query_texts=[query], n_results=2)
+        print("\nTop 2 results:")
+        for i, (doc, meta) in enumerate(zip(results["documents"][0], results["metadatas"][0])):
+            print(f"\nResult {i + 1}")
+            print(f"Text: {doc[:300]}{'...' if len(doc) > 300 else ''}")
+            print(f"Metadata: {meta}")
