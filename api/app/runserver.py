@@ -1,10 +1,9 @@
 import pdfplumber
 import re
 import json
-import chromadb
-from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
-
-# ---------- PDF Extraction and Nested Section Parsing ----------
+from langchain.vectorstores import Chroma
+from langchain.embeddings import OllamaEmbeddings
+from langchain.docstore.document import Document
 
 QUOTE_PAIRS = [
     ('"', '"'), ('“', '”'), ('„', '“'), ('«', '»'), ('‹', '›'), ('‟', '”'),
@@ -50,8 +49,7 @@ def split_section_numbers(header):
         return [header]
     if re.match(r"^[a-zA-Z]\.$", header):
         return [header]
-    parts = h.split('.')
-    return parts
+    return h.split('.')
 
 def insert_section(root, section_numbers, section_data):
     current = root
@@ -83,24 +81,14 @@ def flatten_tree(node):
         res = {}
         for k in ("page", "section_header", "topic", "section_title", "paragraph"):
             if k in node:
-                if k == "paragraph":
-                    res[k] = node[k].strip()
-                else:
-                    res[k] = node[k]
+                res[k] = node[k].strip() if isinstance(node[k], str) else node[k]
         if "children" in node:
-            res["children"] = []
-            for key in sorted(node["children"].keys(), key=lambda x: (len(x), x)):
-                res["children"].append(helper(node["children"][key]))
+            res["children"] = [helper(child) for key, child in sorted(node["children"].items())]
         return res
     return helper(node)
 
 def extract_sections(pdf_path):
-    root = {
-        "section_header": "root",
-        "paragraph": "",
-        "children": {}
-    }
-
+    root = {"section_header": "root", "paragraph": "", "children": {}}
     current_section_numbers = None
     current_section_data = {}
     buffer = []
@@ -148,8 +136,6 @@ def extract_sections(pdf_path):
 
     return flatten_tree(root)
 
-# ---------- Chunk Generation ----------
-
 def generate_chunks(node, parent_metadata=None):
     chunks = []
     parent_metadata = parent_metadata or {}
@@ -161,59 +147,39 @@ def generate_chunks(node, parent_metadata=None):
 
     paragraph = node.get("paragraph", "").strip()
     if paragraph:
-        chunks.append({
-            "data": paragraph,
-            "metadata": metadata
-        })
+        chunks.append(Document(page_content=paragraph, metadata=metadata))
 
     for child in node.get("children", []):
         chunks.extend(generate_chunks(child, metadata))
 
     return chunks
 
-def save_to_json(data, output_path):
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
-# ---------- Main Flow ----------
+# ---------- Main Program ----------
 
 if __name__ == "__main__":
     pdf_path = "your_file.pdf"  # Replace with your actual PDF path
-    nested_output_path = "nested_sections.json"
-    chunks_output_path = "chunks.json"
 
-    # Step 1: Extract nested sections
-    nested_sections = extract_sections(pdf_path)
-    save_to_json(nested_sections, nested_output_path)
-    print(f"Nested sections saved to {nested_output_path}")
+    # Step 1: Extract structured nested sections
+    nested_data = extract_sections(pdf_path)
+    chunks = generate_chunks(nested_data)
 
-    # Step 2: Generate paragraph chunks
-    chunks = generate_chunks(nested_sections)
-    save_to_json(chunks, chunks_output_path)
-    print(f"Paragraph chunks saved to {chunks_output_path}")
+    # Step 2: Set up embeddings and vector store
+    embedding_model = OllamaEmbeddings(model="nomic-embed-text")
+    vectorstore = Chroma.from_documents(
+        documents=chunks,
+        embedding=embedding_model,
+        collection_name="pdf_chunks"
+    )
 
-    # Step 3: Use Chroma with Ollama embeddings
-    client = chromadb.Client()
-    embedding_fn = OllamaEmbeddingFunction(model_name="nomic-embed-text")  # You can change model if needed
-
-    collection_name = "pdf_chunks"
-    documents = [chunk["data"] for chunk in chunks]
-    metadatas = [chunk["metadata"] for chunk in chunks]
-    ids = [str(i) for i in range(len(documents))]
-
-    collection = client.create_collection(name=collection_name, embedding_function=embedding_fn)
-    collection.add(documents=documents, metadatas=metadatas, ids=ids)
-    print(f"Added {len(documents)} chunks to Chroma DB")
-
-    # Step 4: Interactive search
+    # Step 3: Interactive Search
     while True:
-        query = input("\nSearch for: ").strip()
+        query = input("\nSearch term (type 'exit' to quit): ").strip()
         if query.lower() == "exit":
             break
 
-        results = collection.query(query_texts=[query], n_results=2)
+        results = vectorstore.similarity_search(query, k=2)
         print("\nTop 2 results:")
-        for i, (doc, meta) in enumerate(zip(results["documents"][0], results["metadatas"][0])):
+        for i, doc in enumerate(results):
             print(f"\nResult {i + 1}")
-            print(f"Text: {doc[:300]}{'...' if len(doc) > 300 else ''}")
-            print(f"Metadata: {meta}")
+            print(f"Text: {doc.page_content[:300]}{'...' if len(doc.page_content) > 300 else ''}")
+            print(f"Metadata: {doc.metadata}")
