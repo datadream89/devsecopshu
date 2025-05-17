@@ -1,9 +1,8 @@
 import pdfplumber
 import re
 import json
+from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
 from langchain.vectorstores import Chroma
-from langchain.embeddings import OllamaEmbeddings
-from langchain.docstore.document import Document
 
 QUOTE_PAIRS = [
     ('"', '"'), ('“', '”'), ('„', '“'), ('«', '»'), ('‹', '›'), ('‟', '”'),
@@ -57,10 +56,7 @@ def insert_section(root, section_numbers, section_data):
         if "children" not in current:
             current["children"] = {}
 
-        if i == 0:
-            key = f"{part}_page_{section_data['page']}"
-        else:
-            key = part
+        key = part if i != 0 else f"{part}_page_{section_data['page']}"
 
         if key not in current["children"]:
             current["children"][key] = {
@@ -147,39 +143,62 @@ def generate_chunks(node, parent_metadata=None):
 
     paragraph = node.get("paragraph", "").strip()
     if paragraph:
-        chunks.append(Document(page_content=paragraph, metadata=metadata))
+        chunks.append({
+            "data": paragraph,
+            "metadata": metadata
+        })
 
     for child in node.get("children", []):
         chunks.extend(generate_chunks(child, metadata))
 
     return chunks
 
+def save_to_json(data, output_path):
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
 # ---------- Main Program ----------
 
 if __name__ == "__main__":
-    pdf_path = "your_file.pdf"  # Replace with your actual PDF path
+    pdf_path = "your_file.pdf"  # Change this
+    nested_output_path = "nested_output.json"
+    chunks_output_path = "chunks.json"
 
-    # Step 1: Extract structured nested sections
     nested_data = extract_sections(pdf_path)
-    chunks = generate_chunks(nested_data)
+    save_to_json(nested_data, nested_output_path)
 
-    # Step 2: Set up embeddings and vector store
-    embedding_model = OllamaEmbeddings(model="nomic-embed-text")
-    vectorstore = Chroma.from_documents(
-        documents=chunks,
-        embedding=embedding_model,
+    chunks = generate_chunks(nested_data)
+    save_to_json(chunks, chunks_output_path)
+
+    embedding_fn = OllamaEmbeddingFunction(model_name="nomic-embed-text")
+    documents = [chunk["data"] for chunk in chunks]
+    metadatas = [chunk["metadata"] for chunk in chunks]
+
+    vector_store = Chroma.from_documents(
+        documents=documents,
+        embedding=embedding_fn,
+        metadatas=metadatas,
         collection_name="pdf_chunks"
     )
 
-    # Step 3: Interactive Search
+    print(f"{len(documents)} chunks embedded and stored in Chroma.")
+
     while True:
-        query = input("\nSearch term (type 'exit' to quit): ").strip()
+        query = input("\nSearch for (type 'exit' to quit): ").strip()
         if query.lower() == "exit":
             break
 
-        results = vectorstore.similarity_search(query, k=2)
-        print("\nTop 2 results:")
-        for i, doc in enumerate(results):
-            print(f"\nResult {i + 1}")
-            print(f"Text: {doc.page_content[:300]}{'...' if len(doc.page_content) > 300 else ''}")
-            print(f"Metadata: {doc.metadata}")
+        results = vector_store.similarity_search(query, k=2)
+        selected = None
+        defs = [r for r in results if 'topic' in r.metadata and 'definition' in r.metadata['topic'].lower()]
+
+        if len(defs) == 2:
+            selected = defs[0]
+        elif len(defs) == 1:
+            selected = defs[0]
+        else:
+            selected = results[0]
+
+        print("\nTop Result:")
+        print(f"Text: {selected.page_content[:300]}{'...' if len(selected.page_content) > 300 else ''}")
+        print(f"Metadata: {selected.metadata}")
