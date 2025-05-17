@@ -11,4 +11,12 @@ def toc_to_nested_json(toc):
         parent_node["children"].append(node)
         stack.append((level, node))
 
-    return root
+    return root      import fitz  # PyMuPDF
+
+doc = fitz.open("your_file.pdf")
+toc = doc.get_toc()
+nested_json = toc_to_nested_json(toc)
+
+import json
+with open("toc_nested.json", "w", encoding="utf-8") as f:
+    json.dump(nested_json, f, indent=2)
