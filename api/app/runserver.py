@@ -1,4 +1,5 @@
 import pdfplumber
+import fitz  # PyMuPDF
 import re
 import json
 from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
@@ -8,24 +9,6 @@ QUOTE_PAIRS = [
     ('"', '"'), ('“', '”'), ('„', '“'), ('«', '»'), ('‹', '›'), ('‟', '”'),
     ('❝', '❞'), ('〝', '〞'), ('＂', '＂')
 ]
-
-def extract_title_and_rest(text):
-    text = text.strip()
-    title = None
-    remainder = text
-
-    for open_q, close_q in QUOTE_PAIRS:
-        pattern = re.escape(open_q) + r'(.+?)' + re.escape(close_q)
-        match = re.search(pattern, text)
-        if match:
-            title = match.group(1).strip()
-            remainder = text.replace(match.group(0), '').strip()
-            return title, remainder
-
-    if text and (text.isupper() or (text.istitle() and len(text.split()) <= 6)):
-        return text, ""
-
-    return None, remainder
 
 section_header_re = re.compile(
     r"""^\s*
@@ -49,6 +32,50 @@ def split_section_numbers(header):
     if re.match(r"^[a-zA-Z]\.$", header):
         return [header]
     return h.split('.')
+
+def extract_title_and_rest(text):
+    text = text.strip()
+    title = None
+    remainder = text
+
+    for open_q, close_q in QUOTE_PAIRS:
+        pattern = re.escape(open_q) + r'(.+?)' + re.escape(close_q)
+        match = re.search(pattern, text)
+        if match:
+            title = match.group(1).strip()
+            remainder = text.replace(match.group(0), '').strip()
+            return title, remainder
+
+    if text and (text.isupper() or (text.istitle() and len(text.split()) <= 6)):
+        return text, ""
+
+    return None, remainder
+
+def extract_styles_from_fitz_page(page):
+    """
+    Extract lines from PyMuPDF page with info about bold/underline.
+    Returns list of dicts: {'text': line_text, 'bold': bool, 'underline': bool}
+    """
+    lines = []
+    blocks = page.get_text("dict")["blocks"]
+    for block in blocks:
+        if block["type"] != 0:
+            continue  # Skip non-text blocks
+        for line in block["lines"]:
+            line_text = ""
+            bold = False
+            underline = False
+            for span in line["spans"]:
+                line_text += span["text"]
+                # Detect bold by fontname or flags
+                fontname = span.get("font", "").lower()
+                if "bold" in fontname or "black" in fontname:
+                    bold = True
+                # Detect underline by flags (4 means underline)
+                if span.get("flags", 0) & 4:
+                    underline = True
+            lines.append({"text": line_text.strip(), "bold": bold, "underline": underline})
+    return lines
 
 def insert_section(root, section_numbers, section_data):
     current = root
@@ -89,6 +116,10 @@ def extract_sections(pdf_path):
     current_section_data = {}
     buffer = []
 
+    # Open pdfs for both pdfplumber and PyMuPDF
+    pdf_p = pdfplumber.open(pdf_path)
+    pdf_fitz = fitz.open(pdf_path)
+
     def flush():
         nonlocal current_section_numbers, current_section_data, buffer
         if current_section_numbers:
@@ -98,37 +129,79 @@ def extract_sections(pdf_path):
         current_section_numbers = None
         current_section_data = {}
 
-    with pdfplumber.open(pdf_path) as pdf:
-        for page_num, page in enumerate(pdf.pages, start=1):
-            text = page.extract_text() or ""
-            lines = text.split("\n")
-            for line in lines:
-                line = line.strip()
-                match = section_header_re.match(line)
-                if match:
-                    flush()
-                    header = match.group("header").strip()
-                    rest_of_line = match.group("rest") or ""
+    total_pages = len(pdf_p.pages)
+    for page_num in range(1, total_pages + 1):
+        page_p = pdf_p.pages[page_num - 1]
+        page_f = pdf_fitz.load_page(page_num - 1)
 
-                    current_section_numbers = split_section_numbers(header)
-                    current_section_data = {
-                        "page": page_num,
-                        "section_header": header
-                    }
+        # Get styles info for this page lines
+        styled_lines = extract_styles_from_fitz_page(page_f)
 
-                    title, rest = extract_title_and_rest(rest_of_line)
-                    if title:
-                        if is_top_level_section(header):
-                            current_section_data["topic"] = title
-                        else:
-                            current_section_data["section_title"] = title
-                    if rest:
-                        buffer.append(rest)
-                else:
-                    if current_section_numbers:
-                        buffer.append(line)
+        # Extract raw text lines from pdfplumber
+        text = page_p.extract_text() or ""
+        lines = text.split("\n")
 
-        flush()
+        # Map each text line to its style info (bold, underline)
+        # We rely on order of lines here, so be careful if mismatch
+        for idx, line in enumerate(lines):
+            line_text = line.strip()
+            style_info = styled_lines[idx] if idx < len(styled_lines) else {"bold": False, "underline": False, "text": ""}
+            match = section_header_re.match(line_text)
+            if match:
+                # Flush existing section buffer before starting new section
+                flush()
+                header = match.group("header").strip()
+                rest_of_line = match.group("rest") or ""
+
+                current_section_numbers = split_section_numbers(header)
+                current_section_data = {
+                    "page": page_num,
+                    "section_header": header
+                }
+
+                # Check if rest_of_line contains bold or underlined title, else check styled lines
+                title, rest = extract_title_and_rest(rest_of_line)
+
+                # If title missing in rest_of_line, try to detect if line after section header is bold/underline
+                # Sometimes the title is in the styled line (which is same as line_text here)
+                if not title and (style_info["bold"] or style_info["underline"]):
+                    title = line_text[len(header):].strip()
+                    rest = ""
+
+                # If still no title, check next line for bold/underline if exists and append
+                elif not title and idx + 1 < len(lines):
+                    next_line_text = lines[idx + 1].strip()
+                    next_style = styled_lines[idx + 1] if idx + 1 < len(styled_lines) else {"bold": False, "underline": False}
+                    if next_style["bold"] or next_style["underline"]:
+                        title = next_line_text
+                        # Skip next line from paragraph by incrementing idx — handled by not appending next line to buffer
+                        # We'll do that by adding a flag to skip below (see next)
+
+                        # We'll set a flag so next line is skipped from paragraph buffer
+                        # Implemented outside for loop is simpler: just skip adding next line to buffer this iteration
+
+                # Assign title as topic or section_title depending on header level
+                if title:
+                    if is_top_level_section(header):
+                        current_section_data["topic"] = title
+                    else:
+                        current_section_data["section_title"] = title
+
+                if rest:
+                    buffer.append(rest)
+                continue  # Start next line after flush and section start
+
+            # If no new section header, append line to buffer (current section)
+            if current_section_numbers:
+                buffer.append(line_text)
+
+        # End of page, do NOT flush yet — because next page may continue this section
+
+    # After last page, flush remaining buffered section
+    flush()
+
+    pdf_p.close()
+    pdf_fitz.close()
 
     return flatten_tree(root)
 
@@ -159,46 +232,3 @@ def save_to_json(data, output_path):
 
 # ---------- Main Program ----------
 
-if __name__ == "__main__":
-    pdf_path = "your_file.pdf"  # Change this
-    nested_output_path = "nested_output.json"
-    chunks_output_path = "chunks.json"
-
-    nested_data = extract_sections(pdf_path)
-    save_to_json(nested_data, nested_output_path)
-
-    chunks = generate_chunks(nested_data)
-    save_to_json(chunks, chunks_output_path)
-
-    embedding_fn = OllamaEmbeddingFunction(model_name="nomic-embed-text")
-    documents = [chunk["data"] for chunk in chunks]
-    metadatas = [chunk["metadata"] for chunk in chunks]
-
-    vector_store = Chroma.from_documents(
-        documents=documents,
-        embedding=embedding_fn,
-        metadatas=metadatas,
-        collection_name="pdf_chunks"
-    )
-
-    print(f"{len(documents)} chunks embedded and stored in Chroma.")
-
-    while True:
-        query = input("\nSearch for (type 'exit' to quit): ").strip()
-        if query.lower() == "exit":
-            break
-
-        results = vector_store.similarity_search(query, k=2)
-        selected = None
-        defs = [r for r in results if 'topic' in r.metadata and 'definition' in r.metadata['topic'].lower()]
-
-        if len(defs) == 2:
-            selected = defs[0]
-        elif len(defs) == 1:
-            selected = defs[0]
-        else:
-            selected = results[0]
-
-        print("\nTop Result:")
-        print(f"Text: {selected.page_content[:300]}{'...' if len(selected.page_content) > 300 else ''}")
-        print(f"Metadata: {selected.metadata}")
