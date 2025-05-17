@@ -70,4 +70,32 @@ def extract_nested_sections(pdf_path):
 
                     path = get_path(section_id)
                     current_path = path
-                    current_section = insert_
+                    current_section = insert_into_tree(current_path, title, page_num)
+                elif current_section:
+                    buffer.append(line)
+
+            if current_section:
+                tables = page.extract_tables()
+                if tables:
+                    current_section["tables"].extend(tables)
+
+        if current_section:
+            flush_buffer(current_section, buffer)
+
+    return root
+
+
+def save_to_json(data, output_path):
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+# ========== Example Usage ==========
+if __name__ == "__main__":
+    pdf_path = "your_file.pdf"  # Replace this
+    output_path = "nested_sections.json"
+
+    nested = extract_nested_sections(pdf_path)
+    save_to_json(nested, output_path)
+
+    print(f"Done! Saved to {output_path}")
