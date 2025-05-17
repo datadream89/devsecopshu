@@ -1,16 +1,21 @@
 import pdfplumber
 import re
+import json
 
 def extract_sections_with_tables(pdf_path):
+    # Regex for section headers (e.g., 1, 1.1, 2.3.4 Introduction)
     section_pattern = re.compile(r'^\s*(\d+(\.\d+)*\.?)\s+([A-Z][^\n]{2,})')
+
     sections = {}
     current_section = None
 
     with pdfplumber.open(pdf_path) as pdf:
         for page_num, page in enumerate(pdf.pages, start=1):
+            # Extract text
             text = page.extract_text() or ''
             lines = text.split('\n')
 
+            # Process each line to find section headers
             for line in lines:
                 match = section_pattern.match(line)
                 if match:
@@ -27,7 +32,7 @@ def extract_sections_with_tables(pdf_path):
                     if page_num not in sections[current_section]["pages"]:
                         sections[current_section]["pages"].append(page_num)
 
-            # Extract tables from this page
+            # Extract tables from current page
             tables = page.extract_tables()
             if current_section and tables:
                 for table in tables:
@@ -35,12 +40,16 @@ def extract_sections_with_tables(pdf_path):
 
     return sections
 
-# Example usage
-pdf_file = "your_file.pdf"
-sections = extract_sections_with_tables(pdf_file)
+def save_sections_to_json(sections, output_path):
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(sections, f, indent=2, ensure_ascii=False)
 
-# Display extracted content
-for title, data in sections.items():
-    print(f"\nSection: {title} (Pages: {data['pages']})")
-    print("Text Preview:", data["text"][:200], "...")
-    print("Tables Found:", len(data["tables"]))
+# ======== Main ========
+if __name__ == "__main__":
+    pdf_file = "your_file.pdf"               # Replace with your PDF file path
+    output_file = "extracted_sections.json"  # Output JSON
+
+    sections = extract_sections_with_tables(pdf_file)
+    save_sections_to_json(sections, output_file)
+
+    print(f"Extraction complete. Sections saved to '{output_file}'")
