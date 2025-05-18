@@ -39,6 +39,18 @@ def extract_docx_hierarchy(doc_path):
                 return True
         return False
 
+    def get_indent_level(para):
+        # Indentation is in inches, where 720 = 0.5 inch
+        indent = para.paragraph_format.left_indent
+        if indent is None:
+            return 0
+        points = indent.pt if hasattr(indent, 'pt') else indent / 12700 * 72
+        if points > 20:
+            return 2
+        elif points > 0:
+            return 1
+        return 0
+
     for para in doc.paragraphs:
         text = para.text.strip()
         if not text:
@@ -60,14 +72,24 @@ def extract_docx_hierarchy(doc_path):
             current_subsection = {"subheading": text, "content": []}
             continue
 
-        # --- Detect Content Type ---
+        # --- Detect Type ---
+        indent_level = get_indent_level(para)
         if para.style.name and "List" in para.style.name:
             if is_bold_underlined(para):
                 text_type = "heading"
+            elif indent_level == 1:
+                text_type = "level 1"
+            elif indent_level >= 2:
+                text_type = "level 2"
             else:
                 text_type = "bullet"
         else:
-            text_type = "paragraph"
+            if indent_level == 1:
+                text_type = "level 1"
+            elif indent_level >= 2:
+                text_type = "level 2"
+            else:
+                text_type = "paragraph"
 
         current_subsection["content"].append({"type": text_type, "text": text})
 
@@ -101,7 +123,7 @@ def extract_docx_hierarchy(doc_path):
 
 # --- Example usage ---
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # Replace with your actual DOCX path
+    docx_path = "your_file.docx"  # Replace with your actual DOCX file path
     result = extract_docx_hierarchy(docx_path)
 
     with open("docx_hierarchy.json", "w", encoding="utf-8") as f:
