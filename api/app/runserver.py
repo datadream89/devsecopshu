@@ -1,78 +1,136 @@
-import fitz  # PyMuPDF import pdfplumber import re import json from collections import defaultdict
+import pdfplumber
+import fitz  # PyMuPDF
+import re
+import json
+from collections import defaultdict
 
-QUOTE_PAIRS = [ ('"', '"'), ('“', '”'), ('„', '“'), ('«', '»'), ('‹', '›'), ('‟', '”'), ('❝', '❞'), ('〝', '〞'), ('＂', '＂') ]
+# Quotation character pairs for international support
+QUOTE_PAIRS = [('“', '”'), ('"', '"'), ("'", "'"), ('‘', '’'), ('«', '»')]
 
-section_header_re = re.compile( r"""^\s* (?P<header> (?:\d+(?:.\d+).)     # e.g. 1. or 1.1. or 2.6.4. | [a-zA-Z].               # e.g. a. or B. |         # e.g. (a), (1) ) \s (?P<rest>.*)?$ """, re.VERBOSE )
+def extract_quoted(text):
+    for open_q, close_q in QUOTE_PAIRS:
+        pattern = re.escape(open_q) + r'(.+?)' + re.escape(close_q)
+        match = re.match(pattern, text)
+        if match:
+            return match.group(1).strip()
+    return None
 
-def extract_title_from_line(text): text = text.strip() for open_q, close_q in QUOTE_PAIRS: pattern = re.escape(open_q) + r'(.*?)' + re.escape(close_q) match = re.search(pattern, text) if match: return match.group(1).strip() return None
+section_header_re = re.compile(
+    r"""^\s*
+    (?P<header>
+        (?:\d+(?:\.\d+)*\.?)       # Numbers like 1, 2.1, 3.4.5
+        | [ivxlcdmIVXLCDM]+\.?     # Roman numerals
+        | [a-zA-Z]\.               # Letters like a.
+        | \([a-zA-Z0-9]+\)         # (a), (1)
+    )
+    \s*
+    (?P<rest>.*)?$
+    """, re.VERBOSE
+)
 
-def extract_structure(pdf_path): doc = fitz.open(pdf_path) structure = []
+def is_section_header(text):
+    return bool(section_header_re.match(text.strip()))
 
-for page_num in range(len(doc)):
-    page = doc[page_num]
-    blocks = page.get_text("dict")['blocks']
+def split_section_numbers(header):
+    if header.startswith('('):
+        return [header.strip('()')]
+    if re.match(r'[ivxlcdmIVXLCDM]+', header):
+        return [header.lower()]
+    return header.strip('.').split('.')
 
+def extract_bold_underline_blocks(doc, page_num):
+    page = doc.load_page(page_num - 1)
+    blocks = []
+    for block in page.get_text("dict")["blocks"]:
+        for line in block.get("lines", []):
+            for span in line.get("spans", []):
+                blocks.append({
+                    "text": span["text"].strip(),
+                    "bold": "bold" in span["font"].lower() or span.get("flags", 0) & 2 != 0,
+                    "underline": span.get("underline", False),
+                })
+    return blocks
+
+def is_bold_underline_or_quoted(line, blocks):
     for block in blocks:
-        if 'lines' not in block:
-            continue
-        line_text = " ".join(span['text'] for line in block['lines'] for span in line['spans']).strip()
-        match = section_header_re.match(line_text)
-        if not match:
-            continue
+        if line.strip().startswith(block["text"]) and (block["bold"] or block["underline"]):
+            return block["text"]
+    return extract_quoted(line)
 
-        header = match.group("header").strip()
-        rest = match.group("rest") or ""
-        title = None
-        found = False
+def insert_section(root, section_numbers, section_data):
+    node = root
+    for sec in section_numbers:
+        node = node.setdefault("children", {}).setdefault(sec, {"section_id": sec})
+    node.update(section_data)
 
-        for line in block['lines']:
-            for span in line['spans']:
-                text = span['text'].strip()
-                if text in rest:
-                    if span.get("flags", 0) in (2, 20, 22, 4) or span.get("underline", False):
-                        title = text
-                        found = True
-                        break
-            if found:
-                break
+def sort_children(children):
+    def sort_key(item):
+        node = item[1]
+        page = node.get("page", 9999)
+        parts = [int(p) if p.isdigit() else p for p in node.get("section_id", "").split('.')]
+        return (page, parts)
+    sorted_items = sorted(children.items(), key=sort_key)
+    for k, v in sorted_items:
+        if "children" in v:
+            v["children"] = sort_children(v["children"])
+    return [v for k, v in sorted_items]
 
-        if not title:
-            title = extract_title_from_line(rest)
+def flatten_tree(node):
+    if "page_list" in node:
+        node["page"] = min(node.pop("page_list"))
+    if "children" in node:
+        node["children"] = sort_children(node["children"])
+        for child in node["children"]:
+            flatten_tree(child)
+    return node
 
-        structure.append({
-            "section": header,
-            "title": title or "",
-            "page": page_num + 1
-        })
+def extract_sections(pdf_path):
+    with pdfplumber.open(pdf_path) as pdf, fitz.open(pdf_path) as doc:
+        root = {}
+        current_section = None
+        current_paragraph = ""
+        page_count = len(pdf.pages)
 
-return structure
+        for i, page in enumerate(pdf.pages):
+            text_lines = page.extract_text().split('\n') if page.extract_text() else []
+            bold_blocks = extract_bold_underline_blocks(doc, i + 1)
 
-def nest_structure(structure): root = [] index = {}
+            for line in text_lines:
+                match = section_header_re.match(line.strip())
+                if match:
+                    if current_section:
+                        current_section["paragraph"] = current_paragraph.strip()
+                        insert_section(root, current_section["section_numbers"], current_section)
+                    header = match.group("header")
+                    rest = match.group("rest").strip() if match.group("rest") else ""
+                    section_numbers = split_section_numbers(header)
+                    title_candidate = is_bold_underline_or_quoted(rest, bold_blocks)
+                    title = title_candidate.strip() if title_candidate else ""
+                    topic = title if len(section_numbers) == 1 else None
+                    current_section = {
+                        "section_id": '.'.join(section_numbers),
+                        "section_numbers": section_numbers,
+                        "title": title,
+                        "topic": topic,
+                        "page_list": [i + 1],
+                    }
+                    current_paragraph = rest if rest and not title else ""
+                elif current_section:
+                    if line.strip():
+                        current_paragraph += " " + line.strip()
+                        if (i + 1) not in current_section["page_list"]:
+                            current_section["page_list"].append(i + 1)
 
-for item in sorted(structure, key=lambda x: (x['page'], x['section'])):
-    parts = re.split(r'\.||', item['section'].strip('.'))
-    parts = [p for p in parts if p and p != ' ']
+        if current_section:
+            current_section["paragraph"] = current_paragraph.strip()
+            insert_section(root, current_section["section_numbers"], current_section)
 
-    current = root
-    for i, part in enumerate(parts):
-        key = '.'.join(parts[:i+1])
-        if key not in index:
-            node = {
-                "section": key,
-                "page": item['page'],
-                "title": item['title'] if i == len(parts)-1 else "",
-                "children": []
-            }
-            index[key] = node
-            current.append(node)
-        current = index[key]["children"]
+        nested_sorted = sort_children(root.get("children", {}))
+        return json.dumps({"children": [flatten_tree(child) for child in nested_sorted]}, indent=2)
 
-return root
-
-if name == "main": pdf_path = "sample_with_sections_and_tables.pdf"  # Change to your file structure = extract_structure(pdf_path) nested = nest_structure(structure)
-
-with open("section_hierarchy_nested.json", "w") as f:
-    json.dump(nested, f, indent=2)
-
-print("Hierarchy extraction complete.")
-
+# Example usage
+if __name__ == "__main__":
+    pdf_path = "your_pdf_with_sections.pdf"
+    json_output = extract_sections(pdf_path)
+    with open("section_hierarchy.json", "w") as f:
+        f.write(json_output)
