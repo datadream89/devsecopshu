@@ -1,87 +1,61 @@
 import pytesseract
 from pdf2image import convert_from_path
 import cv2
+import os
 import json
-import re
-from pytesseract import Output
 
-# Path to tesseract executable (adjust if needed)
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Set tesseract path if not in PATH
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-def extract_from_pdf(pdf_path):
-    pages = convert_from_path(pdf_path)
-    result = []
+def extract_headings_from_image(image):
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    d = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT)
 
-    for page_num, page in enumerate(pages):
-        image = cv2.cvtColor(np.array(page), cv2.COLOR_RGB2BGR)
-        data = pytesseract.image_to_data(image, output_type=Output.DICT)
-        blocks = []
+    headings = []
+    for i in range(len(d['text'])):
+        text = d['text'][i].strip()
+        font_size = int(d['height'][i])
+        conf = int(d['conf'][i])
+        
+        # Skip low-confidence or short text
+        if len(text) < 3 or conf < 60:
+            continue
 
-        num_items = len(data['text'])
-        current_block = {"type": None, "text": "", "indent": 0, "page": page_num + 1}
-        prev_left = 0
-        prev_line_num = -1
+        # Heuristics: larger font or "Table" / numeric prefixes => heading
+        if font_size > 15 or text.lower().startswith(("table", "chapter", "section", "1", "2", "3")):
+            headings.append({
+                "text": text,
+                "left": d['left'][i],
+                "top": d['top'][i],
+                "font_size": font_size,
+                "confidence": conf
+            })
 
-        for i in range(num_items):
-            text = data['text'][i].strip()
-            conf = int(data['conf'][i])
-            if not text or conf < 50:
-                continue
+    return headings
 
-            left = data['left'][i]
-            top = data['top'][i]
-            width = data['width'][i]
-            height = data['height'][i]
-            line_num = data['line_num'][i]
+def process_pdf(pdf_path):
+    pages = convert_from_path(pdf_path, dpi=300)
+    all_headings = []
 
-            # Estimate indentation based on left offset
-            indent = left // 40
+    for idx, page in enumerate(pages):
+        image_path = f"page_{idx}.png"
+        page.save(image_path, 'PNG')
+        image = cv2.imread(image_path)
+        headings = extract_headings_from_image(image)
+        all_headings.append({
+            "page": idx + 1,
+            "headings": headings
+        })
+        os.remove(image_path)  # cleanup
 
-            if line_num != prev_line_num:
-                if current_block['text']:
-                    blocks.append(current_block)
-                current_block = {"type": "paragraph", "text": "", "indent": indent, "page": page_num + 1}
-                prev_line_num = line_num
+    return all_headings
 
-            # Classification
-            if text.isupper() and abs(left - image.shape[1]//2) < 100:
-                current_block['type'] = "topic"
-            elif re.match(r'^\s*1(\.|)\s+', text) and current_block['type'] != "topic":
-                current_block['type'] = "heading"
-
-            current_block['text'] += text + " "
-
-        if current_block['text']:
-            blocks.append(current_block)
-
-        # Detect tables using contours
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        _, thresh = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY_INV)
-        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        for cnt in contours:
-            x, y, w, h = cv2.boundingRect(cnt)
-            if w > 100 and h > 50:  # Table-like structure
-                roi = image[y:y+h, x:x+w]
-                table_text = pytesseract.image_to_string(roi, config='--psm 6')
-                blocks.append({
-                    "type": "table",
-                    "text": table_text.strip(),
-                    "indent": 0,
-                    "page": page_num + 1
-                })
-
-        result.extend(blocks)
-
-    return result
-
-# Usage
 if __name__ == "__main__":
-    import numpy as np
-    pdf_path = "your_document.pdf"  # Replace with actual path
-    output = extract_from_pdf(pdf_path)
+    pdf_file = "your_file.pdf"  # Replace with your file
+    result = process_pdf(pdf_file)
 
-    with open("output.json", "w", encoding="utf-8") as f:
-        json.dump(output, f, indent=2, ensure_ascii=False)
+    # Write to JSON
+    with open("document_toc.json", "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2, ensure_ascii=False)
 
-    print("Extraction complete. Output written to output.json")
+    print("Extracted headings written to document_toc.json")
