@@ -3,7 +3,6 @@ import json
 from docx import Document
 import fitz  # PyMuPDF
 
-# --- Step 1: Extract docx to intermediate JSON ---
 def extract_docx_to_json(doc_path):
     doc = Document(doc_path)
     content = []
@@ -29,7 +28,6 @@ def extract_docx_to_json(doc_path):
 
     return content
 
-# --- Step 2: Load all PDF text lines ---
 def extract_pdf_lines(pdf_path):
     doc = fitz.open(pdf_path)
     lines = []
@@ -38,7 +36,6 @@ def extract_pdf_lines(pdf_path):
         lines.extend(line.strip() for line in page_text if line.strip())
     return lines
 
-# --- Step 3: Prefix detection ---
 def detect_prefix(text):
     patterns = [
         (r"^\s*(\d+\.\d+\.?)\s+", "numeric_subsection"),
@@ -52,15 +49,17 @@ def detect_prefix(text):
             return ptype, match.group(1).strip()
     return None, None
 
-# --- Step 4: Match prefixes from PDF lines to JSON entries ---
-def update_types_by_prefix(json_data, pdf_lines):
+def update_types_by_prefix(json_data, pdf_lines, char_match_threshold=25):
     for entry in json_data:
         if entry["type"] not in ("paragraph", "bullet"):
             continue
         para_text = entry["text"].strip()
+        if not para_text:
+            continue
+        snippet = para_text[:char_match_threshold]
         found = False
         for line in pdf_lines:
-            if para_text in line:
+            if snippet in line:
                 prefix_match = re.match(r"^\s*(\S{1,10})\s+", line)
                 if prefix_match:
                     candidate_prefix = prefix_match.group(1)
@@ -76,14 +75,14 @@ def update_types_by_prefix(json_data, pdf_lines):
 
 # --- Usage ---
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # Replace with actual file
-    pdf_path = "your_file.pdf"    # Replace with actual file
+    docx_path = "your_file.docx"
+    pdf_path = "your_file.pdf"
 
     intermediate_json = extract_docx_to_json(docx_path)
     with open("intermediate.json", "w", encoding="utf-8") as f:
         json.dump(intermediate_json, f, indent=2, ensure_ascii=False)
 
     pdf_lines = extract_pdf_lines(pdf_path)
-    final_json = update_types_by_prefix(intermediate_json, pdf_lines)
+    final_json = update_types_by_prefix(intermediate_json, pdf_lines, char_match_threshold=25)
     with open("final_output.json", "w", encoding="utf-8") as f:
         json.dump(final_json, f, indent=2, ensure_ascii=False)
