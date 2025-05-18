@@ -41,8 +41,11 @@ def extract_docx_hierarchy(doc_path):
             is_underlined = any(run.underline for run in para.runs if run.text.strip())
 
             if has_index and is_bold and is_underlined:
-                text_type = "parent"
-            elif 'List' in style:
+                append_subsection()
+                current_subsection = {"subheading": text, "content": []}
+                continue  # Skip adding as regular paragraph
+
+            if 'List' in style:
                 text_type = "bullet"
             else:
                 text_type = "paragraph"
