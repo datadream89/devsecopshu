@@ -3,10 +3,19 @@ from docx import Document
 
 def get_indent_level(para, max_level=10):
     indent = para.paragraph_format.left_indent
-    if indent is None:
-        return 0
-    points = indent.pt if hasattr(indent, 'pt') else indent / 12700
-    level = int(points // 12)  # Each 12pt indentation step counts as one level
+    first_line_indent = para.paragraph_format.first_line_indent
+
+    indent_points = 0
+    if indent:
+        indent_points += indent.pt if hasattr(indent, 'pt') else 0
+    if first_line_indent:
+        indent_points += first_line_indent.pt if hasattr(first_line_indent, 'pt') else 0
+
+    # Count tab characters as additional indent steps (each tab = ~12pt)
+    tab_count = para.text.count('\t')
+    indent_points += tab_count * 12
+
+    level = int(indent_points // 12)
     return min(level, max_level)
 
 def extract_docx_hierarchy_with_indent(doc_path):
