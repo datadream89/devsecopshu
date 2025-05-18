@@ -15,10 +15,10 @@ def extract_docx_structure(doc_path):
 
     def is_subsection(para):
         text = para.text.strip()
-        match = re.match(r"^(\d+(\.)?)\s+(.*)", text)
+        match = re.match(r"^(\d+\.\d+\.?|\d+\.\d+)\s+(.*)", text)
         if not match:
             return False
-        title = match.group(3)
+        title = match.group(2)
         for run in para.runs:
             if run.text.strip() and title.startswith(run.text.strip()):
                 if run.bold and run.underline:
@@ -83,8 +83,7 @@ def extract_docx_structure(doc_path):
 
     return hierarchy
 
-# --- Step 2: Classify paragraph types using PDF text ---
-
+# --- Step 2: Extract PDF text for matching ---
 def extract_pdf_text(pdf_path):
     doc = fitz.open(pdf_path)
     pdf_text = []
@@ -92,15 +91,17 @@ def extract_pdf_text(pdf_path):
         pdf_text.append(page.get_text())
     return "\n".join(pdf_text)
 
+# --- Step 3: Classify based on prefix-only matching ---
 def classify_prefix(text, pdf_text):
-    text_escaped = re.escape(text[:50])  # Use a snippet to avoid regex overflow
+    escaped = re.escape(text[:50])
     patterns = {
-        "numeric subsection": rf"\b\d+\.\d+\s+{text_escaped}",
-        "alpha subsection": rf"\b([a-zA-Z]|[a-zA-Z]\.|\([a-zA-Z]\))\s+{text_escaped}",
-        "roman subsection": rf"\b(i{1,3}|iv|v|vi{1,3}|ix|x|xi{0,3}|xiv|xv|xvi{1,3})\s+{text_escaped}",
+        "numeric section": rf"^\s*\d+\.?\s+{escaped}",
+        "numeric subsection": rf"^\s*\d+\.\d+\.?\s+{escaped}",
+        "alpha subsection": rf"^\s*[(]?[a-zA-Z][).]?\s+{escaped}",
+        "roman subsection": rf"^\s*[(]?(?i)(ix|iv|v?i{0,3}|x)[).]?\s+{escaped}",
     }
     for typ, pattern in patterns.items():
-        if re.search(pattern, pdf_text, re.IGNORECASE):
+        if re.search(pattern, pdf_text, re.IGNORECASE | re.MULTILINE):
             return typ
     return None
 
@@ -119,20 +120,19 @@ def update_json_with_subtypes(data, pdf_text):
 
 # --- Main Execution ---
 if __name__ == "__main__":
-    docx_path = "your_file.docx"   # Replace with your .docx path
-    pdf_path = "your_file.pdf"     # Replace with matching .pdf path
+    docx_path = "your_file.docx"   # Replace with your .docx file path
+    pdf_path = "your_file.pdf"     # Replace with matching .pdf file path
 
-    # Step 1: Extract structure
     result = extract_docx_structure(docx_path)
+
     with open("docx_structure.json", "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
-    # Step 2: Refine types using PDF
     pdf_text = extract_pdf_text(pdf_path)
     updated_result = update_json_with_subtypes(result, pdf_text)
+
     with open("updated_structure.json", "w", encoding="utf-8") as f:
         json.dump(updated_result, f, ensure_ascii=False, indent=2)
 
-    # Optional: Print
     import pprint
     pprint.pprint(updated_result)
