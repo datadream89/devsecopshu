@@ -1,58 +1,72 @@
-import cv2
-import pytesseract
-from pdf2image import convert_from_path
-import os
+# Install required packages before running:
+# pip install transformers torchvision pytorch-lightning pdf2image
+# Also install Poppler (https://blog.alivate.com.au/poppler-windows/) and add to system PATH
+
 import json
+from pdf2image import convert_from_path
+from PIL import Image
+import torch
+from transformers import DonutProcessor, VisionEncoderDecoderModel
 
-# Optional: path to tesseract if not in PATH
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Load Donut Processor and Model
+processor = DonutProcessor.from_pretrained("naver-clova-ix/donut-base-finetuned-docvqa")
+model = VisionEncoderDecoderModel.from_pretrained("naver-clova-ix/donut-base-finetuned-docvqa")
 
-def detect_text_blocks(image):
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, binary = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY_INV)
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model.to(device)
 
-    # Dilate to merge text into blocks
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (10, 3))
-    dilated = cv2.dilate(binary, kernel, iterations=2)
+def pdf_to_images(pdf_path, dpi=200):
+    """Convert PDF to list of PIL images (one per page)."""
+    return convert_from_path(pdf_path, dpi=dpi)
 
-    contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+def run_donut_on_image(image: Image.Image) -> str:
+    """Run Donut model on a single image and return output text."""
+    task_prompt = "<s_docvqa><s_question>What is the document structure?</s_question><s_answer>"
+    pixel_values = processor(image, return_tensors="pt").pixel_values.to(device)
 
-    blocks = []
-    for cnt in contours:
-        x, y, w, h = cv2.boundingRect(cnt)
-        if h > 20 and w > 50:
-            roi = image[y:y+h, x:x+w]
-            text = pytesseract.image_to_string(roi, config="--psm 6").strip()
-            if len(text) > 2:
-                blocks.append({
-                    "text": text,
-                    "bbox": [int(x), int(y), int(w), int(h)]
-                })
-    return sorted(blocks, key=lambda b: b["bbox"][1])  # sort top-down
+    decoder_input_ids = processor.tokenizer(
+        task_prompt, add_special_tokens=False, return_tensors="pt"
+    ).input_ids.to(device)
 
-def process_pdf_with_opencv(pdf_path):
-    pages = convert_from_path(pdf_path, dpi=300)
-    result = []
+    outputs = model.generate(
+        pixel_values,
+        decoder_input_ids=decoder_input_ids,
+        max_length=512,
+        early_stopping=True,
+        pad_token_id=processor.tokenizer.pad_token_id,
+        eos_token_id=processor.tokenizer.eos_token_id,
+        use_cache=True
+    )
 
-    for i, page in enumerate(pages):
-        image_path = f"page_{i}.png"
-        page.save(image_path, 'PNG')
-        image = cv2.imread(image_path)
+    return processor.batch_decode(outputs, skip_special_tokens=True)[0]
 
-        blocks = detect_text_blocks(image)
-        result.append({
-            "page": i + 1,
-            "blocks": blocks
-        })
-        os.remove(image_path)
+def parse_pdf_to_structure(pdf_path: str):
+    """Process all pages and return structured output."""
+    images = pdf_to_images(pdf_path)
+    document_structure = []
 
-    return result
+    for page_num, image in enumerate(images, start=1):
+        try:
+            result_text = run_donut_on_image(image)
+            document_structure.append({
+                "page": page_num,
+                "structure": result_text
+            })
+        except Exception as e:
+            document_structure.append({
+                "page": page_num,
+                "error": str(e)
+            })
+
+    return document_structure
 
 if __name__ == "__main__":
-    pdf_path = "your_file.pdf"  # Replace with your PDF file
-    output = process_pdf_with_opencv(pdf_path)
+    input_pdf = "input.pdf"  # Replace with your PDF filename
+    output_json = "document_structure.json"
 
-    with open("sections_extracted.json", "w", encoding="utf-8") as f:
-        json.dump(output, f, indent=2, ensure_ascii=False)
+    structure = parse_pdf_to_structure(input_pdf)
 
-    print("Sections extracted using OpenCV and saved to sections_extracted.json")
+    with open(output_json, "w", encoding="utf-8") as f:
+        json.dump(structure, f, ensure_ascii=False, indent=2)
+
+    print(f"Structure saved to: {output_json}")
