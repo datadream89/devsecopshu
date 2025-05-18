@@ -4,28 +4,44 @@ import json
 
 def bullet_is_subheading(para):
     text = para.text.lstrip()
+    print(f"Checking paragraph text: '{text}'")
+
     prefix_match = re.match(r"^(\d+(\.)?)\s*", text)
     if not prefix_match:
+        print("No number prefix found.")
         return False
 
-    prefix_len = len(prefix_match.group(0))  # number prefix + trailing spaces
+    prefix_len = len(prefix_match.group(0))
+    print(f"Number prefix found: '{prefix_match.group(0)}' with length {prefix_len}")
 
     pos = 0
-    for run in para.runs:
+    for i, run in enumerate(para.runs):
         run_text = run.text or ""
         run_len = len(run_text)
         run_start = pos
         run_end = pos + run_len
         pos = run_end
 
-        # Check runs that start after prefix+spaces
+        print(f"Run {i}: '{run_text}' from {run_start} to {run_end}, bold={run.bold}, underline={run.underline}")
+
+        # Skip runs fully inside prefix (number and spaces)
         if run_end <= prefix_len:
+            print(f"Run {i} is within prefix, skipping.")
             continue
 
+        # For runs starting after prefix
         if run_start >= prefix_len:
             if run_text.strip() and run.bold and run.underline:
+                print("Found bold and underlined run after prefix - returning True")
                 return True
 
+    print("No bold and underlined run found after prefix - returning False")
+    return False
+
+def is_bold_underlined(para):
+    for run in para.runs:
+        if run.text.strip() and run.bold and run.underline:
+            return True
     return False
 
 def extract_docx_hierarchy(doc_path):
@@ -45,26 +61,6 @@ def extract_docx_hierarchy(doc_path):
             hierarchy.append(current_section.copy())
             current_section["subsections"] = []
 
-    def is_subsection(para):
-        text = para.text.strip()
-        match = re.match(r'^(\d+(\.)?)\s+(.*)', text)
-        if not match:
-            return False
-        _, _, title = match.groups()
-
-        for run in para.runs:
-            run_text = run.text.strip()
-            if run_text and title.startswith(run_text):
-                if run.bold and run.underline:
-                    return True
-        return False
-
-    def is_bold_underlined(para):
-        for run in para.runs:
-            if run.text.strip() and run.bold and run.underline:
-                return True
-        return False
-
     for para in doc.paragraphs:
         text = para.text.strip()
         if not text:
@@ -73,20 +69,14 @@ def extract_docx_hierarchy(doc_path):
         alignment = para.paragraph_format.alignment  # 1 = center
         is_bold = any(run.bold for run in para.runs if run.text.strip())
 
-        # Detect Section: center aligned and bold
+        # Detect Section (center aligned and bold)
         if alignment == 1 and is_bold:
             append_section()
             current_section["heading"] = text
             current_subsection = {"subheading": None, "content": []}
             continue
 
-        # Detect Subsection (numbered, bold+underline)
-        if is_subsection(para):
-            append_subsection()
-            current_subsection = {"subheading": text, "content": []}
-            continue
-
-        # Determine content type
+        # Detect Subsection (bullet list items with number prefix + bold & underline)
         if para.style.name and "List" in para.style.name:
             if bullet_is_subheading(para):
                 text_type = "subheading"
@@ -101,7 +91,7 @@ def extract_docx_hierarchy(doc_path):
 
     append_section()
 
-    # Extract tables and attach immediately to last subsection content
+    # Extract tables and append them under last subsection content if exists
     for table in doc.tables:
         table_data = []
         for row in table.rows:
@@ -127,7 +117,6 @@ def extract_docx_hierarchy(doc_path):
 
     return hierarchy
 
-# Usage example
 if __name__ == "__main__":
     docx_path = "your_file.docx"  # Replace with your file path
     result = extract_docx_hierarchy(docx_path)
