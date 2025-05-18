@@ -14,12 +14,9 @@ def get_non_table_pages_first_n(pdf_path, max_pages=7):
 def is_number_like(text):
     return re.match(r'^([0-9]+(\.[0-9]+)*|[IVXLCDM]+)$', text.strip(), re.IGNORECASE)
 
-def extract_bold_and_underlined(pdf_path, non_table_pages):
+def extract_section_titles(pdf_path, non_table_pages):
     doc = fitz.open(pdf_path)
-    output = {
-        "bold_numbers": [],
-        "bold_underlined_texts": []
-    }
+    merged_output = []
 
     for page_num in non_table_pages:
         page = doc[page_num - 1]
@@ -27,50 +24,40 @@ def extract_bold_and_underlined(pdf_path, non_table_pages):
 
         for block in blocks:
             for line in block.get("lines", []):
-                current_text = ""
-                collecting = False
+                line_spans = line.get("spans", [])
+                bold_number = None
+                bold_underlined_parts = []
 
-                for span in line.get("spans", []):
-                    text = span["text"]
+                for span in line_spans:
+                    text = span["text"].strip()
+                    if not text:
+                        continue
                     font = span.get("font", "").lower()
                     flags = span.get("flags", 0)
-
                     is_bold = "bold" in font
                     is_underlined = bool(flags & 4)
 
-                    if is_bold and is_underlined:
-                        collecting = True
-                        current_text += text  # preserve spacing within the line
-                    elif collecting:
-                        # Finalize the collected underlined + bold phrase
-                        output["bold_underlined_texts"].append({
-                            "page": page_num,
-                            "text": current_text.strip()
-                        })
-                        current_text = ""
-                        collecting = False
+                    if is_bold and not is_underlined and is_number_like(text):
+                        bold_number = text
 
-                    if is_bold and not is_underlined and is_number_like(text.strip()):
-                        output["bold_numbers"].append({
-                            "page": page_num,
-                            "text": text.strip()
-                        })
+                    elif is_bold and is_underlined:
+                        bold_underlined_parts.append(text)
 
-                # If still collecting at end of line
-                if collecting and current_text.strip():
-                    output["bold_underlined_texts"].append({
+                if bold_number and bold_underlined_parts:
+                    merged_output.append({
                         "page": page_num,
-                        "text": current_text.strip()
+                        "section": bold_number,
+                        "title": " ".join(bold_underlined_parts)
                     })
 
-    return output
+    return merged_output
 
 # === Example usage ===
 pdf_path = "your_file.pdf"  # Replace with actual path
 non_table_pages = get_non_table_pages_first_n(pdf_path)
-result = extract_bold_and_underlined(pdf_path, non_table_pages)
+section_titles = extract_section_titles(pdf_path, non_table_pages)
 
-with open("bold_and_underlined_output.json", "w") as f:
-    json.dump(result, f, indent=2)
+with open("merged_section_titles.json", "w") as f:
+    json.dump(section_titles, f, indent=2)
 
-print("Done. Output written to bold_and_underlined_output.json")
+print("Done. Output written to merged_section_titles.json")
