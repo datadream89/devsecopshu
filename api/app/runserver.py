@@ -7,6 +7,7 @@ def extract_docx_hierarchy(doc_path):
     hierarchy = []
     current_section = {"heading": None, "subsections": []}
     current_subsection = {"subheading": None, "content": []}
+    current_heading_level = 0  # 1 for section, 2 for subsection
 
     def append_subsection():
         if current_subsection["subheading"] or current_subsection["content"]:
@@ -25,7 +26,7 @@ def extract_docx_hierarchy(doc_path):
         if not match:
             return False
         _, _, title = match.groups()
-
+        # Title must be bold & underlined for subsection
         for run in para.runs:
             run_text = run.text.strip()
             if run_text and title.startswith(run_text):
@@ -39,17 +40,18 @@ def extract_docx_hierarchy(doc_path):
                 return True
         return False
 
-    def get_indent_level(para):
-        # Indentation is in inches, where 720 = 0.5 inch
-        indent = para.paragraph_format.left_indent
-        if indent is None:
-            return 0
-        points = indent.pt if hasattr(indent, 'pt') else indent / 12700 * 72
-        if points > 20:
-            return 2
-        elif points > 0:
-            return 1
-        return 0
+    def starts_with_underlined(para):
+        # Check if the start of paragraph text is underlined
+        # We'll check runs from the start until non-space text ends
+        pos = 0
+        for run in para.runs:
+            run_text = run.text
+            if not run_text.strip():
+                pos += len(run_text)
+                continue
+            # If first non-space run is underlined, return True
+            return run.underline is True
+        return False
 
     for para in doc.paragraphs:
         text = para.text.strip()
@@ -59,35 +61,31 @@ def extract_docx_hierarchy(doc_path):
         alignment = para.paragraph_format.alignment  # 1 = center
         is_bold = any(run.bold for run in para.runs if run.text.strip())
 
-        # --- Detect Section ---
+        # --- Detect Section (level 1) ---
         if alignment == 1 and is_bold:
             append_section()
             current_section["heading"] = text
             current_subsection = {"subheading": None, "content": []}
+            current_heading_level = 1
             continue
 
-        # --- Detect Subsection ---
+        # --- Detect Subsection (level 2) ---
         if is_subsection(para):
             append_subsection()
             current_subsection = {"subheading": text, "content": []}
+            current_heading_level = 2
             continue
 
-        # --- Detect Type ---
-        indent_level = get_indent_level(para)
-        if para.style.name and "List" in para.style.name:
-            if is_bold_underlined(para):
-                text_type = "heading"
-            elif indent_level == 1:
-                text_type = "level 1"
-            elif indent_level >= 2:
-                text_type = "level 2"
-            else:
-                text_type = "bullet"
+        # --- Determine content type ---
+        # Check if paragraph or bullet starts with underlined string
+        if starts_with_underlined(para):
+            text_type = f"level{current_heading_level}"
         else:
-            if indent_level == 1:
-                text_type = "level 1"
-            elif indent_level >= 2:
-                text_type = "level 2"
+            if para.style.name and "List" in para.style.name:
+                if is_bold_underlined(para):
+                    text_type = "heading"
+                else:
+                    text_type = "bullet"
             else:
                 text_type = "paragraph"
 
@@ -123,7 +121,7 @@ def extract_docx_hierarchy(doc_path):
 
 # --- Example usage ---
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # Replace with your actual DOCX file path
+    docx_path = "your_file.docx"  # Replace with your DOCX path
     result = extract_docx_hierarchy(docx_path)
 
     with open("docx_hierarchy.json", "w", encoding="utf-8") as f:
