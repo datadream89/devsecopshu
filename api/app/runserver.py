@@ -1,50 +1,76 @@
-import pdfplumber
-import fitz
 import re
+import pdfplumber
+import fitz  # PyMuPDF
 
-def split_table_non_table_pages(pdf_path, max_page=7):
-    table_pages = []
-    non_table_pages = []
-
-    with pdfplumber.open(pdf_path) as pdf:
-        total_pages = min(len(pdf.pages), max_page)
-        for i in range(total_pages):
-            page = pdf.pages[i]
-            tables = page.extract_tables()
-            if tables and len(tables) > 0:
-                table_pages.append(i + 1)
-            else:
-                non_table_pages.append(i + 1)
-
-    return table_pages, non_table_pages
+# Helper: Recognize quotes
+QUOTE_PAIRS = [
+    ('"', '"'), ('“', '”'), ('„', '“'), ('«', '»'), ('‹', '›'),
+    ('‟', '”'), ('❝', '❞'), ('〝', '〞'), ('＂', '＂')
+]
 
 def extract_bold_underlined_quoted_text(page_fitz, line_text):
     """
-    Extract the bold, underlined, or quoted portion immediately following section header
-    This is a placeholder function. You need to implement the logic by checking text spans in
-    the page using PyMuPDF (fitz).
+    Find the first bold/underline or quoted text *immediately after* the section number in line_text.
+    Returns the matched string or None.
     """
+    blocks = page_fitz.get_text("dict")["blocks"]
+    # Flatten all spans of the page with their text and font flags
+    spans = []
+    for b in blocks:
+        for l in b.get("lines", []):
+            for s in l.get("spans", []):
+                spans.append(s)
 
-    # Example: extract spans on the line that are bold or underlined or quoted
-    # For now, return None to fallback to rest of line
-    # You can expand this by scanning text spans on the page_fitz
+    # Try to find the part of line_text which is bold/underline or quoted, immediately after section number
 
-    # Pseudocode:
-    # for span in page_fitz.get_text("dict")["blocks"]:
-    #     for line in span["lines"]:
-    #         for span in line["spans"]:
-    #             if span['text'] in line_text and (span['flags'] & BOLD_FLAG or UNDERLINE_FLAG):
-    #                 collect that span text as title
+    # We'll iterate over spans to find a span matching part of line_text,
+    # then check if it's bold/underline or quoted.
+
+    line_text_stripped = line_text.strip()
+    candidates = []
+
+    # We'll try to find all candidate spans that are substrings of line_text and have the style
+    for span in spans:
+        span_text = span.get("text", "").strip()
+        if not span_text:
+            continue
+
+        # Check if span_text is in line_text
+        if span_text in line_text_stripped:
+            # Check for bold or underline or quoted
+            font_flags = span.get("flags", 0)
+            # font_flags bit 2 (value=2) = bold, bit 1 (value=1) = italic, bit 4 (value=4) = monospace, bit 5 (value=32) = serif, bit 6 (value=64) underline (check docs)
+            is_bold = (font_flags & 2) != 0
+            is_underline = (span.get("underline", False) is True)
+            # Check quotes
+            is_quoted = False
+            for open_q, close_q in QUOTE_PAIRS:
+                if span_text.startswith(open_q) and span_text.endswith(close_q):
+                    is_quoted = True
+                    break
+
+            if is_bold or is_underline or is_quoted:
+                candidates.append(span_text)
+
+    if candidates:
+        # Return the longest candidate (most likely the full title)
+        return max(candidates, key=len)
 
     return None
 
 def extract_section_headers(pdf_path, non_table_pages, max_page=7):
-    # Regex to match section headers like: 1. 1.1 6.1.2 a. (a) i. IV etc.
+    # Regex to match section headers:
+    # numbers with dots (like 1.2.3), single letters (a., B.), Roman numerals (IV., XII.)
     section_header_re = re.compile(
-        r'^\s*(\d+(\.\d+)*|[ivxlcdmIVXLCDM]+|[a-zA-Z]|\([a-zA-Z0-9]+\))\.?\s*(.*)'
+        r'^\s*('
+        r'(?:\d+(?:\.\d+)+)'               # Numbers with dots like 1.2 or 3.1.4
+        r'|[a-zA-Z]'                       # Single letter
+        r'|M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})'  # Roman numerals
+        r')\.?\s*(.*)'
     )
 
     headers = []
+
     with pdfplumber.open(pdf_path) as pdf:
         doc = fitz.open(pdf_path)
         for page_num in non_table_pages:
@@ -63,27 +89,25 @@ def extract_section_headers(pdf_path, non_table_pages, max_page=7):
                 match = section_header_re.match(line)
                 if match:
                     section_num = match.group(1)
-                    rest = match.group(3).strip()
+                    rest_of_line = match.group(3).strip()
 
+                    # Extract bold/underline/quoted text immediately following section number
                     title = extract_bold_underlined_quoted_text(page_fitz, line)
 
                     headers.append({
                         "page": page_num,
                         "section": section_num,
-                        "title": title if title else rest
+                        "title": title if title else rest_of_line
                     })
     return headers
 
+# --- Example usage ---
 if __name__ == "__main__":
-    pdf_path = "your_file.pdf"  # Replace with your PDF file path
+    pdf_path = "your_pdf_file.pdf"
+    # Example non-table pages (from your earlier step), here assumed pages 1 to 7 for demo
+    non_table_pages = list(range(1, 8))
 
-    # Step 1: Split first 7 pages into table and non-table pages
-    table_pages, non_table_pages = split_table_non_table_pages(pdf_path, max_page=7)
-    print(f"Table pages (up to 7): {table_pages}")
-    print(f"Non-table pages (up to 7): {non_table_pages}")
+    section_headers = extract_section_headers(pdf_path, non_table_pages, max_page=7)
 
-    # Step 2: Extract section headers only on non-table pages within first 7 pages
-    headers = extract_section_headers(pdf_path, non_table_pages, max_page=7)
-    print("Extracted headers:")
-    for h in headers:
-        print(h)
+    import json
+    print(json.dumps(section_headers, indent=2))
