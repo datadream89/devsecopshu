@@ -9,113 +9,102 @@ QUOTE_PAIRS = [
     ('❝', '❞'), ('〝', '〞'), ('＂', '＂')
 ]
 
-section_pattern = re.compile(
-    r"^(?P<section>(\d+(\.\d+)*|[a-zA-Z]|\([a-zA-Z0-9]+\))\.)\s+(?P<rest>.+)")
+section_header_re = re.compile(
+    r"""^\s*
+    (?P<header>
+        (?:\d+(?:\.\d+)*\.)     # e.g. 1. or 1.1. or 2.6.4.
+        | [a-zA-Z]\.               # e.g. a. or B.
+        | \([a-zA-Z0-9]+\)        # e.g. (a), (1)
+    )
+    \s*
+    (?P<rest>.*)?$
+    """, re.VERBOSE
+)
 
-# Extract formatted text for titles using fitz
-def get_formatted_titles(pdf_path):
+def extract_bold_underline_quoted_titles(pdf_path):
     doc = fitz.open(pdf_path)
-    formatted = defaultdict(dict)
+    title_map = defaultdict(list)  # {page_num: [(section_id, title)]}
     for page_num, page in enumerate(doc, start=1):
-        blocks = page.get_text("dict")['blocks']
+        blocks = page.get_text("dict")["blocks"]
         for block in blocks:
             for line in block.get("lines", []):
-                for span in line.get("spans", []):
-                    text = span.get("text", "").strip()
+                line_text = " ".join(span["text"] for span in line["spans"])
+                match = section_header_re.match(line_text.strip())
+                if not match:
+                    continue
+
+                header = match.group("header")
+                rest = match.group("rest") or ""
+
+                title = None
+                for span in line["spans"]:
+                    text = span["text"].strip()
                     if not text:
                         continue
-                    flags = span.get("flags", 0)
-                    is_bold = flags & 2
-                    is_underline = flags & 4
+                    is_bold = span.get("flags", 0) & 2
+                    is_underline = "underline" in span.get("font", "").lower()
                     if is_bold or is_underline:
-                        formatted[page_num][text] = True
-    return formatted
+                        title = text
+                        break
 
-def extract_title(text):
-    for open_q, close_q in QUOTE_PAIRS:
-        pattern = re.escape(open_q) + r'(.+?)' + re.escape(close_q)
-        match = re.search(pattern, text)
-        if match:
-            return match.group(1).strip(), text.replace(match.group(0), '').strip()
-    return None, text
+                if not title:
+                    for open_q, close_q in QUOTE_PAIRS:
+                        q_match = re.search(re.escape(open_q) + r"(.+?)" + re.escape(close_q), rest)
+                        if q_match:
+                            title = q_match.group(1).strip()
+                            break
 
-def build_hierarchy(pdf_path):
-    formatted_titles = get_formatted_titles(pdf_path)
-    hierarchy = {}
-    current_path = []
-    current_node = hierarchy
-    node_stack = []
+                if title:
+                    title_map[page_num].append((header, title))
+    return title_map
 
+def extract_hierarchy(pdf_path, title_map):
+    hierarchy = {"children": []}
+    node_stack = {}
+
+    sections = []
     with pdfplumber.open(pdf_path) as pdf:
         for page_num, page in enumerate(pdf.pages, start=1):
-            lines = page.extract_text().split("\n")
+            lines = (page.extract_text() or "").split("\n")
             for line in lines:
-                line = line.strip()
-                if not line:
-                    continue
-                match = section_pattern.match(line)
+                match = section_header_re.match(line.strip())
                 if match:
-                    section_id = match.group("section")
-                    rest = match.group("rest").strip()
-                    title, remaining = extract_title(rest)
-                    if not title:
-                        for txt in formatted_titles.get(page_num, {}):
-                            if txt in rest:
-                                title = txt
-                                remaining = rest.replace(txt, '').strip()
-                                break
+                    header = match.group("header").strip()
+                    level = header.count('.') + 1 if '.' in header else 2 if header.isalpha() else 3
+                    title = None
+                    for h, t in title_map.get(page_num, []):
+                        if h == header:
+                            title = t
+                            break
+                    sections.append({"level": level, "section": header, "title": title, "page": page_num})
 
-                    section_parts = section_id.strip('.').split('.')
-                    current = hierarchy
-                    for part in section_parts:
-                        if part not in current:
-                            current[part] = {
-                                "section": part,
-                                "title": title if title else None,
-                                "paragraph": "",
-                                "page": [page_num],
-                                "children": {}
-                            }
-                        else:
-                            if page_num not in current[part]["page"]:
-                                current[part]["page"].append(page_num)
-                        current = current[part]["children"]
+    # Build hierarchy
+    for item in sorted(sections, key=lambda x: (x["page"], x["section"])):
+        level = item["level"]
+        node = {"section": item["section"], "title": item["title"], "page": item["page"], "children": []}
 
-                    current_path = section_parts
-                    node_stack = [hierarchy[p] if i == 0 else node_stack[-1]["children"][p]
-                                  for i, p in enumerate(section_parts)]
+        if level == 1:
+            hierarchy["children"].append(node)
+        else:
+            parent = node_stack.get(level - 1)
+            if parent:
+                parent["children"].append(node)
+            else:
+                hierarchy["children"].append(node)
 
-                    if remaining:
-                        node_stack[-1]["paragraph"] += remaining + " "
-                elif node_stack:
-                    node_stack[-1]["paragraph"] += line + " "
+        node_stack[level] = node
 
     return hierarchy
 
-def flatten_hierarchy(hierarchy):
-    flat = []
-    def recurse(node, parent_topic=None):
-        for key in sorted(node.keys(), key=lambda x: [int(s) if s.isdigit() else s for s in x.split('.')]):
-            entry = node[key]
-            flat.append({
-                "section": entry["section"],
-                "title": entry.get("title"),
-                "topic": parent_topic,
-                "paragraph": entry.get("paragraph", "").strip(),
-                "page": entry["page"][0] if entry["page"] else None
-            })
-            recurse(entry["children"], parent_topic=entry.get("title") or parent_topic)
-    recurse(hierarchy)
-    return flat
-
-def save_to_json(data, path):
-    with open(path, 'w', encoding='utf-8') as f:
+def save_json(data, path):
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 if __name__ == "__main__":
-    pdf_path = "your_file.pdf"  # Replace with actual path
-    hierarchy = build_hierarchy(pdf_path)
-    flat = flatten_hierarchy(hierarchy)
+    pdf_path = "sample.pdf"  # Replace with your PDF file path
+    output_path = "hierarchy.json"
 
-    save_to_json(flat, "flat_sections.json")
-    print("Extracted", len(flat), "sections.")
+    title_map = extract_bold_underline_quoted_titles(pdf_path)
+    hierarchy = extract_hierarchy(pdf_path, title_map)
+    save_json(hierarchy, output_path)
+    print("Hierarchy saved to", output_path)
