@@ -1,45 +1,15 @@
-import fitz  # PyMuPDF
-import json
+import pdfplumber
 
-def get_sorted_toc(pdf_path, max_page=7):
-    doc = fitz.open(pdf_path)
-    toc = doc.get_toc()
+def get_non_table_pages_first_n(pdf_path, max_pages=7):
+    non_table_pages = []
+    with pdfplumber.open(pdf_path) as pdf:
+        for i, page in enumerate(pdf.pages[:max_pages]):
+            tables = page.extract_tables()
+            if not tables:
+                non_table_pages.append(i + 1)  # +1 for 1-based page numbers
+    return non_table_pages
 
-    # Filter entries within first `max_page` pages
-    filtered_toc = [entry for entry in toc if entry[2] <= max_page]
-
-    # Sort by page number
-    sorted_toc = sorted(filtered_toc, key=lambda x: x[2])
-
-    # Build nested hierarchy
-    hierarchy = []
-    stack = []
-
-    for level, title, page in sorted_toc:
-        node = {
-            "title": title.strip(),
-            "page": page,
-            "children": []
-        }
-
-        if level == 1:
-            hierarchy.append(node)
-            stack = [node]
-        else:
-            while len(stack) >= level:
-                stack.pop()
-            if stack:
-                stack[-1]["children"].append(node)
-            stack.append(node)
-
-    return hierarchy
-
-# Usage
-pdf_path = "your_file.pdf"
-toc_hierarchy = get_sorted_toc(pdf_path)
-
-# Write to JSON file
-with open("toc_output.json", "w", encoding="utf-8") as f:
-    json.dump(toc_hierarchy, f, indent=2, ensure_ascii=False)
-
-print("ToC JSON saved to toc_output.json")
+# Example usage
+pdf_path = "your_file.pdf"  # Replace with your actual file path
+non_table_pages = get_non_table_pages_first_n(pdf_path)
+print("First non-table pages (up to 7):", non_table_pages)
