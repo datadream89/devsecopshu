@@ -1,7 +1,7 @@
 import re
 import json
 from docx import Document
-import fitz  # PyMuPDF for PDF reading
+import fitz  # PyMuPDF
 
 def extract_docx_structure(doc_path):
     doc = Document(doc_path)
@@ -14,16 +14,10 @@ def extract_docx_structure(doc_path):
 
     def is_subsection(para):
         text = para.text.strip()
-        # Check if starts with number + optional dot + whitespace + rest
-        match = re.match(r"^\d+(\.)?\s+", text)
-        if not match:
-            return False
-        # Check if any run with bold+underline matches the title start
-        title = text[match.end():].strip()
+        # Bold + underline check without prefix assumption
         for run in para.runs:
-            if run.text.strip() and title.startswith(run.text.strip()):
-                if run.bold and run.underline:
-                    return True
+            if run.bold and run.underline and run.text.strip():
+                return True
         return False
 
     def is_bullet(para):
@@ -94,7 +88,7 @@ def extract_pdf_text(pdf_path):
 
 
 def detect_prefix_type(text, pdf_text):
-    # Patterns with optional leading whitespace (for matching start of text)
+    # Regex patterns for prefixes at start, optional leading spaces allowed
     patterns = {
         "numeric_section": r"^\s*(\d+(\.)?)\s+",
         "numeric_subsection": r"^\s*((\d+\.)+\d+(\.)?)\s+",
@@ -102,8 +96,6 @@ def detect_prefix_type(text, pdf_text):
         "roman_subsection": r"^\s*((\(?[ivxlcdmIVXLCDM]+\)?)(\.|\s))\s*",
     }
 
-    # We want to check numeric_subsection first (like 1.1 or 2.3.1), then numeric_section (1. or 1)
-    # Because numeric_subsection pattern can match numeric_section as well
     check_order = ["numeric_subsection", "numeric_section", "alpha_subsection", "roman_subsection"]
 
     for key in check_order:
@@ -111,8 +103,7 @@ def detect_prefix_type(text, pdf_text):
         m = regex.match(text)
         if m:
             prefix = m.group(1)
-            # Check if prefix exists in pdf_text (ignore whitespace differences)
-            # Normalize spaces for matching
+            # Verify prefix exists in PDF text ignoring spaces/case
             prefix_norm = re.sub(r"\s+", "", prefix.lower())
             pdf_text_norm = re.sub(r"\s+", "", pdf_text.lower())
             if prefix_norm in pdf_text_norm:
@@ -120,32 +111,38 @@ def detect_prefix_type(text, pdf_text):
     return None, None
 
 
-def classify_types(hierarchy, pdf_text):
+def add_prefix_from_pdf(hierarchy, pdf_text):
     def classify_content_list(content_list):
         for c in content_list:
-            if c["type"] in ["paragraph", "bullet"]:
+            # Only attempt if type is paragraph or bullet and prefix not present
+            if c["type"] in ["paragraph", "bullet"] and "prefix" not in c:
                 ctype, prefix = detect_prefix_type(c["text"], pdf_text)
                 if ctype:
                     c["type"] = ctype
                     c["prefix"] = prefix
-            # Tables and others remain as is
 
     for section in hierarchy:
-        # Check heading and subheading for prefix
-        ctype, prefix = detect_prefix_type(section["heading"], pdf_text) if section["heading"] else (None, None)
-        if ctype == "numeric_section":
-            section["type"] = ctype
-            section["prefix"] = prefix
+        # Only add prefix if heading has no prefix yet
+        if section.get("heading") and "prefix" not in section:
+            ctype, prefix = detect_prefix_type(section["heading"], pdf_text)
+            if ctype == "numeric_section":
+                section["type"] = ctype
+                section["prefix"] = prefix
+            else:
+                section["type"] = "section"
         else:
-            section["type"] = "section"
+            section.setdefault("type", "section")
 
         for subsection in section.get("subsections", []):
-            ctype, prefix = detect_prefix_type(subsection["subheading"], pdf_text) if subsection["subheading"] else (None, None)
-            if ctype == "numeric_subsection":
-                subsection["type"] = ctype
-                subsection["prefix"] = prefix
+            if subsection.get("subheading") and "prefix" not in subsection:
+                ctype, prefix = detect_prefix_type(subsection["subheading"], pdf_text)
+                if ctype == "numeric_subsection":
+                    subsection["type"] = ctype
+                    subsection["prefix"] = prefix
+                else:
+                    subsection["type"] = "subsection"
             else:
-                subsection["type"] = "subsection"
+                subsection.setdefault("type", "subsection")
 
             classify_content_list(subsection.get("content", []))
 
@@ -155,18 +152,12 @@ def classify_types(hierarchy, pdf_text):
 
 
 if __name__ == "__main__":
-    docx_path = "sample.docx"  # Your Word doc file path
-    pdf_path = "sample.pdf"    # Your PDF file path
+    docx_path = "sample.docx"  # Your Word document path
+    pdf_path = "sample.pdf"    # Your PDF document path
 
-    # Extract structure from Word
     hierarchy = extract_docx_structure(docx_path)
-
-    # Extract full text from PDF
     pdf_text = extract_pdf_text(pdf_path)
+    updated_hierarchy = add_prefix_from_pdf(hierarchy, pdf_text)
 
-    # Classify paragraphs, bullets, headings based on PDF prefixes
-    classified_hierarchy = classify_types(hierarchy, pdf_text)
-
-    # Output to JSON
     with open("structured_output.json", "w", encoding="utf-8") as f:
-        json.dump(classified_hierarchy, f, indent=2, ensure_ascii=False)
+        json.dump(updated_hierarchy, f, indent=2, ensure_ascii=False)
