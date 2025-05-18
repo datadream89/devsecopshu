@@ -1,51 +1,68 @@
 from docx import Document
+from docx.shared import Pt
 import json
 
-def alignment_to_str(alignment):
+def get_indent_level(left_indent, base_indent=36):
+    if left_indent is None:
+        return 0
+    indent_pts = left_indent.pt if hasattr(left_indent, 'pt') else 0
+    level = int(round(indent_pts / base_indent))
+    return level
+
+def is_bold_and_underlined(para):
+    for run in para.runs:
+        if run.text.strip() and run.bold and run.underline:
+            return True
+    return False
+
+def get_alignment_str(alignment):
     if alignment is None:
         return "None"
     mapping = {
-        0: "Left",
-        1: "Center",
-        2: "Right",
-        3: "Justify"
+        0: "left",
+        1: "center",
+        2: "right",
+        3: "justify"
     }
-    return mapping.get(alignment.value, "Unknown")
+    return mapping.get(alignment.value, "unknown")
 
-def get_font_info(run):
-    font = run.font
-    return {
-        "text": run.text,
-        "name": font.name,
-        "size": font.size.pt if font.size else None,
-        "bold": font.bold,
-        "italic": font.italic,
-        "underline": font.underline,
-        "color": font.color.rgb.hex if font.color and font.color.rgb else None
-    }
+def extract_sections(doc_path):
+    doc = Document(doc_path)
+    sections = []
 
-docx_path = 'your_file.docx'  # Replace with your file
+    for para in doc.paragraphs:
+        text = para.text.strip()
+        if not text:
+            continue
 
-doc = Document(docx_path)
+        alignment = para.paragraph_format.alignment
+        align_str = get_alignment_str(alignment)
+        indent_level = get_indent_level(para.paragraph_format.left_indent)
 
-paragraphs_data = []
+        if is_bold_and_underlined(para):
+            if align_str == "center":
+                para_type = "topic"
+            elif align_str == "justify":
+                para_type = "heading"
+            else:
+                para_type = "paragraph"
+        else:
+            para_type = "paragraph"
 
-for para in doc.paragraphs:
-    para_text = para.text
-    para_style = para.style.name if para.style else None
-    para_alignment = alignment_to_str(para.paragraph_format.alignment)
+        sections.append({
+            "text": text,
+            "type": para_type,
+            "indent_level": indent_level,
+            "alignment": align_str
+        })
 
-    runs_info = [get_font_info(run) for run in para.runs]
+    return sections
 
-    paragraphs_data.append({
-        "text": para_text,
-        "style": para_style,
-        "alignment": para_alignment,
-        "runs": runs_info
-    })
+if __name__ == "__main__":
+    docx_path = "your_file.docx"  # Replace with your file path
+    result = extract_sections(docx_path)
 
-# Save to JSON file
-with open('paragraphs_output.json', 'w', encoding='utf-8') as f:
-    json.dump(paragraphs_data, f, ensure_ascii=False, indent=2)
+    with open("sections_output.json", "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
 
-print("Paragraph data with font info saved to paragraphs_output.json")
+    print("Extracted paragraphs with types and indent levels saved in sections_output.json")
