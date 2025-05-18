@@ -1,107 +1,138 @@
 import re
-import json
 from docx import Document
+import json
 
-def extract_docx_structure(doc_path):
+def bullet_is_subheading(para):
+    text = para.text.lstrip()
+    prefix_match = re.match(r"^(\d+(\.)?)\s*", text)
+    if not prefix_match:
+        return False
+
+    prefix_len = len(prefix_match.group(0))  # number prefix + trailing spaces
+
+    pos = 0
+    for run in para.runs:
+        run_text = run.text or ""
+        run_len = len(run_text)
+        run_start = pos
+        run_end = pos + run_len
+        pos = run_end
+
+        # Check runs that start after prefix+spaces
+        if run_end <= prefix_len:
+            continue
+
+        if run_start >= prefix_len:
+            if run_text.strip() and run.bold and run.underline:
+                return True
+
+    return False
+
+def extract_docx_hierarchy(doc_path):
     doc = Document(doc_path)
     hierarchy = []
-    current_section = None
-    current_subsection = None
+    current_section = {"heading": None, "subsections": []}
+    current_subsection = {"subheading": None, "content": []}
 
-    def is_section(para):
-        return para.paragraph_format.alignment == 1 and any(run.bold for run in para.runs if run.text.strip())
+    def append_subsection():
+        if current_subsection["subheading"] or current_subsection["content"]:
+            current_section["subsections"].append(current_subsection.copy())
+            current_subsection["content"] = []
+
+    def append_section():
+        append_subsection()
+        if current_section["heading"] or current_section["subsections"]:
+            hierarchy.append(current_section.copy())
+            current_section["subsections"] = []
 
     def is_subsection(para):
         text = para.text.strip()
-        match = re.match(r"^(\d+(\.)?)\s+(.*)", text)
+        match = re.match(r'^(\d+(\.)?)\s+(.*)', text)
         if not match:
             return False
-        title = match.group(3)
+        _, _, title = match.groups()
+
         for run in para.runs:
-            if run.text.strip() and title.startswith(run.text.strip()):
+            run_text = run.text.strip()
+            if run_text and title.startswith(run_text):
                 if run.bold and run.underline:
                     return True
         return False
 
-    def is_bullet(para):
-        return para.style.name and "List" in para.style.name
-
-    def bullet_is_subheading(para):
-        text = para.text.strip()
-        if re.match(r"^\d+(\.)?\s+", text):
-            for run in para.runs:
-                if run.text.strip() and run.bold and run.underline:
-                    return True
+    def is_bold_underlined(para):
+        for run in para.runs:
+            if run.text.strip() and run.bold and run.underline:
+                return True
         return False
-
-    def add_content(text, ctype):
-        if current_subsection is not None:
-            current_subsection["content"].append({"type": ctype, "text": text})
-        elif current_section is not None:
-            current_section["content"].append({"type": ctype, "text": text})
-        else:
-            hierarchy.append({"heading": None, "content": [{"type": ctype, "text": text}]})
 
     for para in doc.paragraphs:
         text = para.text.strip()
         if not text:
             continue
 
-        if is_section(para):
-            if current_section:
-                if current_subsection:
-                    current_section["subsections"].append(current_subsection)
-                    current_subsection = None
-                hierarchy.append(current_section)
-            current_section = {"heading": text, "content": [], "subsections": []}
-            current_subsection = None
+        alignment = para.paragraph_format.alignment  # 1 = center
+        is_bold = any(run.bold for run in para.runs if run.text.strip())
+
+        # Detect Section: center aligned and bold
+        if alignment == 1 and is_bold:
+            append_section()
+            current_section["heading"] = text
+            current_subsection = {"subheading": None, "content": []}
             continue
 
+        # Detect Subsection (numbered, bold+underline)
         if is_subsection(para):
-            if current_subsection:
-                current_section["subsections"].append(current_subsection)
+            append_subsection()
             current_subsection = {"subheading": text, "content": []}
             continue
 
-        if is_bullet(para):
+        # Determine content type
+        if para.style.name and "List" in para.style.name:
             if bullet_is_subheading(para):
-                ctype = "subheading"
+                text_type = "subheading"
+            elif is_bold_underlined(para):
+                text_type = "heading"
             else:
-                ctype = "bullet"
+                text_type = "bullet"
         else:
-            ctype = "paragraph"
+            text_type = "paragraph"
 
-        add_content(text, ctype)
+        current_subsection["content"].append({"type": text_type, "text": text})
 
-    if current_subsection:
-        current_section["subsections"].append(current_subsection)
-    if current_section:
-        hierarchy.append(current_section)
+    append_section()
 
-    # --- Attach tables ---
+    # Extract tables and attach immediately to last subsection content
     for table in doc.tables:
         table_data = []
         for row in table.rows:
-            table_data.append([cell.text.strip() for cell in row.cells])
-        table_entry = {"type": "table", "data": table_data}
+            row_data = [cell.text.strip() for cell in row.cells]
+            table_data.append(row_data)
 
         if hierarchy:
-            last_section = hierarchy[-1]
-            if last_section["subsections"]:
-                last_section["subsections"][-1]["content"].append(table_entry)
+            if hierarchy[-1]["subsections"]:
+                hierarchy[-1]["subsections"][-1]["content"].append({"type": "table", "data": table_data})
             else:
-                last_section["content"].append(table_entry)
+                hierarchy[-1]["subsections"].append({
+                    "subheading": None,
+                    "content": [{"type": "table", "data": table_data}]
+                })
         else:
-            hierarchy.append({"heading": None, "content": [table_entry], "subsections": []})
+            hierarchy.append({
+                "heading": None,
+                "subsections": [{
+                    "subheading": None,
+                    "content": [{"type": "table", "data": table_data}]
+                }]
+            })
 
     return hierarchy
 
-# --- Usage ---
+# Usage example
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # Replace with your Word file path
-    result = extract_docx_structure(docx_path)
+    docx_path = "your_file.docx"  # Replace with your file path
+    result = extract_docx_hierarchy(docx_path)
 
-    with open("docx_structure.json", "w", encoding="utf-8") as f:
+    with open("docx_hierarchy.json", "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
     import pprint
