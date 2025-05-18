@@ -1,61 +1,58 @@
+import cv2
 import pytesseract
 from pdf2image import convert_from_path
-import cv2
 import os
 import json
 
-# Set tesseract path if not in PATH
+# Optional: path to tesseract if not in PATH
 # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-def extract_headings_from_image(image):
+def detect_text_blocks(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    d = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT)
+    _, binary = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY_INV)
 
-    headings = []
-    for i in range(len(d['text'])):
-        text = d['text'][i].strip()
-        font_size = int(d['height'][i])
-        conf = int(d['conf'][i])
-        
-        # Skip low-confidence or short text
-        if len(text) < 3 or conf < 60:
-            continue
+    # Dilate to merge text into blocks
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (10, 3))
+    dilated = cv2.dilate(binary, kernel, iterations=2)
 
-        # Heuristics: larger font or "Table" / numeric prefixes => heading
-        if font_size > 15 or text.lower().startswith(("table", "chapter", "section", "1", "2", "3")):
-            headings.append({
-                "text": text,
-                "left": d['left'][i],
-                "top": d['top'][i],
-                "font_size": font_size,
-                "confidence": conf
-            })
+    contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    return headings
+    blocks = []
+    for cnt in contours:
+        x, y, w, h = cv2.boundingRect(cnt)
+        if h > 20 and w > 50:
+            roi = image[y:y+h, x:x+w]
+            text = pytesseract.image_to_string(roi, config="--psm 6").strip()
+            if len(text) > 2:
+                blocks.append({
+                    "text": text,
+                    "bbox": [int(x), int(y), int(w), int(h)]
+                })
+    return sorted(blocks, key=lambda b: b["bbox"][1])  # sort top-down
 
-def process_pdf(pdf_path):
+def process_pdf_with_opencv(pdf_path):
     pages = convert_from_path(pdf_path, dpi=300)
-    all_headings = []
+    result = []
 
-    for idx, page in enumerate(pages):
-        image_path = f"page_{idx}.png"
+    for i, page in enumerate(pages):
+        image_path = f"page_{i}.png"
         page.save(image_path, 'PNG')
         image = cv2.imread(image_path)
-        headings = extract_headings_from_image(image)
-        all_headings.append({
-            "page": idx + 1,
-            "headings": headings
-        })
-        os.remove(image_path)  # cleanup
 
-    return all_headings
+        blocks = detect_text_blocks(image)
+        result.append({
+            "page": i + 1,
+            "blocks": blocks
+        })
+        os.remove(image_path)
+
+    return result
 
 if __name__ == "__main__":
-    pdf_file = "your_file.pdf"  # Replace with your file
-    result = process_pdf(pdf_file)
+    pdf_path = "your_file.pdf"  # Replace with your PDF file
+    output = process_pdf_with_opencv(pdf_path)
 
-    # Write to JSON
-    with open("document_toc.json", "w", encoding="utf-8") as f:
-        json.dump(result, f, indent=2, ensure_ascii=False)
+    with open("sections_extracted.json", "w", encoding="utf-8") as f:
+        json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print("Extracted headings written to document_toc.json")
+    print("Sections extracted using OpenCV and saved to sections_extracted.json")
