@@ -30,25 +30,26 @@ def extract_docx_hierarchy(doc_path):
         is_bold = any(run.bold for run in para.runs if run.text.strip())
         is_underlined = any(run.underline for run in para.runs if run.text.strip())
 
-        # Check if it starts with a single digit + "." or space
-        if re.match(r'^\d(\.|\s)', text) and is_bold and is_underlined:
+        # Detect "Section 1. Definitions" or "1 Definitions" etc. as parent
+        parent_pattern = r'^(Section\s*)?\d(\.|\s)+'
+        if re.match(parent_pattern, text, re.IGNORECASE) and is_bold and is_underlined:
             append_subsection()
             current_subsection = {"subheading": text, "content": []}
             continue
 
-        # Check for Heading 1
+        # Heading 1 becomes section
         if style.startswith('Heading 1'):
             append_section()
             current_section["heading"] = text
             current_section["subsections"] = []
             current_subsection = {"subheading": None, "content": []}
 
-        # Check for Heading 2
+        # Heading 2 becomes subsection
         elif style.startswith('Heading 2'):
             append_subsection()
             current_subsection = {"subheading": text, "content": []}
 
-        # Bullet or paragraph
+        # Bullet or regular paragraph
         else:
             if 'List' in style:
                 text_type = "bullet"
@@ -58,7 +59,7 @@ def extract_docx_hierarchy(doc_path):
 
     append_section()
 
-    # Append tables
+    # Extract tables
     for table in doc.tables:
         table_data = []
         for row in table.rows:
@@ -85,7 +86,7 @@ def extract_docx_hierarchy(doc_path):
 
 # Example usage
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # Replace with your actual DOCX file path
+    docx_path = "your_file.docx"  # Replace with your actual DOCX path
     result = extract_docx_hierarchy(docx_path)
 
     with open("docx_hierarchy.json", "w", encoding="utf-8") as f:
