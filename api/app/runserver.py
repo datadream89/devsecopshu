@@ -7,10 +7,18 @@ QUOTE_PAIRS = [
     ('‟', '”'), ('❝', '❞'), ('〝', '〞'), ('＂', '＂')
 ]
 
-def extract_bold_underlined_quoted_text(page_fitz, line_text):
-    if not line_text:
-        return None
+def is_quoted(text):
+    for open_q, close_q in QUOTE_PAIRS:
+        if text.startswith(open_q) and text.endswith(close_q):
+            return True
+    return False
 
+def extract_bold_underlined_quoted_text_after_section(page_fitz, line, section_num):
+    """
+    Extract the bold/underlined/quoted text immediately after the section number in the line.
+    Return None if no such text found.
+    """
+    # Get spans from page
     blocks = page_fitz.get_text("dict").get("blocks", [])
     spans = []
     for b in blocks:
@@ -18,37 +26,60 @@ def extract_bold_underlined_quoted_text(page_fitz, line_text):
             for s in l.get("spans", []):
                 spans.append(s)
 
-    line_text_stripped = line_text.strip()
+    # Find start index of section number in line text
+    section_index = line.find(section_num)
+    if section_index == -1:
+        return None
+
+    # Remaining text after section number (strip leading whitespace and dots)
+    after_section = line[section_index + len(section_num):].lstrip(" .")
+
+    if not after_section:
+        return None
+
+    # We'll try to find spans which are inside the after_section substring
+
+    # Strategy:
+    # - Find span(s) whose text is a substring of after_section starting from beginning
+    # - Among those, pick the longest bold/underlined/quoted span (or combination if contiguous)
+
+    # Collect candidates: spans whose text appears at start of after_section
     candidates = []
+    after_section_lower = after_section.lower()
 
     for span in spans:
-        span_text = span.get("text", "")
+        span_text = span.get("text", "").strip()
         if not span_text:
             continue
-        if span_text.strip() in line_text_stripped:
+        # Check if after_section starts with this span text (case insensitive)
+        if after_section_lower.startswith(span_text.lower()):
+            # Check formatting
             font_flags = span.get("flags", 0)
             is_bold = (font_flags & 2) != 0
             is_underline = span.get("underline", False)
-            is_quoted = False
-            for open_q, close_q in QUOTE_PAIRS:
-                if span_text.startswith(open_q) and span_text.endswith(close_q):
-                    is_quoted = True
-                    break
-            if is_bold or is_underline or is_quoted:
-                candidates.append(span_text.strip())
+            quoted = is_quoted(span_text)
 
-    if candidates:
-        return max(candidates, key=len)
-    return None
+            if is_bold or is_underline or quoted:
+                candidates.append(span_text)
+
+    if not candidates:
+        return None
+
+    # Return the longest candidate as the best title
+    best_title = max(candidates, key=len)
+    return best_title
 
 def extract_section_headers(pdf_path, non_table_pages, max_page=7):
-    # Regex updated to capture section number and rest of line correctly
+    # Regex matches:
+    #  - Numbered sections like 1. or 1.2. or 1.2.3.
+    #  - Single letters with trailing dot like a. or B.
+    #  - Roman numerals with trailing dot like i. or iv.
     section_header_re = re.compile(
         r'^\s*('
-        r'(?:\d+(?:\.\d+)*)'             # Numbers with dots, e.g. 1 or 1.2 or 1.2.3
-        r'|[a-zA-Z]'                     # Single letter
-        r'|M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})'  # Roman numerals
-        r')\.?\s*(.*)'
+        r'(?:\d+(?:\.\d+)*\.)'             # e.g. 1. or 1.2. or 2.6.4.
+        r'|[a-zA-Z]\.'                     # e.g. a. or B.
+        r'|M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})\.'  # Roman numerals with dot
+        r')\s*(.*)$'
     )
 
     headers = []
@@ -68,32 +99,34 @@ def extract_section_headers(pdf_path, non_table_pages, max_page=7):
             lines = text.split('\n')
 
             for line in lines:
-                if not line:
-                    continue
                 line = line.strip()
                 if not line:
                     continue
+
                 match = section_header_re.match(line)
                 if match:
                     section_num = match.group(1)
-                    rest_of_line = match.group(2).strip() if match.group(2) else ""
+                    rest_of_line = match.group(2).strip()
 
-                    title = extract_bold_underlined_quoted_text(page_fitz, line)
+                    # Extract title as only bold/underline/quoted text immediately after section_num
+                    title = extract_bold_underlined_quoted_text_after_section(page_fitz, line, section_num)
+
+                    # If no title found by formatting, fallback to None or empty (don't use full rest_of_line)
                     if not title:
-                        title = rest_of_line
+                        title = None
 
                     headers.append({
                         "page": page_num,
-                        "section": section_num,
+                        "section": section_num.rstrip('.'),  # remove trailing dot
                         "title": title
                     })
 
     return headers
 
-# Usage example
+# Example usage:
 if __name__ == "__main__":
     pdf_path = "your_pdf_file.pdf"
-    non_table_pages = list(range(1, 8))  # first 7 pages (non-table)
-    results = extract_section_headers(pdf_path, non_table_pages)
+    non_table_pages = list(range(1, 8))  # first 7 pages
+    headers = extract_section_headers(pdf_path, non_table_pages)
     import json
-    print(json.dumps(results, indent=2))
+    print(json.dumps(headers, indent=2))
