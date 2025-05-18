@@ -1,88 +1,138 @@
 import re
-from collections import deque
-from doctr.documents import DocumentFile
-from doctr.models import ocr_predictor
+import json
+from docx import Document
+import fitz  # PyMuPDF
 
-def get_level(text):
-    numeric_pattern = re.compile(r'^(\d+(\.\d+)*)[.\s]')
-    alpha_pattern = re.compile(r'^([a-zA-Z])[.\s]')
-    roman_pattern = re.compile(r'^\(?([ivxlcdm]+)\)?[.\s]', re.IGNORECASE)
-
-    if numeric_pattern.match(text):
-        prefix = numeric_pattern.match(text).group(1)
-        return prefix.count('.') + 1
-    elif alpha_pattern.match(text):
-        return 3
-    elif roman_pattern.match(text):
-        return 4
-    else:
-        return None
-
-def parse_lines_to_hierarchy(lines):
+# --- Step 1: Extract structure from DOCX ---
+def extract_docx_structure(doc_path):
+    doc = Document(doc_path)
     hierarchy = []
-    stack = deque()
+    current_section = None
+    current_subsection = None
 
-    for line in lines:
-        text = line["text"].strip()
-        level = get_level(text)
+    def is_section(para):
+        return para.paragraph_format.alignment == 1 and any(run.bold for run in para.runs if run.text.strip())
 
-        node = {
-            "text": text,
-            "children": [],
-            "page": line["page"],
-            "bbox": line["bbox"],
-        }
+    def is_subsection(para):
+        text = para.text.strip()
+        match = re.match(r"^(\d+(\.)?)\s+(.*)", text)
+        if not match:
+            return False
+        title = match.group(3)
+        for run in para.runs:
+            if run.text.strip() and title.startswith(run.text.strip()):
+                if run.bold and run.underline:
+                    return True
+        return False
 
-        if level is None:
-            # Paragraph or continuation text - add under last section if any
-            if stack:
-                stack[-1]["children"].append(node)
-            else:
-                hierarchy.append(node)
+    def is_bullet(para):
+        return para.style.name and "List" in para.style.name
+
+    def add_content(text, ctype):
+        if current_subsection is not None:
+            current_subsection["content"].append({"type": ctype, "text": text})
+        elif current_section is not None:
+            current_section["content"].append({"type": ctype, "text": text})
+        else:
+            hierarchy.append({"heading": None, "content": [{"type": ctype, "text": text}]})
+
+    for para in doc.paragraphs:
+        text = para.text.strip()
+        if not text:
             continue
 
-        # Pop from stack until top has lower level than current
-        while stack and get_level(stack[-1]["text"]) >= level:
-            stack.pop()
+        if is_section(para):
+            if current_section:
+                if current_subsection:
+                    current_section["subsections"].append(current_subsection)
+                    current_subsection = None
+                hierarchy.append(current_section)
+            current_section = {"heading": text, "content": [], "subsections": []}
+            current_subsection = None
+            continue
 
-        if stack:
-            stack[-1]["children"].append(node)
+        if is_subsection(para):
+            if current_subsection:
+                current_section["subsections"].append(current_subsection)
+            current_subsection = {"subheading": text, "content": []}
+            continue
+
+        ctype = "bullet" if is_bullet(para) else "paragraph"
+        add_content(text, ctype)
+
+    if current_subsection:
+        current_section["subsections"].append(current_subsection)
+    if current_section:
+        hierarchy.append(current_section)
+
+    # Attach tables
+    for table in doc.tables:
+        table_data = []
+        for row in table.rows:
+            table_data.append([cell.text.strip() for cell in row.cells])
+        table_entry = {"type": "table", "data": table_data}
+
+        if hierarchy:
+            last_section = hierarchy[-1]
+            if last_section["subsections"]:
+                last_section["subsections"][-1]["content"].append(table_entry)
+            else:
+                last_section["content"].append(table_entry)
         else:
-            hierarchy.append(node)
-
-        stack.append(node)
+            hierarchy.append({"heading": None, "content": [table_entry], "subsections": []})
 
     return hierarchy
 
-def ocr_and_extract_hierarchy(pdf_path):
-    # Load pretrained doctr OCR model
-    model = ocr_predictor(pretrained=True)
+# --- Step 2: Classify paragraph types using PDF text ---
 
-    # Load and OCR the document
-    doc = DocumentFile.from_pdf(pdf_path)
-    result = model(doc)
+def extract_pdf_text(pdf_path):
+    doc = fitz.open(pdf_path)
+    pdf_text = []
+    for page in doc:
+        pdf_text.append(page.get_text())
+    return "\n".join(pdf_text)
 
-    lines = []
-    for page_idx, page in enumerate(result.pages):
-        for block in page.blocks:
-            for line in block.lines:
-                text = line.value
-                bbox = line.geometry.to_list()  # [x1,y1,x2,y2]
-                lines.append({
-                    "text": text,
-                    "bbox": bbox,
-                    "page": page_idx
-                })
+def classify_prefix(text, pdf_text):
+    text_escaped = re.escape(text[:50])  # Use a snippet to avoid regex overflow
+    patterns = {
+        "numeric subsection": rf"\b\d+\.\d+\s+{text_escaped}",
+        "alpha subsection": rf"\b([a-zA-Z]|[a-zA-Z]\.|\([a-zA-Z]\))\s+{text_escaped}",
+        "roman subsection": rf"\b(i{1,3}|iv|v|vi{1,3}|ix|x|xi{0,3}|xiv|xv|xvi{1,3})\s+{text_escaped}",
+    }
+    for typ, pattern in patterns.items():
+        if re.search(pattern, pdf_text, re.IGNORECASE):
+            return typ
+    return None
 
-    hierarchy = parse_lines_to_hierarchy(lines)
-    return hierarchy
+def update_json_with_subtypes(data, pdf_text):
+    def update_block(block):
+        for item in block.get("content", []):
+            if item["type"] in ["paragraph", "bullet"]:
+                subtype = classify_prefix(item["text"], pdf_text)
+                if subtype:
+                    item["type"] = subtype
+        for subsection in block.get("subsections", []):
+            update_block(subsection)
+    for section in data:
+        update_block(section)
+    return data
 
+# --- Main Execution ---
 if __name__ == "__main__":
-    pdf_path = "your_document.pdf"  # replace with your PDF path
-    hierarchy = ocr_and_extract_hierarchy(pdf_path)
+    docx_path = "your_file.docx"   # Replace with your .docx path
+    pdf_path = "your_file.pdf"     # Replace with matching .pdf path
 
-    import json
-    with open("hierarchy_output.json", "w", encoding="utf-8") as f:
-        json.dump(hierarchy, f, ensure_ascii=False, indent=2)
+    # Step 1: Extract structure
+    result = extract_docx_structure(docx_path)
+    with open("docx_structure.json", "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
 
-    print(json.dumps(hierarchy, indent=2, ensure_ascii=False))
+    # Step 2: Refine types using PDF
+    pdf_text = extract_pdf_text(pdf_path)
+    updated_result = update_json_with_subtypes(result, pdf_text)
+    with open("updated_structure.json", "w", encoding="utf-8") as f:
+        json.dump(updated_result, f, ensure_ascii=False, indent=2)
+
+    # Optional: Print
+    import pprint
+    pprint.pprint(updated_result)
