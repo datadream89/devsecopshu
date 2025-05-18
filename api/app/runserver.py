@@ -1,3 +1,4 @@
+import re
 from docx import Document
 import json
 
@@ -37,19 +38,23 @@ def extract_docx_hierarchy(doc_path):
             current_subsection["content"].append({"type": "bullet", "text": text})
 
         elif text:
-            current_subsection["content"].append({"type": "paragraph", "text": text})
+            # Regex: start with exactly one digit, followed by a dot or a space
+            index_pattern = r'^(\d)(\.|\s)'
+            has_index = bool(re.match(index_pattern, text))
+            is_bold = any(run.bold for run in para.runs if run.text.strip())
+            is_underlined = any(run.underline for run in para.runs if run.text.strip())
+            text_type = "parent" if has_index and (is_bold or is_underlined) else "paragraph"
+            current_subsection["content"].append({"type": text_type, "text": text})
 
-    # Append any remaining content
     append_section()
 
-    # Add tables globally or inside the last known context (you can enhance this to insert per position)
+    # Append tables
     for table in doc.tables:
         table_data = []
         for row in table.rows:
             row_data = [cell.text.strip() for cell in row.cells]
             table_data.append(row_data)
         if hierarchy:
-            # Add to last subsection of the last section
             if hierarchy[-1]["subsections"]:
                 hierarchy[-1]["subsections"][-1]["content"].append({"type": "table", "data": table_data})
             else:
@@ -70,13 +75,11 @@ def extract_docx_hierarchy(doc_path):
 
 # Example usage
 if __name__ == "__main__":
-    docx_path = "your_file.docx"
+    docx_path = "your_file.docx"  # replace with your file path
     result = extract_docx_hierarchy(docx_path)
 
-    # Save to JSON
     with open("docx_hierarchy.json", "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
-    # Optionally print
     import pprint
     pprint.pprint(result)
