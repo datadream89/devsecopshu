@@ -1,17 +1,13 @@
+import re
 from docx import Document
 
-def get_indent_level(paragraph):
-    indent = paragraph.paragraph_format.left_indent
+def get_indent_level(para, max_level=10):
+    indent = para.paragraph_format.left_indent
     if indent is None:
         return 0
-    # Convert EMU to points (1 pt = 12700 EMUs)
     points = indent.pt if hasattr(indent, 'pt') else indent / 12700
-    if points < 12:
-        return 0
-    elif points < 24:
-        return 1
-    else:
-        return 2
+    level = int(points // 12)  # Each 12pt indentation step counts as one level
+    return min(level, max_level)
 
 def extract_docx_hierarchy_with_indent(doc_path):
     doc = Document(doc_path)
@@ -53,7 +49,7 @@ def extract_docx_hierarchy_with_indent(doc_path):
             current_subsection = {"subheading": None, "indent_level": 0, "content": []}
             continue
 
-        # Detect Subsection (bold and underlined starting with number handled elsewhere)
+        # Detect Subsection (bold and underlined)
         if is_bold_underlined(para):
             append_subsection()
             current_subsection = {"subheading": text, "indent_level": level, "content": []}
@@ -73,7 +69,7 @@ def extract_docx_hierarchy_with_indent(doc_path):
 
     append_section()
 
-    # Add tables just after their last content element, attaching indent level 0 (or customize as needed)
+    # Attach tables to the last subsection content with indent_level 0
     for table in doc.tables:
         table_data = []
         for row in table.rows:
@@ -105,9 +101,9 @@ def extract_docx_hierarchy_with_indent(doc_path):
 
     return hierarchy
 
-# --- Usage ---
+# --- Usage example ---
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # Replace with your .docx path
+    docx_path = "your_file.docx"  # Replace with your .docx file path
     result = extract_docx_hierarchy_with_indent(docx_path)
 
     import json
