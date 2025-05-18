@@ -33,6 +33,12 @@ def extract_docx_hierarchy(doc_path):
                     return True
         return False
 
+    def is_bold_underlined(para):
+        for run in para.runs:
+            if run.text.strip() and run.bold and run.underline:
+                return True
+        return False
+
     for para in doc.paragraphs:
         text = para.text.strip()
         if not text:
@@ -54,9 +60,12 @@ def extract_docx_hierarchy(doc_path):
             current_subsection = {"subheading": text, "content": []}
             continue
 
-        # --- Regular content ---
+        # --- Detect Content Type ---
         if para.style.name and "List" in para.style.name:
-            text_type = "bullet"
+            if is_bold_underlined(para):
+                text_type = "heading"
+            else:
+                text_type = "bullet"
         else:
             text_type = "paragraph"
 
@@ -92,7 +101,7 @@ def extract_docx_hierarchy(doc_path):
 
 # --- Example usage ---
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # Replace with actual file
+    docx_path = "your_file.docx"  # Replace with your actual DOCX path
     result = extract_docx_hierarchy(docx_path)
 
     with open("docx_hierarchy.json", "w", encoding="utf-8") as f:
