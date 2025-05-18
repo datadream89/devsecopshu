@@ -1,28 +1,45 @@
-import pdfplumber
 import fitz  # PyMuPDF
+import json
 
-def get_non_table_pages(pdf_path, max_pages=7):
-    non_table_pages = []
-    with pdfplumber.open(pdf_path) as pdf:
-        for i, page in enumerate(pdf.pages[:max_pages], start=1):
-            tables = page.find_tables()
-            if not tables:
-                non_table_pages.append(i)
-    return non_table_pages
-
-def extract_filtered_toc(pdf_path, non_table_pages):
+def get_sorted_toc(pdf_path, max_page=7):
     doc = fitz.open(pdf_path)
-    toc = doc.get_toc(simple=False)
-    doc.close()
-    # Filter TOC entries only on non-table pages
-    filtered_toc = [entry for entry in toc if entry[2] in non_table_pages]
-    return filtered_toc
+    toc = doc.get_toc()
 
-if __name__ == "__main__":
-    pdf_path = "your_file.pdf"
-    non_table_pages = get_non_table_pages(pdf_path, max_pages=7)
-    print("Non-table pages (1-7):", non_table_pages)
+    # Filter entries within first `max_page` pages
+    filtered_toc = [entry for entry in toc if entry[2] <= max_page]
 
-    filtered_toc = extract_filtered_toc(pdf_path, non_table_pages)
-    for level, title, page in filtered_toc:
-        print(f"Level {level} - Page {page}: {title}")
+    # Sort by page number
+    sorted_toc = sorted(filtered_toc, key=lambda x: x[2])
+
+    # Build nested hierarchy
+    hierarchy = []
+    stack = []
+
+    for level, title, page in sorted_toc:
+        node = {
+            "title": title.strip(),
+            "page": page,
+            "children": []
+        }
+
+        if level == 1:
+            hierarchy.append(node)
+            stack = [node]
+        else:
+            while len(stack) >= level:
+                stack.pop()
+            if stack:
+                stack[-1]["children"].append(node)
+            stack.append(node)
+
+    return hierarchy
+
+# Usage
+pdf_path = "your_file.pdf"
+toc_hierarchy = get_sorted_toc(pdf_path)
+
+# Write to JSON file
+with open("toc_output.json", "w", encoding="utf-8") as f:
+    json.dump(toc_hierarchy, f, indent=2, ensure_ascii=False)
+
+print("ToC JSON saved to toc_output.json")
