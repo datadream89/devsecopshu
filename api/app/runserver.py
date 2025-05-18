@@ -26,6 +26,14 @@ def extract_docx_structure(doc_path):
     def is_bullet(para):
         return para.style.name and "List" in para.style.name
 
+    def bullet_is_subheading(para):
+        text = para.text.strip()
+        if re.match(r"^\d+(\.)?\s+", text):
+            for run in para.runs:
+                if run.text.strip() and run.bold and run.underline:
+                    return True
+        return False
+
     def add_content(text, ctype):
         if current_subsection is not None:
             current_subsection["content"].append({"type": ctype, "text": text})
@@ -55,7 +63,14 @@ def extract_docx_structure(doc_path):
             current_subsection = {"subheading": text, "content": []}
             continue
 
-        ctype = "bullet" if is_bullet(para) else "paragraph"
+        if is_bullet(para):
+            if bullet_is_subheading(para):
+                ctype = "subheading"
+            else:
+                ctype = "bullet"
+        else:
+            ctype = "paragraph"
+
         add_content(text, ctype)
 
     if current_subsection:
