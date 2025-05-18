@@ -1,56 +1,40 @@
 from docx import Document
 import json
 
-def get_indent_level(left_indent, base_indent=36):
-    if left_indent is None:
-        return 0
-    indent_pts = left_indent.pt if hasattr(left_indent, 'pt') else 0
-    level = int(round(indent_pts / base_indent))
-    return level
-
-def is_bold(run):
-    return run.bold is True
-
-def is_underline(run):
-    return run.underline is True
-
 def is_bold_para(para):
-    for run in para.runs:
-        if run.text.strip() and is_bold(run):
-            return True
-    return False
+    return any(run.bold for run in para.runs if run.text.strip())
 
 def is_underline_para(para):
-    for run in para.runs:
-        if run.text.strip() and is_underline(run):
-            return True
-    return False
+    return any(run.underline for run in para.runs if run.text.strip())
+
+def get_left_indent_pts(para):
+    if para.paragraph_format.left_indent:
+        return para.paragraph_format.left_indent.pt
+    return 0
 
 def extract_sections_and_tables(doc_path):
     doc = Document(doc_path)
     output = []
 
-    # Collect all block-level elements (paras + tables) with their XML elements and indexes
+    # Step 1: Collect all elements (paragraphs and tables) in document order
     body = doc.element.body
-    paras = list(doc.paragraphs)
-    tables = list(doc.tables)
-
+    p_idx, t_idx = 0, 0
     elements = []
-    p_idx = 0
-    t_idx = 0
 
     for child in body.iterchildren():
-        tag = child.tag.split('}')[1]
+        tag = child.tag.split('}')[-1]
         if tag == 'p':
-            para = paras[p_idx]
+            elements.append(('p', doc.paragraphs[p_idx]))
             p_idx += 1
-            elements.append(('p', para))
         elif tag == 'tbl':
-            table = tables[t_idx]
+            elements.append(('tbl', doc.tables[t_idx]))
             t_idx += 1
-            elements.append(('tbl', table))
 
-    # Now process elements in order
+    # Step 2: Track indent level relatively
+    indent_levels = []
+    prev_indent = None
+    current_level = 0
+
     for typ, elem in elements:
         if typ == 'p':
             para = elem
@@ -58,32 +42,47 @@ def extract_sections_and_tables(doc_path):
             if not text:
                 continue
 
-            alignment = para.paragraph_format.alignment
-            align_val = alignment.value if alignment else None
+            left_indent = get_left_indent_pts(para)
+            align = para.paragraph_format.alignment
+            align_val = align.value if align else None
 
             bold = is_bold_para(para)
-            underlined = is_underline_para(para)
+            underline = is_underline_para(para)
 
-            indent_level = get_indent_level(para.paragraph_format.left_indent)
-
-            if align_val == 1 and bold:  # center aligned and bold
+            # Detect type
+            if align_val == 1 and bold:
                 para_type = "topic"
-            elif align_val == 3 and bold and underlined:  # justified and bold+underlined
+            elif align_val == 3 and bold and underline:
                 para_type = "heading"
             else:
                 para_type = "paragraph"
+
+            # Relative indentation level
+            if prev_indent is None:
+                indent_level = 0
+            else:
+                if abs(left_indent - prev_indent) < 1:
+                    indent_level = current_level
+                elif left_indent > prev_indent:
+                    current_level += 1
+                    indent_level = current_level
+                else:
+                    current_level = max(0, current_level - 1)
+                    indent_level = current_level
+
+            prev_indent = left_indent
 
             output.append({
                 "type": para_type,
                 "text": text,
                 "indent_level": indent_level,
-                "alignment": {0: "left",1: "center",2: "right",3: "justify"}.get(align_val, "none")
+                "alignment": {0: "left", 1: "center", 2: "right", 3: "justify"}.get(align_val, "none")
             })
 
         elif typ == 'tbl':
-            table = elem
+            # Table — just append without affecting indentation
             table_data = []
-            for row in table.rows:
+            for row in elem.rows:
                 row_data = [cell.text.strip() for cell in row.cells]
                 table_data.append(row_data)
 
@@ -94,12 +93,12 @@ def extract_sections_and_tables(doc_path):
 
     return output
 
-
+# --- Run ---
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # Replace with your actual file path
+    docx_path = "your_file.docx"  # Replace with your .docx path
     result = extract_sections_and_tables(docx_path)
 
-    with open("doc_sections_tables.json", "w", encoding="utf-8") as f:
+    with open("structured_doc.json", "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2, ensure_ascii=False)
 
-    print("Done writing JSON output to doc_sections_tables.json")
+    print("Written to structured_doc.json")
