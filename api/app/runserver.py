@@ -26,7 +26,6 @@ def extract_docx_hierarchy(doc_path):
             return False
         _, _, title = match.groups()
 
-        # Check formatting of the title (not the number)
         for run in para.runs:
             run_text = run.text.strip()
             if run_text and title.startswith(run_text):
@@ -42,11 +41,10 @@ def extract_docx_hierarchy(doc_path):
         alignment = para.paragraph_format.alignment  # 1 = center
         is_bold = any(run.bold for run in para.runs if run.text.strip())
 
-        # --- Detect Section: Center-aligned & Bold ---
+        # --- Detect Section ---
         if alignment == 1 and is_bold:
             append_section()
             current_section["heading"] = text
-            current_section["subsections"] = []
             current_subsection = {"subheading": None, "content": []}
             continue
 
@@ -56,7 +54,7 @@ def extract_docx_hierarchy(doc_path):
             current_subsection = {"subheading": text, "content": []}
             continue
 
-        # --- Bullet or Paragraph ---
+        # --- Regular content ---
         if para.style.name and "List" in para.style.name:
             text_type = "bullet"
         else:
@@ -94,7 +92,7 @@ def extract_docx_hierarchy(doc_path):
 
 # --- Example usage ---
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # Replace with your actual DOCX path
+    docx_path = "your_file.docx"  # Replace with actual file
     result = extract_docx_hierarchy(docx_path)
 
     with open("docx_hierarchy.json", "w", encoding="utf-8") as f:
