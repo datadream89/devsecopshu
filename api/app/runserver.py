@@ -1,9 +1,7 @@
 import re
 import json
 from docx import Document
-import fitz  # PyMuPDF
 
-# --- Step 1: Extract structure from DOCX ---
 def extract_docx_structure(doc_path):
     doc = Document(doc_path)
     hierarchy = []
@@ -15,10 +13,10 @@ def extract_docx_structure(doc_path):
 
     def is_subsection(para):
         text = para.text.strip()
-        match = re.match(r"^(\d+\.\d+\.?|\d+\.\d+)\s+(.*)", text)
+        match = re.match(r"^(\d+(\.)?)\s+(.*)", text)
         if not match:
             return False
-        title = match.group(2)
+        title = match.group(3)
         for run in para.runs:
             if run.text.strip() and title.startswith(run.text.strip()):
                 if run.bold and run.underline:
@@ -28,13 +26,32 @@ def extract_docx_structure(doc_path):
     def is_bullet(para):
         return para.style.name and "List" in para.style.name
 
-    def add_content(text, ctype):
+    def classify_with_prefix(text):
+        patterns = {
+            "numeric section":    r"^\s*(\d+\.?)\s+",
+            "numeric subsection": r"^\s*(\d+\.\d+\.?)\s+",
+            "alpha subsection":   r"^\s*[(]?([a-zA-Z])[).]?\s+",
+            "roman subsection":   r"^\s*[(]?((?i)ix|iv|v?i{0,3}|x)[).]?\s+",
+        }
+        for label, pattern in patterns.items():
+            match = re.match(pattern, text)
+            if match:
+                return label, match.group(1)
+        return None, None
+
+    def add_content(text, base_type):
+        full_type, prefix = classify_with_prefix(text)
+        ctype = full_type if full_type else base_type
+        content_entry = {"type": ctype, "text": text}
+        if prefix:
+            content_entry["prefix"] = prefix
+
         if current_subsection is not None:
-            current_subsection["content"].append({"type": ctype, "text": text})
+            current_subsection["content"].append(content_entry)
         elif current_section is not None:
-            current_section["content"].append({"type": ctype, "text": text})
+            current_section["content"].append(content_entry)
         else:
-            hierarchy.append({"heading": None, "content": [{"type": ctype, "text": text}]})
+            hierarchy.append({"heading": None, "content": [content_entry]})
 
     for para in doc.paragraphs:
         text = para.text.strip()
@@ -57,8 +74,8 @@ def extract_docx_structure(doc_path):
             current_subsection = {"subheading": text, "content": []}
             continue
 
-        ctype = "bullet" if is_bullet(para) else "paragraph"
-        add_content(text, ctype)
+        base_type = "bullet" if is_bullet(para) else "paragraph"
+        add_content(text, base_type)
 
     if current_subsection:
         current_section["subsections"].append(current_subsection)
@@ -83,56 +100,10 @@ def extract_docx_structure(doc_path):
 
     return hierarchy
 
-# --- Step 2: Extract PDF text for matching ---
-def extract_pdf_text(pdf_path):
-    doc = fitz.open(pdf_path)
-    pdf_text = []
-    for page in doc:
-        pdf_text.append(page.get_text())
-    return "\n".join(pdf_text)
-
-# --- Step 3: Classify based on prefix-only matching ---
-def classify_prefix(text, pdf_text):
-    escaped = re.escape(text[:50])
-    patterns = {
-        "numeric section": rf"^\s*\d+\.?\s+{escaped}",
-        "numeric subsection": rf"^\s*\d+\.\d+\.?\s+{escaped}",
-        "alpha subsection": rf"^\s*[(]?[a-zA-Z][).]?\s+{escaped}",
-        "roman subsection": rf"^\s*[(]?(?i)(ix|iv|v?i{0,3}|x)[).]?\s+{escaped}",
-    }
-    for typ, pattern in patterns.items():
-        if re.search(pattern, pdf_text, re.IGNORECASE | re.MULTILINE):
-            return typ
-    return None
-
-def update_json_with_subtypes(data, pdf_text):
-    def update_block(block):
-        for item in block.get("content", []):
-            if item["type"] in ["paragraph", "bullet"]:
-                subtype = classify_prefix(item["text"], pdf_text)
-                if subtype:
-                    item["type"] = subtype
-        for subsection in block.get("subsections", []):
-            update_block(subsection)
-    for section in data:
-        update_block(section)
-    return data
-
-# --- Main Execution ---
+# --- Usage ---
 if __name__ == "__main__":
-    docx_path = "your_file.docx"   # Replace with your .docx file path
-    pdf_path = "your_file.pdf"     # Replace with matching .pdf file path
-
+    docx_path = "your_file.docx"  # Replace with your Word file path
     result = extract_docx_structure(docx_path)
 
     with open("docx_structure.json", "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
-
-    pdf_text = extract_pdf_text(pdf_path)
-    updated_result = update_json_with_subtypes(result, pdf_text)
-
-    with open("updated_structure.json", "w", encoding="utf-8") as f:
-        json.dump(updated_result, f, ensure_ascii=False, indent=2)
-
-    import pprint
-    pprint.pprint(updated_result)
