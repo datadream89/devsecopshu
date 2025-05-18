@@ -1,104 +1,87 @@
-from docx import Document
+import pytesseract
+from pdf2image import convert_from_path
+import cv2
 import json
+import re
+from pytesseract import Output
 
-def is_bold_para(para):
-    return any(run.bold for run in para.runs if run.text.strip())
+# Path to tesseract executable (adjust if needed)
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-def is_underline_para(para):
-    return any(run.underline for run in para.runs if run.text.strip())
+def extract_from_pdf(pdf_path):
+    pages = convert_from_path(pdf_path)
+    result = []
 
-def get_left_indent_pts(para):
-    if para.paragraph_format.left_indent:
-        return para.paragraph_format.left_indent.pt
-    return 0
+    for page_num, page in enumerate(pages):
+        image = cv2.cvtColor(np.array(page), cv2.COLOR_RGB2BGR)
+        data = pytesseract.image_to_data(image, output_type=Output.DICT)
+        blocks = []
 
-def extract_sections_and_tables(doc_path):
-    doc = Document(doc_path)
-    output = []
+        num_items = len(data['text'])
+        current_block = {"type": None, "text": "", "indent": 0, "page": page_num + 1}
+        prev_left = 0
+        prev_line_num = -1
 
-    # Step 1: Collect all elements (paragraphs and tables) in document order
-    body = doc.element.body
-    p_idx, t_idx = 0, 0
-    elements = []
-
-    for child in body.iterchildren():
-        tag = child.tag.split('}')[-1]
-        if tag == 'p':
-            elements.append(('p', doc.paragraphs[p_idx]))
-            p_idx += 1
-        elif tag == 'tbl':
-            elements.append(('tbl', doc.tables[t_idx]))
-            t_idx += 1
-
-    # Step 2: Track indent level relatively
-    indent_levels = []
-    prev_indent = None
-    current_level = 0
-
-    for typ, elem in elements:
-        if typ == 'p':
-            para = elem
-            text = para.text.strip()
-            if not text:
+        for i in range(num_items):
+            text = data['text'][i].strip()
+            conf = int(data['conf'][i])
+            if not text or conf < 50:
                 continue
 
-            left_indent = get_left_indent_pts(para)
-            align = para.paragraph_format.alignment
-            align_val = align.value if align else None
+            left = data['left'][i]
+            top = data['top'][i]
+            width = data['width'][i]
+            height = data['height'][i]
+            line_num = data['line_num'][i]
 
-            bold = is_bold_para(para)
-            underline = is_underline_para(para)
+            # Estimate indentation based on left offset
+            indent = left // 40
 
-            # Detect type
-            if align_val == 1 and bold:
-                para_type = "topic"
-            elif align_val == 3 and bold and underline:
-                para_type = "heading"
-            else:
-                para_type = "paragraph"
+            if line_num != prev_line_num:
+                if current_block['text']:
+                    blocks.append(current_block)
+                current_block = {"type": "paragraph", "text": "", "indent": indent, "page": page_num + 1}
+                prev_line_num = line_num
 
-            # Relative indentation level
-            if prev_indent is None:
-                indent_level = 0
-            else:
-                if abs(left_indent - prev_indent) < 1:
-                    indent_level = current_level
-                elif left_indent > prev_indent:
-                    current_level += 1
-                    indent_level = current_level
-                else:
-                    current_level = max(0, current_level - 1)
-                    indent_level = current_level
+            # Classification
+            if text.isupper() and abs(left - image.shape[1]//2) < 100:
+                current_block['type'] = "topic"
+            elif re.match(r'^\s*1(\.|)\s+', text) and current_block['type'] != "topic":
+                current_block['type'] = "heading"
 
-            prev_indent = left_indent
+            current_block['text'] += text + " "
 
-            output.append({
-                "type": para_type,
-                "text": text,
-                "indent_level": indent_level,
-                "alignment": {0: "left", 1: "center", 2: "right", 3: "justify"}.get(align_val, "none")
-            })
+        if current_block['text']:
+            blocks.append(current_block)
 
-        elif typ == 'tbl':
-            # Table — just append without affecting indentation
-            table_data = []
-            for row in elem.rows:
-                row_data = [cell.text.strip() for cell in row.cells]
-                table_data.append(row_data)
+        # Detect tables using contours
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY_INV)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-            output.append({
-                "type": "table",
-                "data": table_data
-            })
+        for cnt in contours:
+            x, y, w, h = cv2.boundingRect(cnt)
+            if w > 100 and h > 50:  # Table-like structure
+                roi = image[y:y+h, x:x+w]
+                table_text = pytesseract.image_to_string(roi, config='--psm 6')
+                blocks.append({
+                    "type": "table",
+                    "text": table_text.strip(),
+                    "indent": 0,
+                    "page": page_num + 1
+                })
 
-    return output
+        result.extend(blocks)
 
-# --- Run ---
+    return result
+
+# Usage
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # Replace with your .docx path
-    result = extract_sections_and_tables(docx_path)
+    import numpy as np
+    pdf_path = "your_document.pdf"  # Replace with actual path
+    output = extract_from_pdf(pdf_path)
 
-    with open("structured_doc.json", "w", encoding="utf-8") as f:
-        json.dump(result, f, indent=2, ensure_ascii=False)
+    with open("output.json", "w", encoding="utf-8") as f:
+        json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print("Written to structured_doc.json")
+    print("Extraction complete. Output written to output.json")
