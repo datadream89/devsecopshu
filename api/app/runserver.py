@@ -2,7 +2,6 @@ import pdfplumber
 import fitz  # PyMuPDF
 import re
 import json
-from collections import defaultdict
 
 QUOTE_PAIRS = [
     ('"', '"'), ('“', '”'), ('„', '“'), ('«', '»'), ('‹', '›'), ('‟', '”'),
@@ -13,127 +12,136 @@ section_header_re = re.compile(
     r"""^\s*
     (?P<header>
         (?:\d+(?:\.\d+)*\.)     # e.g. 1. or 1.1. or 2.6.4.
-        | [a-zA-Z]\.
-        | \([a-zA-Z0-9]+\)
+        | [a-zA-Z]\.                # e.g. a. or B.
+        | \([a-zA-Z0-9]+\)         # e.g. (a), (1)
     )
     \s*
     (?P<rest>.*)?$
     """, re.VERBOSE
 )
 
-def extract_title(rest, styles):
-    rest = rest.strip()
-    for open_q, close_q in QUOTE_PAIRS:
-        pattern = re.escape(open_q) + r'(.*?)' + re.escape(close_q)
-        match = re.search(pattern, rest)
-        if match:
-            return match.group(1).strip(), rest.replace(match.group(0), '').strip()
+def extract_title_and_rest(line, styles):
+    for quote_open, quote_close in QUOTE_PAIRS:
+        quote_match = re.search(re.escape(quote_open) + r"(.+?)" + re.escape(quote_close), line)
+        if quote_match:
+            return quote_match.group(1).strip(), line.replace(quote_match.group(0), '').strip()
 
-    for style in styles:
-        if style.get("text") and (style.get("is_bold") or style.get("is_underlined")):
-            if rest.startswith(style["text"]):
-                return style["text"].strip(), rest.replace(style["text"], '').strip()
+    for word, style in styles:
+        if 'bold' in style or 'underline' in style:
+            if line.startswith(word):
+                return word.strip(), line.replace(word, '', 1).strip()
 
-    return None, rest
+    return None, line
 
-def extract_text_styles(page):
-    styles = []
-    blocks = page.get_text("dict")["blocks"]
-    for b in blocks:
-        for l in b.get("lines", []):
-            for s in l.get("spans", []):
-                styles.append({
-                    "text": s.get("text", "").strip(),
-                    "is_bold": "bold" in s.get("font", "").lower(),
-                    "is_underlined": s.get("underline", 0) == 1
-                })
-    return styles
+def split_section_numbers(header):
+    h = header.rstrip('.')
+    if header.startswith('(') and header.endswith(')'):
+        return [header]
+    if re.match(r"^[a-zA-Z]\.$", header):
+        return [header]
+    return h.split('.')
 
-def insert_section(root, parts, section_data):
-    node = root
-    for i, part in enumerate(parts):
-        key = part if i != 0 else f"{part}_p{section_data['page'][0]}"
-        if "children" not in node:
-            node["children"] = {}
-        if key not in node["children"]:
-            node["children"][key] = {"section_id": part, "paragraph": "", "page": []}
-        node = node["children"][key]
-        if i == len(parts) - 1:
-            node["paragraph"] += section_data["paragraph"] + "\n"
-            node["page"].extend(section_data["page"])
-            if "title" in section_data:
-                node["title"] = section_data["title"]
+def is_top_level_section(header):
+    return bool(re.match(r"^\d+\.$", header))
 
+def insert_section(root, section_numbers, section_data):
+    current = root
+    for i, part in enumerate(section_numbers):
+        if "children" not in current:
+            current["children"] = {}
 
-def flatten(node, parent_title=None):
-    out = []
-    this_node = {
-        "section": node.get("section_id", ""),
-        "page": node.get("page", [])[0] if node.get("page") else None,
-        "title": node.get("title", ""),
-        "paragraph": node.get("paragraph", "").strip(),
-        "topic": parent_title if parent_title else node.get("title", "")
-    }
-    out.append(this_node)
-    for k, child in sorted_children(node.get("children", {})):
-        out.extend(flatten(child, parent_title=node.get("title", "")))
-    return out
+        key = part if i != 0 else f"{part}_page_{section_data['page'][0]}"
 
-def sorted_children(children):
-    def sort_key(item):
-        node = item[1]
-        page = node.get("page", [9999])[0]
-        parts = node.get("section_id", "").split('.')
-        sortable_parts = tuple(f"{int(p):04}" if p.isdigit() else p.lower() for p in parts)
-        return (page, sortable_parts)
-    return sorted(children.items(), key=sort_key)
+        if key not in current["children"]:
+            current["children"][key] = {
+                "section_header": part + ('.' if not part.endswith('.') else ''),
+                "paragraph": "",
+                "page": [],
+            }
+        current = current["children"][key]
 
-def process_pdf(pdf_path):
-    doc = fitz.open(pdf_path)
-    plumber = pdfplumber.open(pdf_path)
-    root = {}
-    current_parts = None
-    current_section = {"paragraph": "", "page": []}
+        if i == len(section_numbers) - 1:
+            for k, v in section_data.items():
+                if k == "paragraph":
+                    current[k] += (v + "\n")
+                elif k == "page":
+                    current[k] = list(sorted(set(current.get(k, []) + v)))
+                else:
+                    current[k] = v
 
-    for i, page in enumerate(doc):
-        styles = extract_text_styles(page)
-        text = plumber.pages[i].extract_text() or ""
-        lines = text.split("\n")
+def flatten_tree(node):
+    def helper(node):
+        res = {}
+        page_list = node.get("page", [])
+        res["page"] = page_list[0] if isinstance(page_list, list) and page_list else None
+        for k in ("section_header", "title", "topic", "paragraph"):
+            if k in node:
+                res[k] = node[k].strip() if isinstance(node[k], str) else node[k]
+        if "children" in node:
+            res["children"] = [helper(child) for _, child in sorted(
+                node["children"].items(), key=lambda x: (x[1].get("page", [float('inf')])[0], x[0]))]
+        return res
+    return helper(node)
 
-        for line in lines:
-            match = section_header_re.match(line.strip())
-            if match:
-                if current_parts:
-                    insert_section(root, current_parts, current_section)
-                header = match.group("header")
-                rest = match.group("rest") or ""
-                parts = header.rstrip('.').split('.')
-                title, remaining = extract_title(rest, styles)
-                current_parts = parts
-                current_section = {
-                    "page": [i + 1],
-                    "paragraph": remaining,
-                }
-                if title:
-                    current_section["title"] = title
-            else:
-                if current_parts:
-                    current_section["paragraph"] += " " + line.strip()
-                    if (i + 1) not in current_section["page"]:
-                        current_section["page"].append(i + 1)
+def extract_sections(pdf_path):
+    root = {"section_header": "root", "paragraph": "", "children": {}}
+    current_section_numbers = None
+    current_section_data = {}
+    buffer = []
 
-    if current_parts:
-        insert_section(root, current_parts, current_section)
+    def flush():
+        nonlocal current_section_numbers, current_section_data, buffer
+        if current_section_numbers:
+            current_section_data["paragraph"] = "\n".join(buffer).strip()
+            insert_section(root, current_section_numbers, current_section_data)
+        buffer = []
+        current_section_numbers = None
+        current_section_data = {}
 
-    return flatten(root)
+    with pdfplumber.open(pdf_path) as pdf:
+        doc = fitz.open(pdf_path)
+        for page_num, page in enumerate(pdf.pages, start=1):
+            text = page.extract_text() or ""
+            lines = text.split("\n")
+            styles = [(span['text'], span) for span in doc[page_num - 1].get_text("dict")["blocks"] for line in span.get("lines", []) for span in line.get("spans", [])]
+            for line in lines:
+                line = line.strip()
+                match = section_header_re.match(line)
+                if match:
+                    flush()
+                    header = match.group("header").strip()
+                    rest_of_line = match.group("rest") or ""
+                    title, remainder = extract_title_and_rest(rest_of_line, styles)
+                    current_section_numbers = split_section_numbers(header)
+                    current_section_data = {
+                        "page": [page_num],
+                        "section_header": header
+                    }
+                    if title:
+                        if is_top_level_section(header):
+                            current_section_data["topic"] = title
+                        else:
+                            current_section_data["title"] = title
+                    if remainder:
+                        buffer.append(remainder)
+                else:
+                    if current_section_numbers:
+                        buffer.append(line)
+            # if no new section found, carry over the page
+            if current_section_numbers:
+                current_section_data["page"].append(page_num)
 
-def save_json(data, path):
-    with open(path, "w", encoding="utf-8") as f:
+        flush()
+
+    return flatten_tree(root)
+
+def save_to_json(data, output_path):
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
+# --- Main ---
 if __name__ == "__main__":
-    file_path = "sample.pdf"  # Replace with your PDF file path
-    output_path = "output.json"
-    structured_data = process_pdf(file_path)
-    save_json(structured_data, output_path)
-    print(f"Extracted and saved {len(structured_data)} sections to {output_path}.")
+    pdf_path = "sample.pdf"  # Your PDF path
+    output_path = "section_hierarchy.json"
+    nested_data = extract_sections(pdf_path)
+    save_to_json(nested_data, output_path)
