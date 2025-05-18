@@ -15,14 +15,12 @@ def is_underline(run):
     return run.underline is True
 
 def is_bold_para(para):
-    # Paragraph considered bold if any run is bold
     for run in para.runs:
         if run.text.strip() and is_bold(run):
             return True
     return False
 
-def is_underlined_para(para):
-    # Paragraph considered underlined if any run is underlined
+def is_underline_para(para):
     for run in para.runs:
         if run.text.strip() and is_underline(run):
             return True
@@ -32,47 +30,28 @@ def extract_sections_and_tables(doc_path):
     doc = Document(doc_path)
     output = []
 
-    # Iterate paragraphs and tables in document order
-    # docx doesn't provide direct interleaved access to paragraphs/tables,
-    # so we iterate over all block-level elements using _body._body property
-
+    # Collect all block-level elements (paras + tables) with their XML elements and indexes
     body = doc.element.body
-    for child in body.iterchildren():
-        tag = child.tag.split('}')[1]  # localname
-
-        if tag == 'p':  # paragraph
-            para = Document().paragraphs._parent._element._element_to_obj(child)
-            # But the above is complicated, so easier is to map index:
-            # We'll iterate paragraphs normally and map indices.
-
-            # So, instead we'll iterate doc.paragraphs and keep a pointer
-            # to track where we are. Let's do that outside this loop.
-
-    # Since above is complicated, we'll do a combined approach:
-    # We get counts of paragraphs and tables, then interleave by their order in XML.
-
-    # Get list of paragraphs and tables with their _element objects
     paras = list(doc.paragraphs)
     tables = list(doc.tables)
 
-    # Create list of (element, type, index) where index is original position in body
-    elems = []
-    for i, child in enumerate(body.iterchildren()):
+    elements = []
+    p_idx = 0
+    t_idx = 0
+
+    for child in body.iterchildren():
         tag = child.tag.split('}')[1]
         if tag == 'p':
-            # Find paragraph with this element
-            for idx, para in enumerate(paras):
-                if para._element == child:
-                    elems.append((para, 'p', idx))
-                    break
+            para = paras[p_idx]
+            p_idx += 1
+            elements.append(('p', para))
         elif tag == 'tbl':
-            for idx, table in enumerate(tables):
-                if table._element == child:
-                    elems.append((table, 'tbl', idx))
-                    break
+            table = tables[t_idx]
+            t_idx += 1
+            elements.append(('tbl', table))
 
-    # Now iterate elems in order
-    for elem, typ, idx in elems:
+    # Now process elements in order
+    for typ, elem in elements:
         if typ == 'p':
             para = elem
             text = para.text.strip()
@@ -83,7 +62,7 @@ def extract_sections_and_tables(doc_path):
             align_val = alignment.value if alignment else None
 
             bold = is_bold_para(para)
-            underlined = is_underlined_para(para)
+            underlined = is_underline_para(para)
 
             indent_level = get_indent_level(para.paragraph_format.left_indent)
 
@@ -117,10 +96,10 @@ def extract_sections_and_tables(doc_path):
 
 
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # Replace with your actual docx file path
+    docx_path = "your_file.docx"  # Replace with your actual file path
     result = extract_sections_and_tables(docx_path)
 
     with open("doc_sections_tables.json", "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2, ensure_ascii=False)
 
-    print("Extracted document structure saved to doc_sections_tables.json")
+    print("Done writing JSON output to doc_sections_tables.json")
