@@ -35,16 +35,14 @@ def extract_docx_hierarchy(doc_path):
             current_subsection = {"subheading": text, "content": []}
 
         elif text:
-            # Regex: matches single number followed by dot or space
             index_pattern = r'^\d(\.|\s)'
             has_index = bool(re.match(index_pattern, text))
             is_bold = any(run.bold for run in para.runs if run.text.strip())
             is_underlined = any(run.underline for run in para.runs if run.text.strip())
-            is_list_style = 'List' in style
 
             if has_index and is_bold and is_underlined:
                 text_type = "parent"
-            elif is_list_style:
+            elif 'List' in style:
                 text_type = "bullet"
             else:
                 text_type = "paragraph"
