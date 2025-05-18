@@ -7,7 +7,6 @@ def extract_docx_hierarchy(doc_path):
     hierarchy = []
     current_section = {"heading": None, "subsections": []}
     current_subsection = {"subheading": None, "content": []}
-    current_heading_level = 0  # 1 for section, 2 for subsection
 
     def append_subsection():
         if current_subsection["subheading"] or current_subsection["content"]:
@@ -22,11 +21,10 @@ def extract_docx_hierarchy(doc_path):
 
     def is_subsection(para):
         text = para.text.strip()
-        match = re.match(r'^(\d+(\.)?)\s+(.*)', text)
+        match = re.match(r'^\s*(\d+(\.)?)\s+(.*)', text)
         if not match:
             return False
         _, _, title = match.groups()
-        # Title must be bold & underlined for subsection
         for run in para.runs:
             run_text = run.text.strip()
             if run_text and title.startswith(run_text):
@@ -40,18 +38,15 @@ def extract_docx_hierarchy(doc_path):
                 return True
         return False
 
-    def starts_with_underlined(para):
-        # Check if the start of paragraph text is underlined
-        # We'll check runs from the start until non-space text ends
-        pos = 0
-        for run in para.runs:
-            run_text = run.text
-            if not run_text.strip():
-                pos += len(run_text)
-                continue
-            # If first non-space run is underlined, return True
-            return run.underline is True
-        return False
+    def get_subtype(para):
+        full_text = "".join(run.text for run in para.runs).strip()
+        if re.match(r'^\(?[a-zA-Z]\)?[.\s]+', full_text):
+            return "alpha subsection"
+        if re.match(r'^\(?[ivxlcdmIVXLCDM]+\)?[.\s]+', full_text):
+            return "roman subsection"
+        if re.match(r'^\d+\.\d+[.\s]+', full_text):
+            return "numeric subsection"
+        return None
 
     for para in doc.paragraphs:
         text = para.text.strip()
@@ -61,33 +56,31 @@ def extract_docx_hierarchy(doc_path):
         alignment = para.paragraph_format.alignment  # 1 = center
         is_bold = any(run.bold for run in para.runs if run.text.strip())
 
-        # --- Detect Section (level 1) ---
+        # --- Detect Section ---
         if alignment == 1 and is_bold:
             append_section()
             current_section["heading"] = text
             current_subsection = {"subheading": None, "content": []}
-            current_heading_level = 1
             continue
 
-        # --- Detect Subsection (level 2) ---
+        # --- Detect Subsection ---
         if is_subsection(para):
             append_subsection()
             current_subsection = {"subheading": text, "content": []}
-            current_heading_level = 2
             continue
 
-        # --- Determine content type ---
-        # Check if paragraph or bullet starts with underlined string
-        if starts_with_underlined(para):
-            text_type = f"level{current_heading_level}"
-        else:
-            if para.style.name and "List" in para.style.name:
-                if is_bold_underlined(para):
-                    text_type = "heading"
-                else:
-                    text_type = "bullet"
+        # --- Determine Content Type ---
+        if para.style.name and "List" in para.style.name:
+            if is_bold_underlined(para):
+                text_type = "heading"
             else:
-                text_type = "paragraph"
+                text_type = "bullet"
+        else:
+            text_type = "paragraph"
+
+        subtype = get_subtype(para)
+        if subtype:
+            text_type = subtype
 
         current_subsection["content"].append({"type": text_type, "text": text})
 
@@ -119,9 +112,9 @@ def extract_docx_hierarchy(doc_path):
 
     return hierarchy
 
-# --- Example usage ---
+# --- Usage ---
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # Replace with your DOCX path
+    docx_path = "your_file.docx"  # Replace with your .docx file path
     result = extract_docx_hierarchy(docx_path)
 
     with open("docx_hierarchy.json", "w", encoding="utf-8") as f:
