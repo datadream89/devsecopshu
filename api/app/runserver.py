@@ -19,37 +19,41 @@ def extract_docx_hierarchy(doc_path):
             hierarchy.append(current_section.copy())
             current_section["subsections"] = []
 
-    para_iter = iter(doc.paragraphs)
-    for para in para_iter:
+    for para in doc.paragraphs:
         style = para.style.name
         text = para.text.strip()
 
+        if not text:
+            continue
+
+        # Detect bold and underlined
+        is_bold = any(run.bold for run in para.runs if run.text.strip())
+        is_underlined = any(run.underline for run in para.runs if run.text.strip())
+
+        # Check if it starts with a single digit + "." or space
+        if re.match(r'^\d(\.|\s)', text) and is_bold and is_underlined:
+            append_subsection()
+            current_subsection = {"subheading": text, "content": []}
+            continue
+
+        # Check for Heading 1
         if style.startswith('Heading 1'):
             append_section()
             current_section["heading"] = text
             current_section["subsections"] = []
             current_subsection = {"subheading": None, "content": []}
 
+        # Check for Heading 2
         elif style.startswith('Heading 2'):
             append_subsection()
             current_subsection = {"subheading": text, "content": []}
 
-        elif text:
-            index_pattern = r'^\d(\.|\s)'
-            has_index = bool(re.match(index_pattern, text))
-            is_bold = any(run.bold for run in para.runs if run.text.strip())
-            is_underlined = any(run.underline for run in para.runs if run.text.strip())
-
-            if has_index and is_bold and is_underlined:
-                append_subsection()
-                current_subsection = {"subheading": text, "content": []}
-                continue  # Skip adding as regular paragraph
-
+        # Bullet or paragraph
+        else:
             if 'List' in style:
                 text_type = "bullet"
             else:
                 text_type = "paragraph"
-
             current_subsection["content"].append({"type": text_type, "text": text})
 
     append_section()
@@ -81,7 +85,7 @@ def extract_docx_hierarchy(doc_path):
 
 # Example usage
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # replace with your file path
+    docx_path = "your_file.docx"  # Replace with your actual DOCX file path
     result = extract_docx_hierarchy(docx_path)
 
     with open("docx_hierarchy.json", "w", encoding="utf-8") as f:
