@@ -34,16 +34,21 @@ def extract_docx_hierarchy(doc_path):
             append_subsection()
             current_subsection = {"subheading": text, "content": []}
 
-        elif 'List' in style:
-            current_subsection["content"].append({"type": "bullet", "text": text})
-
         elif text:
-            # Regex: start with exactly one digit, followed by a dot or a space
-            index_pattern = r'^(\d)(\.|\s)'
+            # Regex: matches single number followed by dot or space
+            index_pattern = r'^\d(\.|\s)'
             has_index = bool(re.match(index_pattern, text))
             is_bold = any(run.bold for run in para.runs if run.text.strip())
             is_underlined = any(run.underline for run in para.runs if run.text.strip())
-            text_type = "parent" if has_index and (is_bold or is_underlined) else "paragraph"
+            is_list_style = 'List' in style
+
+            if has_index and is_bold and is_underlined:
+                text_type = "parent"
+            elif is_list_style:
+                text_type = "bullet"
+            else:
+                text_type = "paragraph"
+
             current_subsection["content"].append({"type": text_type, "text": text})
 
     append_section()
