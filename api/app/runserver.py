@@ -2,15 +2,8 @@ import re
 import json
 from docx import Document
 
-def get_indent_level(para):
-    text = para.text.lstrip()
-    match = re.match(r'^(\(?[ivxlcdmIVXLCDM]+\)|[a-zA-Z]\.?|\d+\.\d+|\d+\.?)\s*(.*)', text)
-    if match:
-        prefix, content = match.groups()
-        start_idx = para.text.find(content)
-        return len(para.text[:start_idx]) - len(para.text[:start_idx].lstrip())
-    else:
-        return len(para.text) - len(para.text.lstrip())
+def get_indent_level_by_whitespace(text):
+    return len(text) - len(text.lstrip(' '))
 
 def detect_prefix_type(text):
     text = text.strip()
@@ -41,7 +34,7 @@ def is_subsection(para):
                 return True
     return False
 
-def extract_docx_hierarchy_with_indent(doc_path):
+def extract_docx_hierarchy_by_whitespace(doc_path):
     doc = Document(doc_path)
     hierarchy = []
     current_section = {"heading": None, "subsections": []}
@@ -59,28 +52,29 @@ def extract_docx_hierarchy_with_indent(doc_path):
             current_section["subsections"] = []
 
     for para in doc.paragraphs:
-        text = para.text.strip()
+        raw_text = para.text
+        text = raw_text.strip()
         if not text:
             continue
 
         alignment = para.paragraph_format.alignment  # 1 = center
         is_bold = any(run.bold for run in para.runs if run.text.strip())
-        indent_level = get_indent_level(para)
+        indent_level = get_indent_level_by_whitespace(raw_text)
 
-        # --- Detect Section ---
+        # Detect Section
         if alignment == 1 and is_bold:
             append_section()
             current_section["heading"] = text
             current_subsection = {"subheading": None, "content": []}
             continue
 
-        # --- Detect Subsection ---
+        # Detect Subsection
         if is_subsection(para):
             append_subsection()
             current_subsection = {"subheading": text, "content": []}
             continue
 
-        # --- Determine Content Type ---
+        # Determine Content Type
         prefix_type = detect_prefix_type(text)
         if para.style.name and "List" in para.style.name:
             if is_bold_underlined(para):
@@ -105,16 +99,13 @@ def extract_docx_hierarchy_with_indent(doc_path):
 
     append_section()
 
-    # --- Add tables under their immediate context ---
+    # Handle tables
     table_idx = 0
     for block in doc.element.body.iterchildren():
         if "tbl" in block.tag:
             table = doc.tables[table_idx]
             table_idx += 1
-            table_data = []
-            for row in table.rows:
-                row_data = [cell.text.strip() for cell in row.cells]
-                table_data.append(row_data)
+            table_data = [[cell.text.strip() for cell in row.cells] for row in table.rows]
 
             if hierarchy:
                 if hierarchy[-1]["subsections"]:
@@ -140,8 +131,8 @@ def extract_docx_hierarchy_with_indent(doc_path):
 
 # --- Usage ---
 if __name__ == "__main__":
-    docx_path = "your_file.docx"  # Replace with your actual file path
-    result = extract_docx_hierarchy_with_indent(docx_path)
+    docx_path = "your_file.docx"  # Replace with your file path
+    result = extract_docx_hierarchy_by_whitespace(docx_path)
 
     with open("docx_hierarchy.json", "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
