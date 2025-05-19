@@ -1,67 +1,61 @@
 import json
-import re
-import pdfplumber
+from docx import Document
 
-def get_pdf_lines(pdf_path):
-    lines = []
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            text = page.extract_text()
-            if text:
-                for line in text.split('\n'):
-                    lines.append(line.strip())
-    return lines
+def parse_docx_with_formatting(doc_path):
+    doc = Document(doc_path)
+    output = []
 
-def detect_prefix(text):
-    text = text.strip()
-    patterns = [
-        (r'^(?P<prefix>\d{1,2}\.?)\s+(?P<content>.+)', 'numeric section'),
-        (r'^(?P<prefix>\d{1,2}\.\d{1,2}\.?)\s+(?P<content>.+)', 'numeric subsection'),
-        (r'^(?P<prefix>\(?[a-zA-Z]\)?)\s+(?P<content>.+)', 'alpha subsection'),
-        (r'^(?P<prefix>\(?[ivxlcIVXLC]+\)?)\s+(?P<content>.+)', 'roman subsection'),
-    ]
-    for pattern, prefix_type in patterns:
-        match = re.match(pattern, text)
-        if match:
-            return prefix_type, match.group('prefix'), match.group('content')
-    return None, None, None
+    # Helper to classify paragraph type
+    def classify_para(para):
+        text = para.text.strip()
+        if not text:
+            return None
 
-def match_and_update(json_path, pdf_path, updated_path):
-    with open(json_path, "r", encoding="utf-8") as f:
-        doc_data = json.load(f)
+        first_run = next((run for run in para.runs if run.text.strip()), None)
+        is_bold = first_run.bold if first_run else False
+        is_underline = first_run.underline if first_run else False
+        alignment = para.paragraph_format.alignment
 
-    pdf_lines = get_pdf_lines(pdf_path)
-
-    def try_match_and_update(item):
-        if item["type"] in ("paragraph", "bullet"):
-            for line in pdf_lines:
-                if item["text"].strip() in line:
-                    prefix_type, prefix, content = detect_prefix(line)
-                    if prefix_type and content.lower().startswith(item["text"].strip().lower()[:20]):
-                        item["type"] = prefix_type
-                        item["prefix"] = prefix
-                        break
-        return item
-
-    updated_data = []
-    for item in doc_data:
-        if item["type"] == "table":
-            updated_data.append(item)
+        if alignment == 1 and is_bold:  # Centered + bold
+            return "topic"
+        elif is_bold and is_underline:
+            return "header"
+        elif is_underline and not is_bold:
+            return "subsection"
         else:
-            updated_data.append(try_match_and_update(item))
+            return "paragraph" if "List" not in para.style.name else "bullet"
 
-    with open(updated_path, "w", encoding="utf-8") as f:
-        json.dump(updated_data, f, ensure_ascii=False, indent=2)
+    body = doc.element.body
+    paragraphs = {p._p: p for p in doc.paragraphs}
+    tables = {t._tbl: t for t in doc.tables}
 
-    return updated_data
+    for child in body.iterchildren():
+        if child.tag.endswith('p'):  # Paragraph
+            para = paragraphs.get(child)
+            if para:
+                ptype = classify_para(para)
+                if ptype:
+                    output.append({
+                        "type": ptype,
+                        "text": para.text.strip()
+                    })
+        elif child.tag.endswith('tbl'):  # Table
+            table = tables.get(child)
+            if table:
+                data = []
+                for row in table.rows:
+                    data.append([cell.text.strip() for cell in row.cells])
+                output.append({
+                    "type": "table",
+                    "data": data
+                })
+
+    return output
 
 # --- Usage ---
 if __name__ == "__main__":
-    input_json = "intermediate_docx_output.json"   # from previous step
-    pdf_file = "your_input_file.pdf"               # your PDF file path
-    output_json = "updated_with_pdf_prefix.json"   # updated output file
+    docx_path = "your_file.docx"  # Replace with your file path
+    data = parse_docx_with_formatting(docx_path)
 
-    result = match_and_update(input_json, pdf_file, output_json)
-
-    import pprint
-    pprint.pprint(result)
+    with open("intermediate_output.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
