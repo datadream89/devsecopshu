@@ -1,118 +1,94 @@
+import json
+import re
 from docx import Document
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-
-def iter_block_items(parent):
-    from docx.oxml.ns import qn
-    parent_elm = parent.element if hasattr(parent, "element") else parent
-
-    for child in parent_elm.iterchildren():
-        if child.tag == qn('w:p'):
-            yield 'paragraph', child
-        elif child.tag == qn('w:tbl'):
-            yield 'table', child
 
 def extract_docx_structure(doc_path):
     doc = Document(doc_path)
+    structure = []
+    current_block = None
 
-    paragraphs = doc.paragraphs
-    tables = doc.tables
-    para_idx = 0
-    table_idx = 0
+    def get_run_styles(run):
+        return {
+            "text": run.text,
+            "bold": run.bold,
+            "underline": run.underline,
+        }
 
-    output = []
+    def classify_paragraph(para):
+        text = para.text.strip()
+        if not text:
+            return None, None
 
-    def is_bold(run): return run.bold is True
-    def is_underline(run): return run.underline is True
-    def is_bold_and_underline(run): return is_bold(run) and is_underline(run)
+        alignment = para.paragraph_format.alignment  # 0-left, 1-center, 2-right, 3-justify
 
-    for block_type, elm in iter_block_items(doc):
-        print(f"Block type: {block_type}")  # DEBUG
+        runs = para.runs
+        if alignment == 1 and any(run.bold for run in runs):
+            return "topic", text
 
-        if block_type == 'paragraph':
-            if para_idx >= len(paragraphs):
-                print("Paragraph index out of range!")
-                break
-            para = paragraphs[para_idx]
-            para_idx += 1
-            text = para.text.strip()
-            print(f"Paragraph text: '{text}'")  # DEBUG
-            if not text:
-                continue
-
-            alignment = para.paragraph_format.alignment
-            is_centered = alignment == WD_PARAGRAPH_ALIGNMENT.CENTER
-            all_bold = all(is_bold(run) for run in para.runs if run.text.strip())
-
-            if is_centered and all_bold:
-                print("Detected Topic")
-                output.append({"type": "topic", "text": text})
-                continue
-
-            runs = para.runs
-            first_non_empty_run_idx = next((i for i, r in enumerate(runs) if r.text.strip()), None)
-            if first_non_empty_run_idx is None:
-                output.append({"type": "paragraph", "text": text})
-                continue
-
-            i = first_non_empty_run_idx
-            heading_runs = []
-            subheading_runs = []
-
-            while i < len(runs) and runs[i].text.strip():
-                run = runs[i]
-                if is_bold_and_underline(run):
-                    heading_runs.append(run)
-                elif is_underline(run) and not is_bold(run):
-                    subheading_runs.append(run)
-                else:
+        # Check if text starts with bold+underline or underline only
+        match = re.match(r"^([\s\S]*?)\b", text)
+        if match:
+            first_word = match.group(1)
+            for run in runs:
+                if run.text and first_word.startswith(run.text.strip()):
+                    if run.bold and run.underline:
+                        return "heading", text
+                    elif run.underline and not run.bold:
+                        return "subheading", text
                     break
-                i += 1
 
-            if heading_runs:
-                print("Detected Heading")
-                output.append({"type": "heading", "text": text})
-                continue
+        if para.style.name and "List" in para.style.name:
+            return "bullet", text
 
-            if subheading_runs:
-                subheading_text = "".join(run.text for run in subheading_runs).strip()
-                rest_text = "".join(run.text for run in runs[i:]).strip()
-                print(f"Detected Subheading: '{subheading_text}' with content: '{rest_text}'")
-                entry = {"type": "subheading", "text": subheading_text}
-                if rest_text:
-                    entry["content"] = [{"type": "paragraph", "text": rest_text}]
-                output.append(entry)
-                continue
+        return "paragraph", text
 
-            style_name = para.style.name if para.style else ""
-            if "List" in style_name or "Bullet" in style_name:
-                print("Detected Bullet")
-                output.append({"type": "bullet", "text": text})
-            else:
-                print("Detected Paragraph")
-                output.append({"type": "paragraph", "text": text})
+    for para in doc.paragraphs:
+        ptype, text = classify_paragraph(para)
+        if not ptype:
+            continue
 
-        elif block_type == 'table':
-            if table_idx >= len(tables):
-                print("Table index out of range!")
-                break
-            table = tables[table_idx]
-            table_idx += 1
-            table_data = []
-            for row in table.rows:
-                table_data.append([cell.text.strip() for cell in row.cells])
-            print("Detected Table")
-            output.append({"type": "table", "data": table_data})
+        if ptype == "subheading":
+            underline_part = ""
+            non_underline_part = ""
+            for run in para.runs:
+                if run.underline and not run.bold:
+                    underline_part += run.text
+                else:
+                    non_underline_part += run.text
+            block = {
+                "type": "subheading",
+                "subheading": underline_part.strip(),
+                "content": [{"type": "paragraph", "text": non_underline_part.strip()}] if non_underline_part.strip() else []
+            }
+            structure.append(block)
+        else:
+            block = {
+                "type": ptype,
+                "text": text
+            }
+            structure.append(block)
 
-    return output
+    # Append tables in place
+    table_index = 0
+    for i, tbl in enumerate(doc.tables):
+        data = []
+        for row in tbl.rows:
+            row_data = [cell.text.strip() for cell in row.cells]
+            data.append(row_data)
 
+        # Insert table after the last paragraph before the table
+        insert_index = len(structure)
+        structure.insert(insert_index, {
+            "type": "table",
+            "data": data
+        })
+        table_index += 1
 
+    return structure
+
+# Usage
 if __name__ == "__main__":
-    docx_path = "your_file.docx"
-    result = extract_docx_structure(docx_path)
-
-    import json
-    with open("docx_output.json", "w", encoding="utf-8") as f:
-        json.dump(result, f, indent=2, ensure_ascii=False)
-
-    import pprint
-    pprint.pprint(result)
+    docx_path = "your_file.docx"  # Replace with your DOCX file path
+    output = extract_docx_structure(docx_path)
+    with open("docx_parsed_output.json", "w", encoding="utf-8") as f:
+        json.dump(output, f, indent=2, ensure_ascii=False)
