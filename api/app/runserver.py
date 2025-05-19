@@ -2,18 +2,8 @@ from docx import Document
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 def iter_block_items(parent):
-    """
-    Yield paragraphs and tables in document order
-    parent: a _Document or _Cell object
-    """
-    from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
-
-    # get the element for body (document or cell)
-    if hasattr(parent, "element"):
-        parent_elm = parent.element
-    else:
-        parent_elm = parent
+    parent_elm = parent.element if hasattr(parent, "element") else parent
 
     for child in parent_elm.iterchildren():
         if child.tag == qn('w:p'):
@@ -36,10 +26,16 @@ def extract_docx_structure(doc_path):
     def is_bold_and_underline(run): return is_bold(run) and is_underline(run)
 
     for block_type, elm in iter_block_items(doc):
+        print(f"Block type: {block_type}")  # DEBUG
+
         if block_type == 'paragraph':
+            if para_idx >= len(paragraphs):
+                print("Paragraph index out of range!")
+                break
             para = paragraphs[para_idx]
             para_idx += 1
             text = para.text.strip()
+            print(f"Paragraph text: '{text}'")  # DEBUG
             if not text:
                 continue
 
@@ -48,6 +44,7 @@ def extract_docx_structure(doc_path):
             all_bold = all(is_bold(run) for run in para.runs if run.text.strip())
 
             if is_centered and all_bold:
+                print("Detected Topic")
                 output.append({"type": "topic", "text": text})
                 continue
 
@@ -72,12 +69,14 @@ def extract_docx_structure(doc_path):
                 i += 1
 
             if heading_runs:
+                print("Detected Heading")
                 output.append({"type": "heading", "text": text})
                 continue
 
             if subheading_runs:
                 subheading_text = "".join(run.text for run in subheading_runs).strip()
                 rest_text = "".join(run.text for run in runs[i:]).strip()
+                print(f"Detected Subheading: '{subheading_text}' with content: '{rest_text}'")
                 entry = {"type": "subheading", "text": subheading_text}
                 if rest_text:
                     entry["content"] = [{"type": "paragraph", "text": rest_text}]
@@ -86,19 +85,26 @@ def extract_docx_structure(doc_path):
 
             style_name = para.style.name if para.style else ""
             if "List" in style_name or "Bullet" in style_name:
+                print("Detected Bullet")
                 output.append({"type": "bullet", "text": text})
             else:
+                print("Detected Paragraph")
                 output.append({"type": "paragraph", "text": text})
 
         elif block_type == 'table':
+            if table_idx >= len(tables):
+                print("Table index out of range!")
+                break
             table = tables[table_idx]
             table_idx += 1
             table_data = []
             for row in table.rows:
                 table_data.append([cell.text.strip() for cell in row.cells])
+            print("Detected Table")
             output.append({"type": "table", "data": table_data})
 
     return output
+
 
 if __name__ == "__main__":
     docx_path = "your_file.docx"
