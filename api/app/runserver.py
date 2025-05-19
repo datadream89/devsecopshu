@@ -1,27 +1,17 @@
 import json
+from langchain.schema import Document
 
-def create_chunks_from_json(input_path, output_path):
-    with open(input_path, "r", encoding="utf-8") as f:
-        items = json.load(f)
+def load_chunks_as_documents(json_path):
+    with open(json_path, "r", encoding="utf-8") as f:
+        chunks = json.load(f)
 
-    chunks = []
-    for item in items:
-        if item["type"] == "table":
-            chunks.append({
-                "type": "table",
-                "data": item["data"]
-            })
-        else:
-            chunks.append({
-                "type": item["type"],
-                "data": item["text"]
-            })
+    documents = []
+    for chunk in chunks:
+        content = chunk.get("text") or json.dumps(chunk.get("data"))
+        doc = Document(page_content=content, metadata={"type": chunk.get("type", "unknown")})
+        documents.append(doc)
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(chunks, f, ensure_ascii=False, indent=2)
+    return documents
 
-    return chunks
-
-# --- Usage ---
-if __name__ == "__main__":
-    create_chunks_from_json("intermediate_output.json", "doc_chunks.json")
+# Usage
+documents = load_chunks_as_documents("intermediate_output.json")
