@@ -13,12 +13,6 @@ import {
   FormControlLabel,
   Radio,
   Modal,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
@@ -58,7 +52,6 @@ const UploadModal = ({ open, onClose, onUpload }) => {
           border: '2px solid #000',
           boxShadow: 24,
           p: 4,
-          borderRadius: 1,
         }}
       >
         <Typography variant="h6" mb={2}>
@@ -91,8 +84,6 @@ export default function IntegratedUI() {
   ]);
   const [modalOpenFor, setModalOpenFor] = useState(null);
   const [submitMsg, setSubmitMsg] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [submissionData, setSubmissionData] = useState([]);
 
   const toggleTypeButton = (label) => {
     setSelectedTypes((prev) =>
@@ -104,10 +95,6 @@ export default function IntegratedUI() {
     setSelectedCompareDirection(label);
   };
 
-  const handleRemoveId = (id) => {
-    setSelectedIds((prev) => prev.filter((opt) => opt.id !== id));
-  };
-
   useEffect(() => {
     if (selectedTypes.length < 2) {
       setValidationMsg('Select at least 2 Types.');
@@ -117,14 +104,14 @@ export default function IntegratedUI() {
       setValidationMsg('Please select at least one ID when PSCRF Data is selected.');
     } else if (
       selectedTypes.includes('Unsigned Approved Contract') &&
-      contractSections.some((s) => !s.file)
+      contractSections.some((s) => !s.file || !s.type)
     ) {
-      setValidationMsg('Please upload a file for each Unsigned Approved Contract section.');
+      setValidationMsg('Please select type and upload a file for each Unsigned Approved Contract section.');
     } else if (
       selectedTypes.includes('Signed Client Contract') &&
-      signedContractSections.some((s) => !s.file)
+      signedContractSections.some((s) => !s.file || !s.type)
     ) {
-      setValidationMsg('Please upload a file for each Signed Client Contract section.');
+      setValidationMsg('Please select type and upload a file for each Signed Client Contract section.');
     } else {
       setValidationMsg('');
     }
@@ -137,17 +124,12 @@ export default function IntegratedUI() {
   };
 
   const handleFileUpload = (file) => {
-    if (!modalOpenFor) return;
-    const { id, type } = modalOpenFor;
-    if (type === 'Unsigned Approved Contract') {
-      setContractSections((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, file } : s))
-      );
-    } else if (type === 'Signed Client Contract') {
-      setSignedContractSections((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, file } : s))
-      );
-    }
+    setContractSections((prev) =>
+      prev.map((s) => (s.id === modalOpenFor ? { ...s, file } : s))
+    );
+    setSignedContractSections((prev) =>
+      prev.map((s) => (s.id === modalOpenFor ? { ...s, file } : s))
+    );
   };
 
   const addSection = (setter) => {
@@ -158,19 +140,15 @@ export default function IntegratedUI() {
     setter((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const renderSections = (sections, setter, sectionTitle) => (
+  const renderSections = (sections, setter) => (
     <Box mt={4}>
-      <Typography variant="h6" fontWeight="bold" mb={2}>
-        {sectionTitle}
-      </Typography>
       {sections.map((section, idx) => (
         <Paper key={section.id} sx={{ p: 2, mb: 2, position: 'relative' }}>
-          <Box display="flex" justifyContent="space-between" gap={2}>
+          <Box display="flex" justifyContent="space-between" alignItems="flex-start">
             <RadioGroup
               row
               value={section.type}
               onChange={(e) => handleRadioChange(section.id, e.target.value, setter)}
-              sx={{ flexGrow: 1 }}
             >
               {['Agreement', 'Supplement', 'Addendum'].map((type) => (
                 <FormControlLabel
@@ -181,109 +159,181 @@ export default function IntegratedUI() {
                 />
               ))}
             </RadioGroup>
-
-            <Box display="flex" flexDirection="column" alignItems="flex-end">
-              <IconButton onClick={() => addSection(setter)} aria-label="Add section">
+            <Box sx={{ position: 'relative', width: 36, height: 36 }}>
+              <IconButton
+                onClick={() => addSection(setter)}
+                sx={{ position: 'absolute', top: 0, right: 0 }}
+                size="small"
+                aria-label="Add Section"
+              >
                 <AddIcon />
               </IconButton>
-              {idx > 0 && (
-                <IconButton
-                  onClick={() => removeSection(section.id, setter)}
-                  aria-label="Remove section"
-                >
-                  <CloseIcon />
-                </IconButton>
-              )}
             </Box>
           </Box>
-
-          <Box display="flex" alignItems="center" gap={2} mt={2}>
+          <Box display="flex" alignItems="center" mt={2} gap={2}>
             <Button
               variant="outlined"
-              onClick={() => setModalOpenFor({ id: section.id, type: sectionTitle })}
+              onClick={() => setModalOpenFor(section.id)}
               startIcon={<UploadFileIcon />}
               sx={{
                 color: '#673ab7',
                 borderColor: '#673ab7',
                 textTransform: 'none',
                 fontWeight: 'bold',
-                minWidth: 140,
-                '&:hover': {
-                  backgroundColor: '#673ab7',
-                  color: '#fff',
-                },
+                ':hover': { backgroundColor: '#ede7f6', borderColor: '#673ab7' },
               }}
             >
               {section.file ? section.file.name : 'Upload File'}
             </Button>
           </Box>
+          {idx > 0 && (
+            <IconButton
+              onClick={() => removeSection(section.id, setter)}
+              sx={{ position: 'absolute', top: 8, right: 8 }}
+              size="small"
+              aria-label="Remove Section"
+            >
+              <CloseIcon />
+            </IconButton>
+          )}
         </Paper>
       ))}
     </Box>
   );
 
   const handleSubmit = () => {
-    const newRequest = {
-      pscrfId: selectedIds.map((id) => id.label).join(', '),
-      requestId: 'REQ-' + Math.floor(Math.random() * 10000),
-      status: 'C'
-    };
-    setSubmissionData((prev) => [...prev, newRequest]);
-    setSubmitted(true);
+    if (!validationMsg) {
+      setSubmitMsg('Submitted successfully request');
+    } else {
+      setSubmitMsg('');
+      alert(validationMsg);
+    }
   };
-
-  const handleBack = () => {
-    setSubmitted(false);
-    setSelectedTypes([]);
-    setSelectedCompareDirection('');
-    setSelectedIds([]);
-    setContractSections([{ id: Date.now(), type: '', file: null }]);
-    setSignedContractSections([{ id: Date.now() + 1, type: '', file: null }]);
-  };
-
-  if (submitted) {
-    return (
-      <Container>
-        <Typography variant="h5" mt={4} mb={2}>Request Submitted Successfully</Typography>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell><strong>PSCRF ID</strong></TableCell>
-                <TableCell><strong>Request ID</strong></TableCell>
-                <TableCell><strong>Status</strong></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {submissionData.map((row, index) => (
-                <TableRow key={index}>
-                  <TableCell>{row.pscrfId}</TableCell>
-                  <TableCell>{row.requestId}</TableCell>
-                  <TableCell>{row.status}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <Button variant="contained" onClick={handleBack} sx={{ mt: 3 }}>
-          Submit New Request
-        </Button>
-      </Container>
-    );
-  }
 
   return (
-    <Container>
-      {/* UI elements and form inputs */}
-      <Button
-        variant="contained"
-        onClick={handleSubmit}
-        sx={{ mt: 4 }}
-        disabled={!!validationMsg}
-      >
-        Submit
-      </Button>
-      {validationMsg && <Typography color="error" mt={2}>{validationMsg}</Typography>}
+    <Container maxWidth="md" sx={{ mt: 4, pb: 4 }}>
+      <Typography variant="h5" gutterBottom fontWeight="bold" mb={3}>
+        PSCRF Data
+      </Typography>
+      <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap" mb={4}>
+        {typeButtons.map((label) => (
+          <Button
+            key={label}
+            variant={selectedTypes.includes(label) ? 'contained' : 'outlined'}
+            onClick={() => toggleTypeButton(label)}
+            sx={{
+              backgroundColor: selectedTypes.includes(label) ? cignaBlue : 'transparent',
+              color: selectedTypes.includes(label) ? 'white' : cignaBlue,
+              minWidth: 180,
+              fontWeight: 'bold',
+              textTransform: 'none',
+              '&:hover': { backgroundColor: cignaBlue, color: 'white' },
+            }}
+          >
+            {label}
+          </Button>
+        ))}
+      </Box>
+
+      <Typography variant="h5" gutterBottom fontWeight="bold" mb={3}>
+        Compare Direction
+      </Typography>
+      <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap" mb={4}>
+        {compareDirectionButtons.map((label) => (
+          <Button
+            key={label}
+            variant={selectedCompareDirection === label ? 'contained' : 'outlined'}
+            onClick={() => selectCompareDirectionButton(label)}
+            sx={{
+              backgroundColor: selectedCompareDirection === label ? cignaBlue : 'transparent',
+              color: selectedCompareDirection === label ? 'white' : cignaBlue,
+              minWidth: 120,
+              fontWeight: 'bold',
+              textTransform: 'none',
+              '&:hover': { backgroundColor: cignaBlue, color: 'white' },
+            }}
+          >
+            {label}
+          </Button>
+        ))}
+      </Box>
+
+      {selectedTypes.includes('PSCRF Data') && (
+        <Box mb={4}>
+          <Autocomplete
+            options={dropdownOptions}
+            getOptionLabel={(option) => option.id}
+            filterSelectedOptions
+            onChange={(e, newValue) => setSelectedIds(newValue)}
+            multiple
+            value={selectedIds}
+            renderInput={(params) => (
+              <TextField {...params} label="Search and select IDs" variant="outlined" />
+            )}
+          />
+
+          {/* Cards showing selected IDs and versions */}
+          <Grid container spacing={2} mt={2}>
+            {selectedIds.map((item) => (
+              <Grid item xs={12} sm={4} key={item.id}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    ID: {item.id}
+                  </Typography>
+                  <Typography variant="body2">Version: {item.version || 'N/A'}</Typography>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      )}
+
+      {selectedTypes.includes('Unsigned Approved Contract') && (
+        <>
+          <Typography variant="h5" gutterBottom fontWeight="bold" mb={2}>
+            Unsigned Approved Contract
+          </Typography>
+          {renderSections(contractSections, setContractSections)}
+        </>
+      )}
+
+      {selectedTypes.includes('Signed Client Contract') && (
+        <>
+          <Typography variant="h5" gutterBottom fontWeight="bold" mb={2}>
+            Signed Client Contract
+          </Typography>
+          {renderSections(signedContractSections, setSignedContractSections)}
+        </>
+      )}
+
+      {validationMsg && (
+        <Typography color="error" mt={3} textAlign="center" fontWeight="bold">
+          {validationMsg}
+        </Typography>
+      )}
+
+      {submitMsg && (
+        <Typography color="success.main" mt={3} textAlign="center" fontWeight="bold">
+          {submitMsg}
+        </Typography>
+      )}
+
+      <Box display="flex" justifyContent="center" mt={4}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSubmit}
+          sx={{ minWidth: 160, fontWeight: 'bold' }}
+        >
+          Submit
+        </Button>
+      </Box>
+
+      <UploadModal
+        open={!!modalOpenFor}
+        onClose={() => setModalOpenFor(null)}
+        onUpload={handleFileUpload}
+      />
     </Container>
   );
 }
