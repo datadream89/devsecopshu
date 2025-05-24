@@ -95,10 +95,6 @@ export default function IntegratedUI() {
     setSelectedCompareDirection(label);
   };
 
-  const handleRemoveId = (id) => {
-    setSelectedIds((prev) => prev.filter((opt) => opt.id !== id));
-  };
-
   useEffect(() => {
     if (selectedTypes.length < 2) {
       setValidationMsg('Select at least 2 Types.');
@@ -108,14 +104,14 @@ export default function IntegratedUI() {
       setValidationMsg('Please select at least one ID when PSCRF Data is selected.');
     } else if (
       selectedTypes.includes('Unsigned Approved Contract') &&
-      contractSections.some((s) => !s.file)
+      contractSections.some((s) => !s.file || !s.type)
     ) {
-      setValidationMsg('Please upload a file for each Unsigned Approved Contract section.');
+      setValidationMsg('Please select type and upload a file for each Unsigned Approved Contract section.');
     } else if (
       selectedTypes.includes('Signed Client Contract') &&
-      signedContractSections.some((s) => !s.file)
+      signedContractSections.some((s) => !s.file || !s.type)
     ) {
-      setValidationMsg('Please upload a file for each Signed Client Contract section.');
+      setValidationMsg('Please select type and upload a file for each Signed Client Contract section.');
     } else {
       setValidationMsg('');
     }
@@ -163,8 +159,13 @@ export default function IntegratedUI() {
                 />
               ))}
             </RadioGroup>
-            <Box>
-              <IconButton onClick={() => addSection(setter)}>
+            <Box sx={{ position: 'relative', width: 36, height: 36 }}>
+              <IconButton
+                onClick={() => addSection(setter)}
+                sx={{ position: 'absolute', top: 0, right: 0 }}
+                size="small"
+                aria-label="Add Section"
+              >
                 <AddIcon />
               </IconButton>
             </Box>
@@ -174,7 +175,13 @@ export default function IntegratedUI() {
               variant="outlined"
               onClick={() => setModalOpenFor(section.id)}
               startIcon={<UploadFileIcon />}
-              sx={{ color: '#673ab7', borderColor: '#673ab7' }}
+              sx={{
+                color: '#673ab7',
+                borderColor: '#673ab7',
+                textTransform: 'none',
+                fontWeight: 'bold',
+                ':hover': { backgroundColor: '#ede7f6', borderColor: '#673ab7' },
+              }}
             >
               {section.file ? section.file.name : 'Upload File'}
             </Button>
@@ -182,7 +189,9 @@ export default function IntegratedUI() {
           {idx > 0 && (
             <IconButton
               onClick={() => removeSection(section.id, setter)}
-              sx={{ position: 'absolute', top: 8, right: 40 }}
+              sx={{ position: 'absolute', top: 8, right: 8 }}
+              size="small"
+              aria-label="Remove Section"
             >
               <CloseIcon />
             </IconButton>
@@ -193,15 +202,20 @@ export default function IntegratedUI() {
   );
 
   const handleSubmit = () => {
-    setSubmitMsg('Submitted successfully request');
+    if (!validationMsg) {
+      setSubmitMsg('Submitted successfully request');
+    } else {
+      setSubmitMsg('');
+      alert(validationMsg);
+    }
   };
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, pb: 4 }}>
-      <Typography variant="h6" gutterBottom>
-        Type
+      <Typography variant="h5" gutterBottom fontWeight="bold" mb={3}>
+        PSCRF Data
       </Typography>
-      <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
+      <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap" mb={4}>
         {typeButtons.map((label) => (
           <Button
             key={label}
@@ -221,10 +235,10 @@ export default function IntegratedUI() {
         ))}
       </Box>
 
-      <Typography variant="h6" gutterBottom mt={4}>
+      <Typography variant="h5" gutterBottom fontWeight="bold" mb={3}>
         Compare Direction
       </Typography>
-      <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
+      <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap" mb={4}>
         {compareDirectionButtons.map((label) => (
           <Button
             key={label}
@@ -245,7 +259,7 @@ export default function IntegratedUI() {
       </Box>
 
       {selectedTypes.includes('PSCRF Data') && (
-        <Box mt={4}>
+        <Box mb={4}>
           <Autocomplete
             options={dropdownOptions}
             getOptionLabel={(option) => option.id}
@@ -257,12 +271,40 @@ export default function IntegratedUI() {
               <TextField {...params} label="Search and select IDs" variant="outlined" />
             )}
           />
+
+          {/* Cards showing selected IDs and versions */}
+          <Grid container spacing={2} mt={2}>
+            {selectedIds.map((item) => (
+              <Grid item xs={12} sm={4} key={item.id}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    ID: {item.id}
+                  </Typography>
+                  <Typography variant="body2">Version: {item.version || 'N/A'}</Typography>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
         </Box>
       )}
 
-      {selectedTypes.includes('Unsigned Approved Contract') && renderSections(contractSections, setContractSections)}
+      {selectedTypes.includes('Unsigned Approved Contract') && (
+        <>
+          <Typography variant="h5" gutterBottom fontWeight="bold" mb={2}>
+            Unsigned Approved Contract
+          </Typography>
+          {renderSections(contractSections, setContractSections)}
+        </>
+      )}
 
-      {selectedTypes.includes('Signed Client Contract') && renderSections(signedContractSections, setSignedContractSections)}
+      {selectedTypes.includes('Signed Client Contract') && (
+        <>
+          <Typography variant="h5" gutterBottom fontWeight="bold" mb={2}>
+            Signed Client Contract
+          </Typography>
+          {renderSections(signedContractSections, setSignedContractSections)}
+        </>
+      )}
 
       {validationMsg && (
         <Typography color="error" mt={3} textAlign="center" fontWeight="bold">
@@ -277,7 +319,12 @@ export default function IntegratedUI() {
       )}
 
       <Box display="flex" justifyContent="center" mt={4}>
-        <Button variant="contained" color="primary" onClick={handleSubmit}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSubmit}
+          sx={{ minWidth: 160, fontWeight: 'bold' }}
+        >
           Submit
         </Button>
       </Box>
