@@ -6,38 +6,37 @@ import {
   Typography,
   Paper,
   IconButton,
-  Stack,
+  Grid,
   Autocomplete,
   TextField,
-  Grid,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import dropdownOptions from './data/options.json';
 
 const cignaBlue = '#004785';
 
-// Button data
-const firstRowButtons = [
+// Button data renamed
+const typeButtons = [
   'PSCRF Data',
   'Unsigned Approved Contract',
   'Signed Client Contract',
 ];
-const secondRowButtons = ['One-Way', 'Bi-Directional'];
+const compareDirectionButtons = ['One-Way', 'Bi-Directional'];
 
 export default function IntegratedUI() {
-  // First row multi-select (min 2)
-  const [selectedFirstRow, setSelectedFirstRow] = useState([]);
-  // Second row single select (exactly 1)
-  const [selectedSecondRow, setSelectedSecondRow] = useState('');
+  // Type (first row) multi-select (min 2)
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  // Compare Direction (second row) single select (exactly 1)
+  const [selectedCompareDirection, setSelectedCompareDirection] = useState('');
   // Selected IDs from autocomplete
   const [selectedIds, setSelectedIds] = useState([]);
 
   // Validation messages
   const [validationMsg, setValidationMsg] = useState('');
 
-  // Handle first row button toggle (multi-select)
-  const toggleFirstRowButton = (label) => {
-    setSelectedFirstRow((prev) => {
+  // Handle Type button toggle (multi-select)
+  const toggleTypeButton = (label) => {
+    setSelectedTypes((prev) => {
       if (prev.includes(label)) {
         return prev.filter((item) => item !== label);
       } else {
@@ -46,9 +45,9 @@ export default function IntegratedUI() {
     });
   };
 
-  // Handle second row button select (single-select)
-  const selectSecondRowButton = (label) => {
-    setSelectedSecondRow(label);
+  // Handle Compare Direction button select (single-select)
+  const selectCompareDirectionButton = (label) => {
+    setSelectedCompareDirection(label);
   };
 
   // Remove selected ID
@@ -58,36 +57,36 @@ export default function IntegratedUI() {
 
   // Validate selections on every change
   useEffect(() => {
-    if (selectedFirstRow.length < 2) {
-      setValidationMsg('Please select at least two buttons in the first row.');
+    if (selectedTypes.length < 2) {
+      setValidationMsg('Select at least 2 Types.');
       return;
     }
-    if (!selectedSecondRow) {
-      setValidationMsg('Please select one button in the second row.');
+    if (!selectedCompareDirection) {
+      setValidationMsg('Select one Compare Direction.');
       return;
     }
     if (
-      selectedFirstRow.includes('PSCRF Data') &&
+      selectedTypes.includes('PSCRF Data') &&
       selectedIds.length === 0
     ) {
       setValidationMsg('Please select at least one ID when PSCRF Data is selected.');
       return;
     }
     setValidationMsg('');
-  }, [selectedFirstRow, selectedSecondRow, selectedIds]);
+  }, [selectedTypes, selectedCompareDirection, selectedIds]);
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
-      {/* First Row Buttons (multi-select) */}
+      {/* Type Buttons (multi-select) */}
       <Box display="flex" justifyContent="center" gap={2} mb={2} flexWrap="wrap">
-        {firstRowButtons.map((label) => (
+        {typeButtons.map((label) => (
           <Button
             key={label}
-            variant={selectedFirstRow.includes(label) ? 'contained' : 'outlined'}
-            onClick={() => toggleFirstRowButton(label)}
+            variant={selectedTypes.includes(label) ? 'contained' : 'outlined'}
+            onClick={() => toggleTypeButton(label)}
             sx={{
-              backgroundColor: selectedFirstRow.includes(label) ? cignaBlue : 'transparent',
-              color: selectedFirstRow.includes(label) ? 'white' : cignaBlue,
+              backgroundColor: selectedTypes.includes(label) ? cignaBlue : 'transparent',
+              color: selectedTypes.includes(label) ? 'white' : cignaBlue,
               minWidth: 180,
               fontWeight: 'bold',
               textTransform: 'none',
@@ -102,16 +101,16 @@ export default function IntegratedUI() {
         ))}
       </Box>
 
-      {/* Second Row Buttons (single-select) */}
+      {/* Compare Direction Buttons (single-select) */}
       <Box display="flex" justifyContent="center" gap={2} mb={4} flexWrap="wrap">
-        {secondRowButtons.map((label) => (
+        {compareDirectionButtons.map((label) => (
           <Button
             key={label}
-            variant={selectedSecondRow === label ? 'contained' : 'outlined'}
-            onClick={() => selectSecondRowButton(label)}
+            variant={selectedCompareDirection === label ? 'contained' : 'outlined'}
+            onClick={() => selectCompareDirectionButton(label)}
             sx={{
-              backgroundColor: selectedSecondRow === label ? cignaBlue : 'transparent',
-              color: selectedSecondRow === label ? 'white' : cignaBlue,
+              backgroundColor: selectedCompareDirection === label ? cignaBlue : 'transparent',
+              color: selectedCompareDirection === label ? 'white' : cignaBlue,
               minWidth: 120,
               fontWeight: 'bold',
               textTransform: 'none',
@@ -127,7 +126,7 @@ export default function IntegratedUI() {
       </Box>
 
       {/* Show Autocomplete only if PSCRF Data is selected */}
-      {selectedFirstRow.includes('PSCRF Data') && (
+      {selectedTypes.includes('PSCRF Data') && (
         <Box>
           <Autocomplete
             options={dropdownOptions}
