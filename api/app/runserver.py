@@ -1,239 +1,134 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Grid,
   Button,
   Container,
-  IconButton,
   Typography,
+  Modal,
   TextField,
-  FormHelperText,
+  IconButton,
+  Paper,
+  Stack,
+  Autocomplete,
 } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import Autocomplete from '@mui/material/Autocomplete';
+import CloseIcon from '@mui/icons-material/Close';
 import dropdownOptions from './data/options.json';
 
 const cignaBlue = '#004785';
 
-const firstRowButtons = ['PSCRF Data', 'Unsigned Approved Contract', 'Signed Client Contract'];
-const secondRowButtons = ['One-Way', 'Bi-Directional'];
+const modalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 420,
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  borderRadius: 2,
+  p: 3,
+  maxHeight: '80vh',
+  overflowY: 'auto',
+};
 
-const Request = () => {
-  const [firstSelection, setFirstSelection] = useState([]);
-  const [secondSelection, setSecondSelection] = useState('');
-  const [dropdowns, setDropdowns] = useState([{ id: 1, selected: null }]);
-  const [validationError, setValidationError] = useState(false);
+export default function IdModalSelector() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedOptions, setSelectedOptions] = useState([]);
 
-  // New state to control inputValue for each dropdown to enable search
-  const [inputValues, setInputValues] = useState({ 1: '' });
-
-  const firstRowValid = firstSelection.length >= 2;
-  const showDropdowns =
-    firstRowValid &&
-    firstSelection.includes('PSCRF Data') &&
-    (secondSelection === 'One-Way' || secondSelection === 'Bi-Directional');
-
-  const handleAddDropdown = () => {
-    const newId = dropdowns.length + 1;
-    setDropdowns([...dropdowns, { id: newId, selected: null }]);
-    setInputValues((prev) => ({ ...prev, [newId]: '' }));
-  };
-
-  const handleSelect = (dropdownId, value) => {
-    setDropdowns((prev) =>
-      prev.map((d) => (d.id === dropdownId ? { ...d, selected: value } : d))
-    );
-    // Reset input value to '' after select so input shows formatted text only
-    setInputValues((prev) => ({ ...prev, [dropdownId]: '' }));
-
-    if (validationError) {
-      setValidationError(false);
-    }
-  };
-
-  const toggleFirstSelection = (label) => {
-    if (firstSelection.includes(label)) {
-      if (firstSelection.length <= 2) return;
-      setFirstSelection(firstSelection.filter((item) => item !== label));
-    } else {
-      setFirstSelection([...firstSelection, label]);
-    }
-  };
-
-  // Control the input value for search
-  const handleInputChange = (dropdownId, newInputValue) => {
-    setInputValues((prev) => ({ ...prev, [dropdownId]: newInputValue }));
-  };
-
-  // Validation check
-  const checkValidation = () => {
-    if (showDropdowns) {
-      const anyEmpty = dropdowns.some((d) => !d.selected);
-      setValidationError(anyEmpty);
-      return !anyEmpty;
-    }
-    setValidationError(false);
-    return true;
-  };
-
-  // Format the selected value for display inside input box with newlines
-  const formatSelectedValue = (selected) => {
-    if (!selected) return '';
-    return `${selected.id}\nSAM Version: ${selected.samVersion}\nPricing Version: ${selected.pricingVersion}`;
+  const handleRemove = (id) => {
+    setSelectedOptions((prev) => prev.filter((opt) => opt.id !== id));
   };
 
   return (
-    <Container maxWidth="md">
-      <Box mt={4}>
-        {/* First row buttons */}
-        <Grid container spacing={2} justifyContent="center">
-          {firstRowButtons.map((label) => (
-            <Grid item key={label}>
-              <Button
-                variant={firstSelection.includes(label) ? 'contained' : 'outlined'}
-                sx={{
-                  backgroundColor: firstSelection.includes(label) ? cignaBlue : 'transparent',
-                  color: firstSelection.includes(label) ? '#fff' : cignaBlue,
-                  borderColor: cignaBlue,
-                  '&:hover': {
-                    backgroundColor: firstSelection.includes(label) ? '#00386A' : '#e3f2fd',
-                  },
-                }}
-                onClick={() => toggleFirstSelection(label)}
-              >
-                {label}
-              </Button>
-            </Grid>
-          ))}
-        </Grid>
+    <Container maxWidth="sm" sx={{ mt: 4, textAlign: 'center' }}>
+      <Button
+        variant="contained"
+        onClick={() => setModalOpen(true)}
+        sx={{ backgroundColor: cignaBlue }}
+      >
+        Select IDs
+      </Button>
 
-        {!firstRowValid && (
-          <FormHelperText error sx={{ textAlign: 'center', mt: 1 }}>
-            Please select at least two options in the first row.
-          </FormHelperText>
-        )}
-
-        {/* Second row buttons */}
-        <Box mt={4}>
-          <Grid container spacing={2} justifyContent="center">
-            {secondRowButtons.map((label) => (
-              <Grid item key={label}>
-                <Button
-                  variant={secondSelection === label ? 'contained' : 'outlined'}
-                  sx={{
-                    backgroundColor: secondSelection === label ? cignaBlue : 'transparent',
-                    color: secondSelection === label ? '#fff' : cignaBlue,
-                    borderColor: cignaBlue,
-                    '&:hover': {
-                      backgroundColor: secondSelection === label ? '#00386A' : '#e3f2fd',
-                    },
-                  }}
-                  onClick={() => setSecondSelection(label)}
-                  onBlur={checkValidation}
-                >
-                  {label}
-                </Button>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
-
-        {/* Dropdowns */}
-        {showDropdowns && (
-          <Box mt={4}>
-            <Typography variant="h6" gutterBottom>
-              Select ID:
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        aria-labelledby="id-selector-modal-title"
+        aria-describedby="id-selector-modal-description"
+      >
+        <Box sx={modalStyle}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography id="id-selector-modal-title" variant="h6" component="h2">
+              Search and Select IDs
             </Typography>
-
-            {dropdowns.map((dropdown, index) => {
-              const hasError = validationError && !dropdown.selected;
-
-              return (
-                <Box
-                  key={dropdown.id}
-                  display="flex"
-                  alignItems="center"
-                  gap={1}
-                  mb={2}
-                >
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Autocomplete
-                      options={dropdownOptions}
-                      getOptionLabel={(option) => option.id}
-                      value={dropdown.selected}
-                      onChange={(event, newValue) => handleSelect(dropdown.id, newValue)}
-                      inputValue={inputValues[dropdown.id] || ''}
-                      onInputChange={(event, newInputValue) =>
-                        handleInputChange(dropdown.id, newInputValue)
-                      }
-                      isOptionEqualToValue={(option, value) => option.id === value?.id}
-                      renderOption={(props, option) => (
-                        <li {...props} key={option.id}>
-                          <Box>
-                            <Typography variant="body1" fontWeight="bold">
-                              {option.id}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              SAM Version: {option.samVersion} <br />
-                              Pricing Version: {option.pricingVersion}
-                            </Typography>
-                          </Box>
-                        </li>
-                      )}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Select ID"
-                          variant="outlined"
-                          error={hasError}
-                          helperText={hasError ? 'Please select a value' : ''}
-                          multiline
-                          minRows={3}
-                          value={
-                            // Show formatted selected value if input is empty (not typing)
-                            inputValues[dropdown.id]
-                              ? inputValues[dropdown.id]
-                              : formatSelectedValue(dropdown.selected)
-                          }
-                          inputProps={{
-                            ...params.inputProps,
-                            style: { whiteSpace: 'pre-line' },
-                          }}
-                        />
-                      )}
-                    />
-                  </Box>
-
-                  {/* + Button */}
-                  <IconButton onClick={handleAddDropdown} sx={{ color: cignaBlue }}>
-                    <AddCircleOutlineIcon />
-                  </IconButton>
-
-                  {/* X Button (only after first) */}
-                  {index !== 0 && (
-                    <IconButton
-                      onClick={() => {
-                        setDropdowns(dropdowns.filter((d) => d.id !== dropdown.id));
-                        if (validationError) {
-                          const stillEmpty = dropdowns
-                            .filter((d) => d.id !== dropdown.id)
-                            .some((d) => !d.selected);
-                          if (!stillEmpty) setValidationError(false);
-                        }
-                      }}
-                      sx={{ color: cignaBlue }}
-                    >
-                      X
-                    </IconButton>
-                  )}
-                </Box>
-              );
-            })}
+            <IconButton onClick={() => setModalOpen(false)} size="small" sx={{ color: cignaBlue }}>
+              <CloseIcon />
+            </IconButton>
           </Box>
-        )}
-      </Box>
+
+          <Autocomplete
+            options={dropdownOptions}
+            getOptionLabel={(option) => option.id}
+            filterSelectedOptions
+            onChange={(event, newValue) => {
+              setSelectedOptions(newValue);
+            }}
+            multiple
+            value={selectedOptions}
+            renderInput={(params) => (
+              <TextField {...params} label="Search and select IDs" variant="outlined" />
+            )}
+            sx={{ mb: 3 }}
+          />
+
+          {selectedOptions.length === 0 && (
+            <Typography color="text.secondary" textAlign="center">
+              No IDs selected
+            </Typography>
+          )}
+
+          <Stack spacing={2}>
+            {selectedOptions.map((option) => (
+              <Paper
+                key={option.id}
+                elevation={3}
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: '#f5faff',
+                  borderLeft: `5px solid ${cignaBlue}`,
+                }}
+              >
+                <Box>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    {option.id}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    SAM Version: {option.samVersion}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Pricing Version: {option.pricingVersion}
+                  </Typography>
+                </Box>
+                <IconButton
+                  onClick={() => handleRemove(option.id)}
+                  size="small"
+                  sx={{ color: cignaBlue }}
+                  aria-label={`Remove ${option.id}`}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Paper>
+            ))}
+          </Stack>
+
+          <Box mt={4} textAlign="right">
+            <Button variant="contained" onClick={() => setModalOpen(false)} sx={{ backgroundColor: cignaBlue }}>
+              Done
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
     </Container>
   );
-};
-
-export default Request;
+}
