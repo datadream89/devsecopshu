@@ -11,7 +11,7 @@ import {
   TextField,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import dropdownOptions from './data/options.json';
+import dropdownOptions from './data/options.json'; // Ensure this path is correct
 
 const cignaBlue = '#004785';
 
@@ -116,10 +116,23 @@ export default function IntegratedUI() {
             multiple
             value={selectedIds}
             renderOption={(props, option) => (
-              <Box component="li" {...props} sx={{ display: 'flex', flexDirection: 'column' }}>
+              <Box
+                component="li"
+                {...props}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  width: '100%',
+                  px: 1,
+                }}
+              >
                 <Typography fontWeight="bold">{option.id}</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  SAM Version: {option.samVersion} | Pricing Version: {option.pricingVersion}
+                  SAM Version: {option.samVersion}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Pricing Version: {option.pricingVersion}
                 </Typography>
               </Box>
             )}
@@ -134,7 +147,7 @@ export default function IntegratedUI() {
             sx={{ mb: 3 }}
           />
 
-          {/* Display Selected ID Cards */}
+          {/* Selected IDs */}
           {selectedIds.length === 0 ? (
             <Typography color="text.secondary" textAlign="center">
               No IDs selected
