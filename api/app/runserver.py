@@ -1,17 +1,47 @@
-import json
-from langchain.schema import Document
+import React from 'react';
+import { Box, Grid, Button, Container } from '@mui/material';
 
-def load_chunks_as_documents(json_path):
-    with open(json_path, "r", encoding="utf-8") as f:
-        chunks = json.load(f)
+const Request = () => {
+  return (
+    <Container maxWidth="md">
+      <Box mt={4}>
+        {/* First row - 3 centered buttons */}
+        <Grid container spacing={2} justifyContent="center">
+          <Grid item>
+            <Button variant="contained" color="primary">
+              PSCRF Data
+            </Button>
+          </Grid>
+          <Grid item>
+            <Button variant="contained" color="primary">
+              Unsigned Approved Contract
+            </Button>
+          </Grid>
+          <Grid item>
+            <Button variant="contained" color="primary">
+              Signed Client Contract
+            </Button>
+          </Grid>
+        </Grid>
 
-    documents = []
-    for chunk in chunks:
-        content = chunk.get("text") or json.dumps(chunk.get("data"))
-        doc = Document(page_content=content, metadata={"type": chunk.get("type", "unknown")})
-        documents.append(doc)
+        {/* Second row - 2 centered buttons */}
+        <Box mt={4}>
+          <Grid container spacing={2} justifyContent="center">
+            <Grid item>
+              <Button variant="outlined" color="secondary">
+                One-Way
+              </Button>
+            </Grid>
+            <Grid item>
+              <Button variant="outlined" color="secondary">
+                Bi-Directional
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+      </Box>
+    </Container>
+  );
+};
 
-    return documents
-
-# Usage
-documents = load_chunks_as_documents("intermediate_output.json")
+export default Request;
