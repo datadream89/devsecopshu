@@ -52,6 +52,7 @@ const UploadModal = ({ open, onClose, onUpload }) => {
           border: '2px solid #000',
           boxShadow: 24,
           p: 4,
+          borderRadius: 1,
         }}
       >
         <Typography variant="h6" mb={2}>
@@ -159,11 +160,18 @@ export default function IntegratedUI() {
             </IconButton>
           )}
 
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={2}
+            sx={{ gap: 2 }}
+          >
             <RadioGroup
               row
               value={section.type}
               onChange={(e) => handleRadioChange(section.id, e.target.value, setter)}
+              sx={{ flexGrow: 1 }}
             >
               {['Agreement', 'Supplement', 'Addendum'].map((type) => (
                 <FormControlLabel
@@ -175,6 +183,7 @@ export default function IntegratedUI() {
                 />
               ))}
             </RadioGroup>
+
             {/* Add (+) button only on last section */}
             {idx === sections.length - 1 && (
               <IconButton
@@ -186,6 +195,7 @@ export default function IntegratedUI() {
               </IconButton>
             )}
           </Box>
+
           <Box display="flex" alignItems="center" gap={2}>
             <Button
               variant="outlined"
@@ -212,7 +222,9 @@ export default function IntegratedUI() {
   );
 
   const handleSubmit = () => {
-    setSubmitMsg('Submitted successfully request');
+    if (!validationMsg) {
+      setSubmitMsg('Submitted successfully request');
+    }
   };
 
   return (
@@ -278,7 +290,6 @@ export default function IntegratedUI() {
               <TextField {...params} label="Search and select IDs" variant="outlined" />
             )}
           />
-          {/* Cards in rows of 3 */}
           <Grid container spacing={2} mt={2}>
             {selectedIds.map((item) => (
               <Grid item xs={12} sm={4} key={item.id}>
@@ -302,4 +313,39 @@ export default function IntegratedUI() {
         renderSections(signedContractSections, setSignedContractSections)}
 
       {validationMsg && (
-        <Typography color="error" mt={3} textAlign="center" fontWeight="bold
+        <Typography color="error" mt={3} textAlign="center" fontWeight="bold">
+          {validationMsg}
+        </Typography>
+      )}
+
+      {submitMsg && (
+        <Typography color="success.main" mt={3} textAlign="center" fontWeight="bold">
+          {submitMsg}
+        </Typography>
+      )}
+
+      <Box display="flex" justifyContent="center" mt={4}>
+        <Button
+          variant="contained"
+          disabled={!!validationMsg}
+          onClick={handleSubmit}
+          sx={{
+            backgroundColor: cignaBlue,
+            fontWeight: 'bold',
+            textTransform: 'none',
+            minWidth: 150,
+            '&:hover': { backgroundColor: '#002f5a' },
+          }}
+        >
+          Submit
+        </Button>
+      </Box>
+
+      <UploadModal
+        open={modalOpenFor !== null}
+        onClose={() => setModalOpenFor(null)}
+        onUpload={handleFileUpload}
+      />
+    </Container>
+  );
+}
