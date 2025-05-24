@@ -13,6 +13,7 @@ import {
   FormControlLabel,
   Radio,
   Modal,
+  Chip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
@@ -31,13 +32,8 @@ const typeButtons = [
 const compareDirectionButtons = ['One-Way', 'Bi-Directional'];
 
 const UploadModal = ({ open, onClose, onUpload }) => {
-  const [file, setFile] = useState(null);
-
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
-  const handleUpload = () => {
+    const file = e.target.files[0];
     if (file) {
       onUpload(file);
       onClose();
@@ -66,19 +62,10 @@ const UploadModal = ({ open, onClose, onUpload }) => {
           component="label"
           variant="contained"
           startIcon={<AttachFileIcon />}
-          sx={{ mb: 2, backgroundColor: '#4caf50', color: '#fff' }}
+          sx={{ backgroundColor: '#4caf50', color: '#fff' }}
         >
-          Choose File
+          Upload File
           <input type="file" hidden onChange={handleFileChange} />
-        </Button>
-        {file && <Typography>{file.name}</Typography>}
-        <Button
-          variant="contained"
-          onClick={handleUpload}
-          sx={{ mt: 2, backgroundColor: '#2196f3', color: '#fff' }}
-          startIcon={<UploadFileIcon />}
-        >
-          Upload
         </Button>
       </Box>
     </Modal>
@@ -155,7 +142,6 @@ export default function IntegratedUI() {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
-      {/* Type and Compare Direction Buttons - Sticky */}
       <Box position="sticky" top={0} zIndex={10} bgcolor="#fff" pb={2}>
         <Typography variant="h6" gutterBottom>
           Type
@@ -239,7 +225,7 @@ export default function IntegratedUI() {
         <Box mt={4}>
           {contractSections.map((section, idx) => (
             <Paper key={section.id} sx={{ p: 2, mb: 2, position: 'relative' }}>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
                 <RadioGroup
                   row
                   value={section.type}
@@ -254,30 +240,43 @@ export default function IntegratedUI() {
                     />
                   ))}
                 </RadioGroup>
-                <IconButton onClick={addContractSection} sx={{ position: 'absolute', top: 8, right: 8 }}>
-                  <AddIcon />
-                </IconButton>
-                {idx > 0 && (
-                  <IconButton onClick={() => removeContractSection(section.id)} sx={{ position: 'absolute', top: 8, right: 40 }}>
-                    <CloseIcon />
+                <Box>
+                  <IconButton onClick={addContractSection}>
+                    <AddIcon />
                   </IconButton>
-                )}
+                </Box>
               </Box>
-              <Box display="flex" alignItems="center" mt={2} gap={2}>
+              <Box display="flex" flexDirection="column" mt={2} gap={2}>
                 <Button
                   variant="outlined"
                   onClick={() => setModalOpenFor(section.id)}
                   startIcon={<UploadFileIcon />}
-                  sx={{ color: '#ff4081', borderColor: '#ff4081' }}
+                  sx={{ color: '#673ab7', borderColor: '#673ab7', alignSelf: 'flex-start' }}
                 >
                   Upload File
                 </Button>
                 {section.file && (
-                  <Typography variant="body2" color="text.secondary">
-                    {section.file.name}
-                  </Typography>
+                  <Chip
+                    label={section.file.name}
+                    onDelete={() =>
+                      setContractSections((prev) =>
+                        prev.map((s) =>
+                          s.id === section.id ? { ...s, file: null } : s
+                        )
+                      )
+                    }
+                    sx={{ maxWidth: '100%', backgroundColor: '#f0f0f0' }}
+                  />
                 )}
               </Box>
+              {idx > 0 && (
+                <IconButton
+                  onClick={() => removeContractSection(section.id)}
+                  sx={{ position: 'absolute', top: 8, right: 8 }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              )}
             </Paper>
           ))}
         </Box>
