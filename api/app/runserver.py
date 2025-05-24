@@ -1,74 +1,53 @@
-import React from 'react';
-import {
-  Box,
-  Button,
-  Container,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Paper,
-} from '@mui/material';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Box, Button, Typography, Table, TableBody, TableCell, TableHead, TableRow, Paper } from '@mui/material';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const cignaBlue = '#004785';
+const cignaBlue = '#0047A0';
 
-export default function RequestSuccess() {
-  const location = useLocation();
+const RequestSuccess = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const submittedData = location.state || {};
+  const [requests, setRequests] = useState([]);
 
-  // Extract passed state from navigation
-  const { selectedIds = [], requestId = 1 } = location.state || {};
-
-  // Build table data: one row per selectedId with pscrfId, requestId, status
-  const tableData =
-    selectedIds.length > 0
-      ? selectedIds.map((item) => ({
-          pscrfId: item.id,
-          requestId,
-          status: 'Success',
-        }))
-      : [{ pscrfId: '-', requestId, status: 'Success' }];
+  useEffect(() => {
+    const prev = JSON.parse(localStorage.getItem('requests')) || [];
+    const nextRequestId = prev.length > 0 ? prev[prev.length - 1].requestId + 1 : 1;
+    const newEntry = {
+      pscrfId: submittedData.pscrfId || 'N/A',
+      requestId: nextRequestId,
+      status: 'Success',
+    };
+    const updatedRequests = [...prev, newEntry];
+    localStorage.setItem('requests', JSON.stringify(updatedRequests));
+    setRequests(updatedRequests);
+  }, [submittedData]);
 
   const handleBack = () => {
-    navigate('/');
+    navigate('/request');
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 6 }}>
-      <Typography
-        variant="h4"
-        color={cignaBlue}
-        gutterBottom
-        fontWeight="bold"
-        align="center"
-      >
+    <Box p={4}>
+      <Typography variant="h5" fontWeight="bold" gutterBottom color={cignaBlue}>
         Request Submitted Successfully!
       </Typography>
 
-      <Paper sx={{ mt: 4 }}>
+      <Paper elevation={3} sx={{ mt: 3, mb: 2 }}>
         <Table>
-          <TableHead sx={{ backgroundColor: cignaBlue }}>
-            <TableRow>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>
-                PSCRF ID
-              </TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>
-                Request ID
-              </TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>
-                Status
-              </TableCell>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: cignaBlue }}>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>PSCRF ID</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Request ID</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {tableData.map(({ pscrfId, requestId, status }, index) => (
+            {requests.map((req, index) => (
               <TableRow key={index}>
-                <TableCell>{pscrfId}</TableCell>
-                <TableCell>{requestId}</TableCell>
-                <TableCell>{status}</TableCell>
+                <TableCell>{req.pscrfId}</TableCell>
+                <TableCell>{req.requestId}</TableCell>
+                <TableCell>{req.status}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -84,6 +63,8 @@ export default function RequestSuccess() {
           Submit Again
         </Button>
       </Box>
-    </Container>
+    </Box>
   );
-}
+};
+
+export default RequestSuccess;
