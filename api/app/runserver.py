@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import {
   Box,
   Button,
@@ -19,7 +18,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
-import dropdownOptions from './data/options.json'; // Your JSON options here
+import { useNavigate } from 'react-router-dom';
+import dropdownOptions from './data/options.json';
 
 const cignaBlue = '#004785';
 
@@ -30,9 +30,6 @@ const typeButtons = [
 ];
 
 const compareDirectionButtons = ['One-Way', 'Bi-Directional'];
-
-// Incrementing request id stored in module-level variable
-let requestCounter = 1;
 
 const UploadModal = ({ open, onClose, onUpload }) => {
   const handleFileChange = (e) => {
@@ -56,7 +53,6 @@ const UploadModal = ({ open, onClose, onUpload }) => {
           border: '2px solid #000',
           boxShadow: 24,
           p: 4,
-          borderRadius: 1,
         }}
       >
         <Typography variant="h6" mb={2}>
@@ -76,12 +72,11 @@ const UploadModal = ({ open, onClose, onUpload }) => {
   );
 };
 
-export default function Request() {
-  const router = useRouter();
-
+export default function Requests() {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedCompareDirection, setSelectedCompareDirection] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
+  const [validationMsg, setValidationMsg] = useState('');
   const [contractSections, setContractSections] = useState([
     { id: Date.now(), type: '', file: null },
   ]);
@@ -89,59 +84,54 @@ export default function Request() {
     { id: Date.now() + 1, type: '', file: null },
   ]);
   const [modalOpenFor, setModalOpenFor] = useState(null);
-  const [validationMsg, setValidationMsg] = useState('');
+  const navigate = useNavigate();
 
-  // Toggle types
+  // Get requestId from localStorage or start at 1
+  const getInitialRequestId = () => {
+    const stored = localStorage.getItem('requestId');
+    return stored ? parseInt(stored, 10) : 1;
+  };
+
+  const [requestId, setRequestId] = useState(getInitialRequestId);
+
   const toggleTypeButton = (label) => {
     setSelectedTypes((prev) =>
-      prev.includes(label) ? prev.filter((i) => i !== label) : [...prev, label]
+      prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]
     );
   };
 
-  // Select compare direction
   const selectCompareDirectionButton = (label) => {
     setSelectedCompareDirection(label);
   };
 
-  // Validation
   useEffect(() => {
     if (selectedTypes.length < 2) {
       setValidationMsg('Select at least 2 Types.');
-      return;
-    }
-    if (!selectedCompareDirection) {
+    } else if (!selectedCompareDirection) {
       setValidationMsg('Select one Compare Direction.');
-      return;
-    }
-    if (selectedTypes.includes('PSCRF Data') && selectedIds.length === 0) {
+    } else if (selectedTypes.includes('PSCRF Data') && selectedIds.length === 0) {
       setValidationMsg('Please select at least one ID when PSCRF Data is selected.');
-      return;
-    }
-    if (
+    } else if (
       selectedTypes.includes('Unsigned Approved Contract') &&
       contractSections.some((s) => !s.file || !s.type)
     ) {
-      setValidationMsg('Please select type and upload file for each Unsigned Approved Contract section.');
-      return;
-    }
-    if (
+      setValidationMsg('Please select type and upload a file for each Unsigned Approved Contract section.');
+    } else if (
       selectedTypes.includes('Signed Client Contract') &&
       signedContractSections.some((s) => !s.file || !s.type)
     ) {
-      setValidationMsg('Please select type and upload file for each Signed Client Contract section.');
-      return;
+      setValidationMsg('Please select type and upload a file for each Signed Client Contract section.');
+    } else {
+      setValidationMsg('');
     }
-    setValidationMsg('');
   }, [selectedTypes, selectedCompareDirection, selectedIds, contractSections, signedContractSections]);
 
-  // Change contract section type
   const handleRadioChange = (id, value, setter) => {
     setter((prev) =>
       prev.map((s) => (s.id === id ? { ...s, type: value, file: null } : s))
     );
   };
 
-  // File upload for contracts (both types)
   const handleFileUpload = (file) => {
     setContractSections((prev) =>
       prev.map((s) => (s.id === modalOpenFor ? { ...s, file } : s))
@@ -151,32 +141,23 @@ export default function Request() {
     );
   };
 
-  // Add contract section
   const addSection = (setter) => {
     setter((prev) => [...prev, { id: Date.now(), type: '', file: null }]);
   };
 
-  // Remove contract section
   const removeSection = (id, setter) => {
     setter((prev) => prev.filter((s) => s.id !== id));
   };
 
-  // Remove selected PSCRF ID
-  const removeSelectedId = (idToRemove) => {
-    setSelectedIds((prev) => prev.filter((item) => item.id !== idToRemove));
-  };
-
-  // Render contract sections UI
   const renderSections = (sections, setter) => (
     <Box mt={4}>
       {sections.map((section, idx) => (
         <Paper key={section.id} sx={{ p: 2, mb: 2, position: 'relative' }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap">
+          <Box display="flex" justifyContent="space-between" alignItems="center">
             <RadioGroup
               row
               value={section.type}
               onChange={(e) => handleRadioChange(section.id, e.target.value, setter)}
-              sx={{ flexGrow: 1, minWidth: 200 }}
             >
               {['Agreement', 'Supplement', 'Addendum'].map((type) => (
                 <FormControlLabel
@@ -187,13 +168,11 @@ export default function Request() {
                 />
               ))}
             </RadioGroup>
-
-            <Box display="flex" flexDirection="column" alignItems="center" gap={1} ml={2} mb={1}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, position: 'relative' }}>
               <IconButton
                 onClick={() => addSection(setter)}
                 size="small"
                 aria-label="Add Section"
-                sx={{ alignSelf: 'flex-start' }}
               >
                 <AddIcon />
               </IconButton>
@@ -202,15 +181,13 @@ export default function Request() {
                   onClick={() => removeSection(section.id, setter)}
                   size="small"
                   aria-label="Remove Section"
-                  sx={{ alignSelf: 'flex-start' }}
                 >
                   <CloseIcon />
                 </IconButton>
               )}
             </Box>
           </Box>
-
-          <Box display="flex" alignItems="center" mt={2} gap={2} flexWrap="wrap">
+          <Box display="flex" alignItems="center" mt={2} gap={2}>
             <Button
               variant="outlined"
               onClick={() => setModalOpenFor(section.id)}
@@ -221,7 +198,6 @@ export default function Request() {
                 textTransform: 'none',
                 fontWeight: 'bold',
                 ':hover': { backgroundColor: '#ede7f6', borderColor: '#673ab7' },
-                minWidth: 150,
               }}
             >
               {section.file ? section.file.name : 'Upload File'}
@@ -232,191 +208,159 @@ export default function Request() {
     </Box>
   );
 
-  // Submit handler
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = () => {
+    if (!validationMsg) {
+      // Increment requestId and store in localStorage
+      const newRequestId = requestId + 1;
+      localStorage.setItem('requestId', newRequestId.toString());
 
-    if (validationMsg) {
+      // Navigate to success page passing data and current requestId (before increment)
+      navigate('/success', {
+        state: {
+          selectedIds,
+          requestId,
+        },
+      });
+
+      // Update local state requestId for next submit
+      setRequestId(newRequestId);
+    } else {
       alert(validationMsg);
-      return;
     }
-
-    const pscrfIdString = selectedIds.map((i) => i.id).join('|');
-    const pscrfIds = pscrfIdString.split('|');
-    const timestamp = new Date().toISOString();
-    const requestId = requestCounter++;
-
-    // Build results array as requested
-    const results = pscrfIds.map((id) => ({
-      pscrfId: id,
-      requestId,
-      status: 'complete',
-      timestamp,
-    }));
-
-    // Redirect with results in query string (stringified JSON)
-    router.push({
-      pathname: '/results',
-      query: { data: JSON.stringify(results) },
-    });
   };
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, pb: 4 }}>
-      <Typography variant="h4" gutterBottom fontWeight="bold" mb={3}>
-        Request Form
+      <Typography variant="h5" gutterBottom fontWeight="bold" mb={3}>
+        PSCRF Data
       </Typography>
-
-      {/* PSCRF ID Multi-select */}
-      <Autocomplete
-        multiple
-        options={dropdownOptions}
-        getOptionLabel={(option) => option.label}
-        value={selectedIds}
-        onChange={(event, newValue) => setSelectedIds(newValue)}
-        renderInput={(params) => (
-          <TextField {...params} label="Select PSCRF IDs" placeholder="Choose PSCRF IDs" />
-        )}
-        sx={{ mb: 4 }}
-      />
-
-      {/* Display selected PSCRF IDs with remove button */}
-      <Box sx={{ mb: 4 }}>
-        {selectedIds.map((item) => (
-          <Paper
-            key={item.id}
+      <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap" mb={4}>
+        {typeButtons.map((label) => (
+          <Button
+            key={label}
+            variant={selectedTypes.includes(label) ? 'contained' : 'outlined'}
+            onClick={() => toggleTypeButton(label)}
             sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              mr: 1,
-              mb: 1,
-              p: '4px 8px',
-              borderRadius: 1,
-              backgroundColor: '#e3f2fd',
+              backgroundColor: selectedTypes.includes(label) ? cignaBlue : 'transparent',
+              color: selectedTypes.includes(label) ? 'white' : cignaBlue,
+              minWidth: 180,
+              fontWeight: 'bold',
+              textTransform: 'none',
+              '&:hover': { backgroundColor: cignaBlue, color: 'white' },
             }}
           >
-            <Typography variant="body2" mr={1}>
-              {item.label}
-            </Typography>
-            <IconButton
-              size="small"
-              onClick={() => removeSelectedId(item.id)}
-              aria-label="Remove ID"
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </Paper>
+            {label}
+          </Button>
         ))}
       </Box>
 
-      {/* Type selection (multi toggle) */}
-      <Box mb={4}>
-        <Typography variant="h6" mb={1}>
-          Select Types (min 2)
-        </Typography>
-        <Box display="flex" gap={2} flexWrap="wrap">
-          {typeButtons.map((label) => (
-            <Button
-              key={label}
-              variant={selectedTypes.includes(label) ? 'contained' : 'outlined'}
-              onClick={() => toggleTypeButton(label)}
-              sx={{
-                backgroundColor: selectedTypes.includes(label) ? cignaBlue : 'inherit',
-                color: selectedTypes.includes(label) ? '#fff' : cignaBlue,
-                textTransform: 'none',
-                fontWeight: 'bold',
-                minWidth: 180,
-                '&:hover': {
-                  backgroundColor: selectedTypes.includes(label) ? '#003d72' : '#cfe3f6',
-                },
-              }}
-            >
-              {label}
-            </Button>
-          ))}
-        </Box>
+      <Typography variant="h5" gutterBottom fontWeight="bold" mb={3}>
+        Compare Direction
+      </Typography>
+      <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap" mb={4}>
+        {compareDirectionButtons.map((label) => (
+          <Button
+            key={label}
+            variant={selectedCompareDirection === label ? 'contained' : 'outlined'}
+            onClick={() => selectCompareDirectionButton(label)}
+            sx={{
+              backgroundColor: selectedCompareDirection === label ? cignaBlue : 'transparent',
+              color: selectedCompareDirection === label ? 'white' : cignaBlue,
+              minWidth: 120,
+              fontWeight: 'bold',
+              textTransform: 'none',
+              '&:hover': { backgroundColor: cignaBlue, color: 'white' },
+            }}
+          >
+            {label}
+          </Button>
+        ))}
       </Box>
 
-      {/* Compare Direction (single select) */}
-      <Box mb={4}>
-        <Typography variant="h6" mb={1}>
-          Compare Direction (select one)
-        </Typography>
-        <Box display="flex" gap={2} flexWrap="wrap">
-          {compareDirectionButtons.map((label) => (
-            <Button
-              key={label}
-              variant={selectedCompareDirection === label ? 'contained' : 'outlined'}
-              onClick={() => selectCompareDirectionButton(label)}
-              sx={{
-                backgroundColor: selectedCompareDirection === label ? cignaBlue : 'inherit',
-                color: selectedCompareDirection === label ? '#fff' : cignaBlue,
-                textTransform: 'none',
-                fontWeight: 'bold',
-                minWidth: 120,
-                '&:hover': {
-                  backgroundColor: selectedCompareDirection === label ? '#003d72' : '#cfe3f6',
-                },
-              }}
-            >
-              {label}
-            </Button>
-          ))}
+      {selectedTypes.includes('PSCRF Data') && (
+        <Box mb={4}>
+          <Autocomplete
+            options={dropdownOptions}
+            getOptionLabel={(option) =>
+              `${option.id} | SAM: ${option.samVersion} | Pricing: ${option.pricingVersion}`
+            }
+            filterSelectedOptions
+            onChange={(e, newValue) => setSelectedIds(newValue)}
+            multiple
+            value={selectedIds}
+            renderInput={(params) => (
+              <TextField {...params} label="Search and select IDs" variant="outlined" />
+            )}
+          />
+
+          {/* Cards showing selected IDs and versions */}
+          <Grid container spacing={2} mt={2}>
+            {selectedIds.map(({ id, samVersion, pricingVersion }) => (
+              <Grid
+                item
+                xs={12}
+                sm={6}
+                md={4}
+                key={id}
+                sx={{
+                  border: `1px solid ${cignaBlue}`,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  position: 'relative',
+                }}
+              >
+                <IconButton
+                  size="small"
+                  sx={{
+                    position: 'absolute',
+                    top: 4,
+                    right: 4,
+                    color: cignaBlue,
+                  }}
+                  onClick={() =>
+                    setSelectedIds((prev) => prev.filter((opt) => opt.id !== id))
+                  }
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+                <Typography fontWeight="bold" color={cignaBlue}>
+                  {id}
+                </Typography>
+                <Typography variant="body2">SAM Version: {samVersion}</Typography>
+                <Typography variant="body2">Pricing Version: {pricingVersion}</Typography>
+              </Grid>
+            ))}
+          </Grid>
         </Box>
-      </Box>
-
-      {/* Contract Sections for Unsigned Approved Contract */}
-      {selectedTypes.includes('Unsigned Approved Contract') && (
-        <>
-          <Typography variant="h6" mb={2}>
-            Unsigned Approved Contract Sections
-          </Typography>
-          {renderSections(contractSections, setContractSections)}
-        </>
       )}
 
-      {/* Contract Sections for Signed Client Contract */}
-      {selectedTypes.includes('Signed Client Contract') && (
-        <>
-          <Typography variant="h6" mb={2} mt={4}>
-            Signed Client Contract Sections
-          </Typography>
-          {renderSections(signedContractSections, setSignedContractSections)}
-        </>
-      )}
+      {selectedTypes.includes('Unsigned Approved Contract') &&
+        renderSections(contractSections, setContractSections)}
 
-      {/* Validation Message */}
-      {validationMsg && (
-        <Typography color="error" mt={2} mb={2}>
-          {validationMsg}
-        </Typography>
-      )}
+      {selectedTypes.includes('Signed Client Contract') &&
+        renderSections(signedContractSections, setSignedContractSections)}
 
-      {/* Submit Button */}
-      <Box textAlign="center" mt={4}>
+      <UploadModal
+        open={Boolean(modalOpenFor)}
+        onClose={() => setModalOpenFor(null)}
+        onUpload={handleFileUpload}
+      />
+
+      <Box mt={4} display="flex" justifyContent="center" gap={2}>
         <Button
           variant="contained"
-          size="large"
+          color="primary"
           onClick={handleSubmit}
-          disabled={!!validationMsg}
+          disabled={Boolean(validationMsg)}
           sx={{
-            backgroundColor: cignaBlue,
-            color: '#fff',
+            minWidth: 160,
             fontWeight: 'bold',
-            px: 6,
-            ':hover': { backgroundColor: '#003d72' },
+            textTransform: 'none',
           }}
         >
           Submit
         </Button>
       </Box>
-
-      {/* Upload Modal */}
-      <UploadModal
-        open={!!modalOpenFor}
-        onClose={() => setModalOpenFor(null)}
-        onUpload={handleFileUpload}
-      />
     </Container>
   );
 }
