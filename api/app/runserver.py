@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Typography, Table, TableBody, TableCell, TableHead, TableRow, Paper } from '@mui/material';
+import {
+  Box,
+  Button,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Paper,
+} from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const cignaBlue = '#0047A0';
@@ -11,14 +21,17 @@ const RequestSuccess = () => {
   const [requests, setRequests] = useState([]);
 
   useEffect(() => {
-    const prev = JSON.parse(localStorage.getItem('requests')) || [];
-    const nextRequestId = prev.length > 0 ? prev[prev.length - 1].requestId + 1 : 1;
-    const newEntry = {
-      pscrfId: submittedData.pscrfId || 'N/A',
-      requestId: nextRequestId,
+    const previousRequests = JSON.parse(localStorage.getItem('requests')) || [];
+    const lastRequestId = previousRequests.length > 0 ? previousRequests[previousRequests.length - 1].requestId : 0;
+    const newRequestId = lastRequestId + 1;
+
+    const newEntries = (submittedData.selectedIds || []).map(id => ({
+      pscrfId: id,
+      requestId: newRequestId,
       status: 'Success',
-    };
-    const updatedRequests = [...prev, newEntry];
+    }));
+
+    const updatedRequests = [...previousRequests, ...newEntries];
     localStorage.setItem('requests', JSON.stringify(updatedRequests));
     setRequests(updatedRequests);
   }, [submittedData]);
