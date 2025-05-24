@@ -1,7 +1,182 @@
-[
-  { "label": "Option 1", "value": "701" },
-  { "label": "Option 2", "value": "702" },
-  { "label": "Option 3", "value": "801" },
-  { "label": "Option 4", "value": "712" },
-  { "label": "Option 5", "value": "900" }
-]
+import React, { useState } from 'react';
+import {
+  Box,
+  Grid,
+  Button,
+  Container,
+  IconButton,
+  Typography,
+  TextField,
+  List,
+  ListItem,
+  ListItemText,
+  FormHelperText
+} from '@mui/material';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import CloseIcon from '@mui/icons-material/Close';
+import dropdownOptions from './options.json';
+
+const cignaBlue = '#004785';
+
+const firstRowButtons = ['PSCRF Data', 'Unsigned Approved Contract', 'Signed Client Contract'];
+const secondRowButtons = ['One-Way', 'Bi-Directional'];
+
+const Request = () => {
+  const [firstSelection, setFirstSelection] = useState([]); // Multi-select
+  const [secondSelection, setSecondSelection] = useState(''); // Single-select
+  const [dropdowns, setDropdowns] = useState([{ id: 1, query: '', filtered: [] }]);
+
+  const firstRowValid = firstSelection.length >= 2;
+  const showDropdowns =
+    firstRowValid &&
+    firstSelection.includes('PSCRF Data') &&
+    (secondSelection === 'One-Way' || secondSelection === 'Bi-Directional');
+
+  const handleAddDropdown = () => {
+    setDropdowns([
+      ...dropdowns,
+      { id: dropdowns.length + 1, query: '', filtered: [] }
+    ]);
+  };
+
+  const handleSearch = (id, value) => {
+    const filtered = dropdownOptions.filter((opt) =>
+      opt.value.startsWith(value)
+    );
+
+    setDropdowns((prev) =>
+      prev.map((d) =>
+        d.id === id ? { ...d, query: value, filtered } : d
+      )
+    );
+  };
+
+  const toggleFirstSelection = (label) => {
+    if (firstSelection.includes(label)) {
+      if (firstSelection.length <= 2) return; // enforce minimum 2
+      setFirstSelection(firstSelection.filter((item) => item !== label));
+    } else {
+      setFirstSelection([...firstSelection, label]);
+    }
+  };
+
+  return (
+    <Container maxWidth="md">
+      <Box mt={4}>
+        {/* First row buttons */}
+        <Grid container spacing={2} justifyContent="center">
+          {firstRowButtons.map((label) => (
+            <Grid item key={label}>
+              <Button
+                variant={firstSelection.includes(label) ? 'contained' : 'outlined'}
+                sx={{
+                  backgroundColor: firstSelection.includes(label) ? cignaBlue : 'transparent',
+                  color: firstSelection.includes(label) ? '#fff' : cignaBlue,
+                  borderColor: cignaBlue,
+                  '&:hover': {
+                    backgroundColor: firstSelection.includes(label) ? '#00386A' : '#e3f2fd',
+                  },
+                }}
+                onClick={() => toggleFirstSelection(label)}
+              >
+                {label}
+              </Button>
+            </Grid>
+          ))}
+        </Grid>
+
+        {/* Validation message */}
+        {!firstRowValid && (
+          <FormHelperText error sx={{ textAlign: 'center', mt: 1 }}>
+            Please select at least two options in the first row.
+          </FormHelperText>
+        )}
+
+        {/* Second row buttons */}
+        <Box mt={4}>
+          <Grid container spacing={2} justifyContent="center">
+            {secondRowButtons.map((label) => (
+              <Grid item key={label}>
+                <Button
+                  variant={secondSelection === label ? 'contained' : 'outlined'}
+                  sx={{
+                    backgroundColor: secondSelection === label ? cignaBlue : 'transparent',
+                    color: secondSelection === label ? '#fff' : cignaBlue,
+                    borderColor: cignaBlue,
+                    '&:hover': {
+                      backgroundColor: secondSelection === label ? '#00386A' : '#e3f2fd',
+                    },
+                  }}
+                  onClick={() => setSecondSelection(label)}
+                >
+                  {label}
+                </Button>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+
+        {/* Dropdowns */}
+        {showDropdowns && (
+          <Box mt={4}>
+            <Typography variant="h6" gutterBottom>
+              Search for ID:
+            </Typography>
+            {dropdowns.map((dropdown, index) => (
+              <Box
+                key={dropdown.id}
+                display="flex"
+                alignItems="center"
+                gap={1}
+                mb={2}
+              >
+                <TextField
+                  fullWidth
+                  label="Enter ID"
+                  value={dropdown.query}
+                  onChange={(e) => handleSearch(dropdown.id, e.target.value)}
+                  variant="outlined"
+                />
+                <IconButton
+                  onClick={() => {
+                    if (dropdowns.length > 1) {
+                      setDropdowns(dropdowns.filter((d) => d.id !== dropdown.id));
+                    }
+                  }}
+                  sx={{ color: dropdowns.length > 1 ? cignaBlue : '#ccc' }}
+                >
+                  <CloseIcon />
+                </IconButton>
+                {index === 0 && (
+                  <IconButton onClick={handleAddDropdown} sx={{ color: cignaBlue }}>
+                    <AddCircleOutlineIcon />
+                  </IconButton>
+                )}
+              </Box>
+            ))}
+            {dropdowns.map(
+              (dropdown) =>
+                dropdown.query && (
+                  <List dense key={dropdown.id}>
+                    {dropdown.filtered.length > 0 ? (
+                      dropdown.filtered.map((item) => (
+                        <ListItem key={item.value}>
+                          <ListItemText primary={`${item.value} - ${item.label}`} />
+                        </ListItem>
+                      ))
+                    ) : (
+                      <ListItem>
+                        <ListItemText primary="ID not found" />
+                      </ListItem>
+                    )}
+                  </List>
+                )
+            )}
+          </Box>
+        )}
+      </Box>
+    </Container>
+  );
+};
+
+export default Request;
