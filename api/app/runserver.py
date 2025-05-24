@@ -1,60 +1,98 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Container, Typography, Table, TableHead, TableBody, TableRow, TableCell, Paper } from '@mui/material';
+import React, { useState } from 'react';
+import {
+  Box,
+  Card,
+  Typography,
+  IconButton,
+  Stack,
+  Autocomplete,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button
+} from '@mui/material';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { styled } from '@mui/system';
+import options from './options.json';
 
-export default function SuccessPage() {
-  const location = useLocation();
-  const submittedData = location.state || {};
-  const [requests, setRequests] = useState(() => {
-    // Load previous requests from localStorage or start fresh
-    const saved = localStorage.getItem('requests');
-    return saved ? JSON.parse(saved) : [];
-  });
+const StyledCard = styled(Card)(({ theme, selected }) => ({
+  padding: theme.spacing(2),
+  minHeight: 180,
+  minWidth: 280,
+  border: selected ? `2px solid ${theme.palette.primary.main}` : '1px solid #ccc',
+  boxShadow: selected ? theme.shadows[4] : theme.shadows[1],
+  textAlign: 'center',
+  transition: 'all 0.3s'
+}));
 
-  useEffect(() => {
-    if (submittedData && submittedData.selectedIds && submittedData.selectedIds.length > 0) {
-      const newRequestId = requests.length + 1;
-      const newRequest = {
-        requestId: newRequestId,
-        ids: submittedData.selectedIds.map((item) => item.id),
-        status: 'Complete',
-      };
-      const updatedRequests = [...requests, newRequest];
-      setRequests(updatedRequests);
-      localStorage.setItem('requests', JSON.stringify(updatedRequests));
-    }
-  }, [submittedData]);
+const Request = () => {
+  const [direction, setDirection] = useState('left-to-right');
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+
+  const handleOptionChange = (event, value) => {
+    setSelectedOption(value);
+    if (value) setOpenModal(true);
+  };
+
+  const handleClose = () => {
+    setOpenModal(false);
+  };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Typography variant="h5" gutterBottom fontWeight="bold">
-        Submission Success
-      </Typography>
+    <Box display="flex" justifyContent="center" alignItems="flex-start" gap={4}>
+      {/* Left Box - PSCRF Data */}
+      <StyledCard selected={direction === 'right-to-left'}>
+        <Typography variant="h6" gutterBottom>
+          PSCRF Data
+        </Typography>
 
-      {requests.length === 0 ? (
-        <Typography>No submissions found.</Typography>
-      ) : (
-        <Paper sx={{ mt: 2, p: 2 }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Request ID</TableCell>
-                <TableCell>Submitted IDs</TableCell>
-                <TableCell>Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {requests.map(({ requestId, ids, status }) => (
-                <TableRow key={requestId}>
-                  <TableCell>{requestId}</TableCell>
-                  <TableCell>{ids.join(', ')}</TableCell>
-                  <TableCell>{status}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Paper>
-      )}
-    </Container>
+        <Autocomplete
+          options={options}
+          getOptionLabel={(option) => option.label}
+          onChange={handleOptionChange}
+          renderInput={(params) => <TextField {...params} label="Select Option" />}
+        />
+
+        <Dialog open={openModal} onClose={handleClose}>
+          <DialogTitle>{selectedOption?.label}</DialogTitle>
+          <DialogContent>
+            <Typography>{selectedOption?.description}</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose} color="primary">
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </StyledCard>
+
+      {/* Arrows */}
+      <Stack spacing={1} alignItems="center" pt={6}>
+        <IconButton
+          color={direction === 'left-to-right' ? 'primary' : 'default'}
+          onClick={() => setDirection('left-to-right')}
+        >
+          <ArrowForwardIcon fontSize="large" />
+        </IconButton>
+        <IconButton
+          color={direction === 'right-to-left' ? 'primary' : 'default'}
+          onClick={() => setDirection('right-to-left')}
+        >
+          <ArrowBackIcon fontSize="large" />
+        </IconButton>
+      </Stack>
+
+      {/* Right Box - Empty for now */}
+      <StyledCard selected={direction === 'left-to-right'}>
+        <Typography variant="h6">Pricing Version</Typography>
+        {/* Placeholder for future content */}
+      </StyledCard>
+    </Box>
   );
-}
+};
+
+export default Request;
