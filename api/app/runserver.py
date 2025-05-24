@@ -11,7 +11,7 @@ import {
   TextField,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import dropdownOptions from './data/options.json'; // Ensure the file path is correct
+import dropdownOptions from './data/options.json'; // Ensure this file exists
 
 const cignaBlue = '#004785';
 
@@ -115,30 +115,32 @@ export default function IntegratedUI() {
             onChange={(e, newValue) => setSelectedIds(newValue)}
             multiple
             value={selectedIds}
-            renderOption={(props, option) => (
-              <Box
-                component="li"
-                {...props}
-                sx={{
-                  px: 2,
-                  py: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  width: '100%',
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" color="text.primary">
-                  {option.id}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  SAM Version: {option.samVersion}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Pricing Version: {option.pricingVersion}
-                </Typography>
-              </Box>
-            )}
+            renderOption={(props, option) => {
+              const { key, ...rest } = props;
+              return (
+                <li
+                  key={key}
+                  {...rest}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    padding: '8px 12px',
+                  }}
+                >
+                  <Box display="flex" flexDirection="column" alignItems="flex-start">
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {option.id}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      SAM Version: {option.samVersion}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Pricing Version: {option.pricingVersion}
+                    </Typography>
+                  </Box>
+                </li>
+              );
+            }}
             renderInput={(params) => (
               <TextField
                 {...params}
