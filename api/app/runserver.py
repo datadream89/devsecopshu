@@ -52,6 +52,8 @@ const UploadModal = ({ open, onClose, onUpload }) => {
           border: '2px solid #000',
           boxShadow: 24,
           p: 4,
+          outline: 'none',
+          borderRadius: 2,
         }}
       >
         <Typography variant="h6" mb={2}>
@@ -85,16 +87,19 @@ export default function IntegratedUI() {
   const [modalOpenFor, setModalOpenFor] = useState(null);
   const [submitMsg, setSubmitMsg] = useState('');
 
+  // Toggle type button selection
   const toggleTypeButton = (label) => {
     setSelectedTypes((prev) =>
       prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]
     );
   };
 
+  // Set compare direction button
   const selectCompareDirectionButton = (label) => {
     setSelectedCompareDirection(label);
   };
 
+  // Validation effect
   useEffect(() => {
     if (selectedTypes.length < 2) {
       setValidationMsg('Select at least 2 Types.');
@@ -117,12 +122,14 @@ export default function IntegratedUI() {
     }
   }, [selectedTypes, selectedCompareDirection, selectedIds, contractSections, signedContractSections]);
 
+  // Handle radio button changes per section
   const handleRadioChange = (id, value, setter) => {
     setter((prev) =>
       prev.map((s) => (s.id === id ? { ...s, type: value, file: null } : s))
     );
   };
 
+  // Handle file upload from modal
   const handleFileUpload = (file) => {
     setContractSections((prev) =>
       prev.map((s) => (s.id === modalOpenFor ? { ...s, file } : s))
@@ -132,45 +139,81 @@ export default function IntegratedUI() {
     );
   };
 
+  // Add a new contract section
   const addSection = (setter) => {
     setter((prev) => [...prev, { id: Date.now(), type: '', file: null }]);
   };
 
+  // Remove a contract section by id
   const removeSection = (id, setter) => {
     setter((prev) => prev.filter((s) => s.id !== id));
   };
 
+  // Render contract sections (Unsigned or Signed)
   const renderSections = (sections, setter) => (
     <Box mt={4}>
       {sections.map((section, idx) => (
-        <Paper key={section.id} sx={{ p: 2, mb: 2, position: 'relative' }}>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-            <RadioGroup
-              row
-              value={section.type}
-              onChange={(e) => handleRadioChange(section.id, e.target.value, setter)}
-            >
-              {['Agreement', 'Supplement', 'Addendum'].map((type) => (
-                <FormControlLabel
-                  key={type}
-                  value={type}
-                  control={<Radio />}
-                  label={type}
-                />
-              ))}
-            </RadioGroup>
-            <Box sx={{ position: 'relative', width: 36, height: 36 }}>
+        <Paper
+          key={section.id}
+          sx={{
+            p: 2,
+            mb: 2,
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            gap={1}
+            flexWrap="wrap"
+          >
+            {/* Radio buttons + Add button aligned horizontally */}
+            <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+              <RadioGroup
+                row
+                value={section.type}
+                onChange={(e) => handleRadioChange(section.id, e.target.value, setter)}
+              >
+                {['Agreement', 'Supplement', 'Addendum'].map((type) => (
+                  <FormControlLabel
+                    key={type}
+                    value={type}
+                    control={<Radio />}
+                    label={type}
+                    sx={{ m: 0, mr: 1 }}
+                  />
+                ))}
+              </RadioGroup>
+
               <IconButton
                 onClick={() => addSection(setter)}
-                sx={{ position: 'absolute', top: 0, right: 0 }}
                 size="small"
                 aria-label="Add Section"
+                sx={{ alignSelf: 'center' }}
               >
                 <AddIcon />
               </IconButton>
             </Box>
+
+            {/* Remove button (except first section) */}
+            {idx > 0 && (
+              <IconButton
+                onClick={() => removeSection(section.id, setter)}
+                size="small"
+                aria-label="Remove Section"
+                sx={{ alignSelf: 'center' }}
+              >
+                <CloseIcon />
+              </IconButton>
+            )}
           </Box>
-          <Box display="flex" alignItems="center" mt={2} gap={2}>
+
+          {/* Upload file button */}
+          <Box display="flex" alignItems="center" gap={2}>
             <Button
               variant="outlined"
               onClick={() => setModalOpenFor(section.id)}
@@ -186,21 +229,12 @@ export default function IntegratedUI() {
               {section.file ? section.file.name : 'Upload File'}
             </Button>
           </Box>
-          {idx > 0 && (
-            <IconButton
-              onClick={() => removeSection(section.id, setter)}
-              sx={{ position: 'absolute', top: 8, right: 8 }}
-              size="small"
-              aria-label="Remove Section"
-            >
-              <CloseIcon />
-            </IconButton>
-          )}
         </Paper>
       ))}
     </Box>
   );
 
+  // Handle submit click
   const handleSubmit = () => {
     if (!validationMsg) {
       setSubmitMsg('Submitted successfully request');
@@ -212,6 +246,7 @@ export default function IntegratedUI() {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, pb: 4 }}>
+      {/* Type Buttons */}
       <Typography variant="h5" gutterBottom fontWeight="bold" mb={3}>
         PSCRF Data
       </Typography>
@@ -235,6 +270,7 @@ export default function IntegratedUI() {
         ))}
       </Box>
 
+      {/* Compare Direction Buttons */}
       <Typography variant="h5" gutterBottom fontWeight="bold" mb={3}>
         Compare Direction
       </Typography>
@@ -258,11 +294,14 @@ export default function IntegratedUI() {
         ))}
       </Box>
 
+      {/* PSCRF Data selection with search dropdown */}
       {selectedTypes.includes('PSCRF Data') && (
         <Box mb={4}>
           <Autocomplete
             options={dropdownOptions}
-            getOptionLabel={(option) => option.id}
+            getOptionLabel={(option) =>
+              `${option.id} | SAM Version: ${option.samVersion || 'N/A'} | Pricing Version: ${option.pricingVersion || 'N/A'}`
+            }
             filterSelectedOptions
             onChange={(e, newValue) => setSelectedIds(newValue)}
             multiple
@@ -270,6 +309,7 @@ export default function IntegratedUI() {
             renderInput={(params) => (
               <TextField {...params} label="Search and select IDs" variant="outlined" />
             )}
+            sx={{ mb: 2 }}
           />
 
           {/* Cards showing selected IDs and versions */}
@@ -280,7 +320,12 @@ export default function IntegratedUI() {
                   <Typography variant="subtitle1" fontWeight="bold">
                     ID: {item.id}
                   </Typography>
-                  <Typography variant="body2">Version: {item.version || 'N/A'}</Typography>
+                  <Typography variant="body2">
+                    SAM Version: {item.samVersion || 'N/A'}
+                  </Typography>
+                  <Typography variant="body2">
+                    Pricing Version: {item.pricingVersion || 'N/A'}
+                  </Typography>
                 </Paper>
               </Grid>
             ))}
@@ -288,6 +333,7 @@ export default function IntegratedUI() {
         </Box>
       )}
 
+      {/* Unsigned Approved Contract Sections */}
       {selectedTypes.includes('Unsigned Approved Contract') && (
         <>
           <Typography variant="h5" gutterBottom fontWeight="bold" mb={2}>
@@ -297,6 +343,7 @@ export default function IntegratedUI() {
         </>
       )}
 
+      {/* Signed Client Contract Sections */}
       {selectedTypes.includes('Signed Client Contract') && (
         <>
           <Typography variant="h5" gutterBottom fontWeight="bold" mb={2}>
@@ -306,31 +353,35 @@ export default function IntegratedUI() {
         </>
       )}
 
+      {/* Validation message */}
       {validationMsg && (
         <Typography color="error" mt={3} textAlign="center" fontWeight="bold">
           {validationMsg}
         </Typography>
       )}
 
+      {/* Submit message */}
       {submitMsg && (
         <Typography color="success.main" mt={3} textAlign="center" fontWeight="bold">
           {submitMsg}
         </Typography>
       )}
 
-      <Box display="flex" justifyContent="center" mt={4}>
+      {/* Submit button */}
+      <Box textAlign="center" mt={4}>
         <Button
           variant="contained"
-          color="primary"
           onClick={handleSubmit}
-          sx={{ minWidth: 160, fontWeight: 'bold' }}
+          disabled={Boolean(validationMsg)}
+          sx={{ minWidth: 150, fontWeight: 'bold' }}
         >
           Submit
         </Button>
       </Box>
 
+      {/* Upload modal */}
       <UploadModal
-        open={!!modalOpenFor}
+        open={Boolean(modalOpenFor)}
         onClose={() => setModalOpenFor(null)}
         onUpload={handleFileUpload}
       />
