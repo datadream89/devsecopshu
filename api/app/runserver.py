@@ -9,19 +9,28 @@ import {
   TextField,
   List,
   ListItem,
-  ListItemText
+  ListItemText,
+  FormHelperText
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import dropdownOptions from './options.json';
 
 const cignaBlue = '#004785';
 
+const firstRowButtons = ['PSCRF Data', 'Unsigned Approved Contract', 'Signed Client Contract'];
+const secondRowButtons = ['One-Way', 'Bi-Directional'];
+
 const Request = () => {
-  const [firstSelection, setFirstSelection] = useState('');
-  const [secondSelection, setSecondSelection] = useState('');
+  const [firstSelection, setFirstSelection] = useState([]); // array for multi-select
+  const [secondSelection, setSecondSelection] = useState(''); // single select
   const [dropdowns, setDropdowns] = useState([{ id: 1, query: '', filtered: [] }]);
 
-  const showDropdowns = firstSelection === 'PSCRF Data' && (secondSelection === 'One-Way' || secondSelection === 'Bi-Directional');
+  // Validation for first row min 2 selections
+  const firstRowValid = firstSelection.length >= 2;
+
+  // Show dropdowns only if valid first row, PSCRF Data included, and second row selected
+  const showDropdowns = firstRowValid && firstSelection.includes('PSCRF Data') &&
+    (secondSelection === 'One-Way' || secondSelection === 'Bi-Directional');
 
   const handleAddDropdown = () => {
     setDropdowns([
@@ -42,50 +51,63 @@ const Request = () => {
     );
   };
 
+  const toggleFirstSelection = (label) => {
+    if (firstSelection.includes(label)) {
+      // only allow removing if more than 2 selected
+      if (firstSelection.length <= 2) return;
+      setFirstSelection(firstSelection.filter((item) => item !== label));
+    } else {
+      setFirstSelection([...firstSelection, label]);
+    }
+  };
+
   return (
     <Container maxWidth="md">
       <Box mt={4}>
         {/* First row buttons */}
         <Grid container spacing={2} justifyContent="center">
-          {['PSCRF Data', 'Unsigned Approved Contract', 'Signed Client Contract'].map((label) => (
+          {firstRowButtons.map((label) => (
             <Grid item key={label}>
               <Button
-                variant="contained"
+                variant={firstSelection.includes(label) ? 'contained' : 'outlined'}
                 sx={{
-                  backgroundColor: cignaBlue,
-                  color: '#fff',
-                  '&:hover': { backgroundColor: '#00386A' },
+                  backgroundColor: firstSelection.includes(label) ? cignaBlue : 'transparent',
+                  color: firstSelection.includes(label) ? '#fff' : cignaBlue,
+                  borderColor: cignaBlue,
+                  '&:hover': {
+                    backgroundColor: firstSelection.includes(label) ? '#00386A' : '#e3f2fd',
+                  },
                 }}
-                onClick={() => {
-                  setFirstSelection(label);
-                  setDropdowns([{ id: 1, query: '', filtered: [] }]); // reset
-                }}
+                onClick={() => toggleFirstSelection(label)}
               >
                 {label}
               </Button>
             </Grid>
           ))}
         </Grid>
+        {/* Validation message */}
+        {!firstRowValid && (
+          <FormHelperText error sx={{ textAlign: 'center', mt: 1 }}>
+            Please select at least two options in the first row.
+          </FormHelperText>
+        )}
 
         {/* Second row buttons */}
         <Box mt={4}>
           <Grid container spacing={2} justifyContent="center">
-            {['One-Way', 'Bi-Directional'].map((label) => (
+            {secondRowButtons.map((label) => (
               <Grid item key={label}>
                 <Button
-                  variant="outlined"
+                  variant={secondSelection === label ? 'contained' : 'outlined'}
                   sx={{
+                    backgroundColor: secondSelection === label ? cignaBlue : 'transparent',
+                    color: secondSelection === label ? '#fff' : cignaBlue,
                     borderColor: cignaBlue,
-                    color: cignaBlue,
                     '&:hover': {
-                      borderColor: '#00386A',
-                      backgroundColor: '#f0f8ff',
+                      backgroundColor: secondSelection === label ? '#00386A' : '#e3f2fd',
                     },
                   }}
-                  onClick={() => {
-                    setSecondSelection(label);
-                    setDropdowns([{ id: 1, query: '', filtered: [] }]); // reset
-                  }}
+                  onClick={() => setSecondSelection(label)}
                 >
                   {label}
                 </Button>
