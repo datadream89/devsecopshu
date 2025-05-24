@@ -63,7 +63,7 @@ const UploadModal = ({ open, onClose, onUpload }) => {
           startIcon={<AttachFileIcon />}
           sx={{ backgroundColor: '#4caf50', color: '#fff' }}
         >
-          Choose and Upload File
+          Choose File
           <input type="file" hidden onChange={handleFileChange} />
         </Button>
       </Box>
@@ -114,17 +114,13 @@ export default function IntegratedUI() {
 
   const handleRadioChange = (id, value) => {
     setContractSections((prev) =>
-      prev.map((s) =>
-        s.id === id ? { ...s, type: value, file: null } : s
-      )
+      prev.map((s) => (s.id === id ? { ...s, type: value, file: null } : s))
     );
   };
 
   const handleFileUpload = (file) => {
     setContractSections((prev) =>
-      prev.map((s) =>
-        s.id === modalOpenFor ? { ...s, file } : s
-      )
+      prev.map((s) => (s.id === modalOpenFor ? { ...s, file } : s))
     );
   };
 
@@ -229,20 +225,14 @@ export default function IntegratedUI() {
                 </Box>
               </Box>
               <Box display="flex" alignItems="center" mt={2} gap={2}>
-                {section.file ? (
-                  <Typography variant="body2" color="text.secondary">
-                    {section.file.name}
-                  </Typography>
-                ) : (
-                  <Button
-                    variant="outlined"
-                    onClick={() => setModalOpenFor(section.id)}
-                    startIcon={<UploadFileIcon />}
-                    sx={{ color: '#673ab7', borderColor: '#673ab7' }}
-                  >
-                    Upload File
-                  </Button>
-                )}
+                <Button
+                  variant="outlined"
+                  onClick={() => setModalOpenFor(section.id)}
+                  startIcon={<UploadFileIcon />}
+                  sx={{ color: '#673ab7', borderColor: '#673ab7' }}
+                >
+                  {section.file ? section.file.name : 'Upload File'}
+                </Button>
               </Box>
               {idx > 0 && (
                 <IconButton
