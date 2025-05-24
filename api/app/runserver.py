@@ -13,6 +13,12 @@ import {
   FormControlLabel,
   Radio,
   Modal,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
@@ -85,6 +91,8 @@ export default function IntegratedUI() {
   ]);
   const [modalOpenFor, setModalOpenFor] = useState(null);
   const [submitMsg, setSubmitMsg] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [submissionData, setSubmissionData] = useState([]);
 
   const toggleTypeButton = (label) => {
     setSelectedTypes((prev) =>
@@ -129,12 +137,17 @@ export default function IntegratedUI() {
   };
 
   const handleFileUpload = (file) => {
-    setContractSections((prev) =>
-      prev.map((s) => (s.id === modalOpenFor ? { ...s, file } : s))
-    );
-    setSignedContractSections((prev) =>
-      prev.map((s) => (s.id === modalOpenFor ? { ...s, file } : s))
-    );
+    if (!modalOpenFor) return;
+    const { id, type } = modalOpenFor;
+    if (type === 'Unsigned Approved Contract') {
+      setContractSections((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, file } : s))
+      );
+    } else if (type === 'Signed Client Contract') {
+      setSignedContractSections((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, file } : s))
+      );
+    }
   };
 
   const addSection = (setter) => {
@@ -169,7 +182,7 @@ export default function IntegratedUI() {
               ))}
             </RadioGroup>
 
-            <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center">
+            <Box display="flex" flexDirection="column" alignItems="flex-end">
               <IconButton onClick={() => addSection(setter)} aria-label="Add section">
                 <AddIcon />
               </IconButton>
@@ -187,7 +200,7 @@ export default function IntegratedUI() {
           <Box display="flex" alignItems="center" gap={2} mt={2}>
             <Button
               variant="outlined"
-              onClick={() => setModalOpenFor(section.id)}
+              onClick={() => setModalOpenFor({ id: section.id, type: sectionTitle })}
               startIcon={<UploadFileIcon />}
               sx={{
                 color: '#673ab7',
@@ -209,5 +222,68 @@ export default function IntegratedUI() {
     </Box>
   );
 
-  return ( ... ); // The rest of the UI rendering remains unchanged
+  const handleSubmit = () => {
+    const newRequest = {
+      pscrfId: selectedIds.map((id) => id.label).join(', '),
+      requestId: 'REQ-' + Math.floor(Math.random() * 10000),
+      status: 'C'
+    };
+    setSubmissionData((prev) => [...prev, newRequest]);
+    setSubmitted(true);
+  };
+
+  const handleBack = () => {
+    setSubmitted(false);
+    setSelectedTypes([]);
+    setSelectedCompareDirection('');
+    setSelectedIds([]);
+    setContractSections([{ id: Date.now(), type: '', file: null }]);
+    setSignedContractSections([{ id: Date.now() + 1, type: '', file: null }]);
+  };
+
+  if (submitted) {
+    return (
+      <Container>
+        <Typography variant="h5" mt={4} mb={2}>Request Submitted Successfully</Typography>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell><strong>PSCRF ID</strong></TableCell>
+                <TableCell><strong>Request ID</strong></TableCell>
+                <TableCell><strong>Status</strong></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {submissionData.map((row, index) => (
+                <TableRow key={index}>
+                  <TableCell>{row.pscrfId}</TableCell>
+                  <TableCell>{row.requestId}</TableCell>
+                  <TableCell>{row.status}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Button variant="contained" onClick={handleBack} sx={{ mt: 3 }}>
+          Submit New Request
+        </Button>
+      </Container>
+    );
+  }
+
+  return (
+    <Container>
+      {/* UI elements and form inputs */}
+      <Button
+        variant="contained"
+        onClick={handleSubmit}
+        sx={{ mt: 4 }}
+        disabled={!!validationMsg}
+      >
+        Submit
+      </Button>
+      {validationMsg && <Typography color="error" mt={2}>{validationMsg}</Typography>}
+    </Container>
+  );
 }
