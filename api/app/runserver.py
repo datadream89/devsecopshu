@@ -86,14 +86,6 @@ export default function Requests() {
   const [modalOpenFor, setModalOpenFor] = useState(null);
   const navigate = useNavigate();
 
-  // Get requestId from localStorage or start at 1
-  const getInitialRequestId = () => {
-    const stored = localStorage.getItem('requestId');
-    return stored ? parseInt(stored, 10) : 1;
-  };
-
-  const [requestId, setRequestId] = useState(getInitialRequestId);
-
   const toggleTypeButton = (label) => {
     setSelectedTypes((prev) =>
       prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]
@@ -210,20 +202,8 @@ export default function Requests() {
 
   const handleSubmit = () => {
     if (!validationMsg) {
-      // Increment requestId and store in localStorage
-      const newRequestId = requestId + 1;
-      localStorage.setItem('requestId', newRequestId.toString());
-
-      // Navigate to success page passing data and current requestId (before increment)
-      navigate('/success', {
-        state: {
-          selectedIds,
-          requestId,
-        },
-      });
-
-      // Update local state requestId for next submit
-      setRequestId(newRequestId);
+      // Just navigate to success page with no data
+      navigate('/success');
     } else {
       alert(validationMsg);
     }
@@ -346,7 +326,15 @@ export default function Requests() {
         onUpload={handleFileUpload}
       />
 
-      <Box mt={4} display="flex" justifyContent="center" gap={2}>
+      <Box mt={4} display="flex" flexDirection="column" alignItems="center" gap={2}>
+        {validationMsg && (
+          <Typography
+            color="error"
+            sx={{ fontWeight: 'bold', textAlign: 'center' }}
+          >
+            {validationMsg}
+          </Typography>
+        )}
         <Button
           variant="contained"
           color="primary"
