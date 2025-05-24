@@ -145,8 +145,11 @@ export default function IntegratedUI() {
     setter((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const renderSections = (sections, setter) => (
+  const renderSections = (sections, setter, sectionTitle) => (
     <Box mt={4}>
+      <Typography variant="h6" fontWeight="bold" mb={2}>
+        {sectionTitle}
+      </Typography>
       {sections.map((section, idx) => (
         <Paper key={section.id} sx={{ p: 2, mb: 2, position: 'relative' }}>
           {/* Remove (x) button for all sections except first */}
@@ -221,12 +224,6 @@ export default function IntegratedUI() {
     </Box>
   );
 
-  const handleSubmit = () => {
-    if (!validationMsg) {
-      setSubmitMsg('Submitted successfully request');
-    }
-  };
-
   return (
     <Container maxWidth="md" sx={{ mt: 4, pb: 4 }}>
       <Typography variant="h6" gutterBottom>
@@ -290,10 +287,19 @@ export default function IntegratedUI() {
               <TextField {...params} label="Search and select IDs" variant="outlined" />
             )}
           />
+
           <Grid container spacing={2} mt={2}>
             {selectedIds.map((item) => (
-              <Grid item xs={12} sm={4} key={item.id}>
-                <Paper sx={{ p: 2 }}>
+              <Grid item xs={12} sm={4} key={item.id} sx={{ position: 'relative' }}>
+                <Paper sx={{ p: 2, position: 'relative' }}>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleRemoveId(item.id)}
+                    sx={{ position: 'absolute', top: 8, right: 8 }}
+                    aria-label="Remove PSCRF ID"
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
                   <Typography variant="subtitle1" fontWeight="bold">
                     {item.id}
                   </Typography>
@@ -307,10 +313,10 @@ export default function IntegratedUI() {
       )}
 
       {selectedTypes.includes('Unsigned Approved Contract') &&
-        renderSections(contractSections, setContractSections)}
+        renderSections(contractSections, setContractSections, 'Unsigned Approved Contract')}
 
       {selectedTypes.includes('Signed Client Contract') &&
-        renderSections(signedContractSections, setSignedContractSections)}
+        renderSections(signedContractSections, setSignedContractSections, 'Signed Client Contract')}
 
       {validationMsg && (
         <Typography color="error" mt={3} textAlign="center" fontWeight="bold">
@@ -328,7 +334,7 @@ export default function IntegratedUI() {
         <Button
           variant="contained"
           disabled={!!validationMsg}
-          onClick={handleSubmit}
+          onClick={() => setSubmitMsg('Submitted successfully request')}
           sx={{
             backgroundColor: cignaBlue,
             fontWeight: 'bold',
