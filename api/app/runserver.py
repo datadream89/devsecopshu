@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
-import dropdownOptions from './options.json';
+import dropdownOptions from './data/options.json';
 
 const cignaBlue = '#004785';
 
@@ -22,8 +22,8 @@ const firstRowButtons = ['PSCRF Data', 'Unsigned Approved Contract', 'Signed Cli
 const secondRowButtons = ['One-Way', 'Bi-Directional'];
 
 const Request = () => {
-  const [firstSelection, setFirstSelection] = useState([]); // Multi-select
-  const [secondSelection, setSecondSelection] = useState(''); // Single-select
+  const [firstSelection, setFirstSelection] = useState([]);
+  const [secondSelection, setSecondSelection] = useState('');
   const [dropdowns, setDropdowns] = useState([{ id: 1, query: '', filtered: [] }]);
 
   const firstRowValid = firstSelection.length >= 2;
@@ -41,7 +41,7 @@ const Request = () => {
 
   const handleSearch = (id, value) => {
     const filtered = dropdownOptions.filter((opt) =>
-      opt.value.startsWith(value)
+      opt.id.startsWith(value)
     );
 
     setDropdowns((prev) =>
@@ -53,7 +53,7 @@ const Request = () => {
 
   const toggleFirstSelection = (label) => {
     if (firstSelection.includes(label)) {
-      if (firstSelection.length <= 2) return; // enforce minimum 2
+      if (firstSelection.length <= 2) return;
       setFirstSelection(firstSelection.filter((item) => item !== label));
     } else {
       setFirstSelection([...firstSelection, label]);
@@ -85,7 +85,7 @@ const Request = () => {
           ))}
         </Grid>
 
-        {/* Validation message */}
+        {/* Validation */}
         {!firstRowValid && (
           <FormHelperText error sx={{ textAlign: 'center', mt: 1 }}>
             Please select at least two options in the first row.
@@ -122,6 +122,7 @@ const Request = () => {
             <Typography variant="h6" gutterBottom>
               Search for ID:
             </Typography>
+
             {dropdowns.map((dropdown, index) => (
               <Box
                 key={dropdown.id}
@@ -137,31 +138,40 @@ const Request = () => {
                   onChange={(e) => handleSearch(dropdown.id, e.target.value)}
                   variant="outlined"
                 />
-                <IconButton
-                  onClick={() => {
-                    if (dropdowns.length > 1) {
-                      setDropdowns(dropdowns.filter((d) => d.id !== dropdown.id));
-                    }
-                  }}
-                  sx={{ color: dropdowns.length > 1 ? cignaBlue : '#ccc' }}
-                >
-                  <CloseIcon />
+
+                {/* + button */}
+                <IconButton onClick={handleAddDropdown} sx={{ color: cignaBlue }}>
+                  <AddCircleOutlineIcon />
                 </IconButton>
-                {index === 0 && (
-                  <IconButton onClick={handleAddDropdown} sx={{ color: cignaBlue }}>
-                    <AddCircleOutlineIcon />
+
+                {/* X button (not shown for first dropdown) */}
+                {index !== 0 && (
+                  <IconButton
+                    onClick={() => {
+                      if (dropdowns.length > 1) {
+                        setDropdowns(dropdowns.filter((d) => d.id !== dropdown.id));
+                      }
+                    }}
+                    sx={{ color: cignaBlue }}
+                  >
+                    <CloseIcon />
                   </IconButton>
                 )}
               </Box>
             ))}
+
+            {/* Search Results */}
             {dropdowns.map(
               (dropdown) =>
                 dropdown.query && (
                   <List dense key={dropdown.id}>
                     {dropdown.filtered.length > 0 ? (
                       dropdown.filtered.map((item) => (
-                        <ListItem key={item.value}>
-                          <ListItemText primary={`${item.value} - ${item.label}`} />
+                        <ListItem key={item.id}>
+                          <ListItemText
+                            primary={`ID: ${item.id}`}
+                            secondary={`SAM Version: ${item.samVersion}, Pricing Version: ${item.pricingVersion}`}
+                          />
                         </ListItem>
                       ))
                     ) : (
