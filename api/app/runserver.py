@@ -39,7 +39,6 @@ const Request = () => {
       prev.map((d) => (d.id === dropdownId ? { ...d, selected: value } : d))
     );
     if (validationError) {
-      // Clear validation error once user selects
       setValidationError(false);
     }
   };
@@ -53,7 +52,7 @@ const Request = () => {
     }
   };
 
-  // Validation check on dropdowns
+  // Call this on form submit or wherever you want to validate dropdowns
   const checkValidation = () => {
     if (showDropdowns) {
       const anyEmpty = dropdowns.some((d) => !d.selected);
@@ -64,8 +63,7 @@ const Request = () => {
     return true;
   };
 
-  // Example: call checkValidation on form submit or on-demand (not in scope now)
-  // You can add a Submit button and call checkValidation before proceeding
+  // Example: For now, just calling validation on blur of second row button selection or add your own submit logic
 
   return (
     <Container maxWidth="md">
@@ -92,7 +90,6 @@ const Request = () => {
           ))}
         </Grid>
 
-        {/* Validation */}
         {!firstRowValid && (
           <FormHelperText error sx={{ textAlign: 'center', mt: 1 }}>
             Please select at least two options in the first row.
@@ -115,6 +112,7 @@ const Request = () => {
                     },
                   }}
                   onClick={() => setSecondSelection(label)}
+                  onBlur={checkValidation} // example validation trigger
                 >
                   {label}
                 </Button>
@@ -132,6 +130,7 @@ const Request = () => {
 
             {dropdowns.map((dropdown, index) => {
               const hasError = validationError && !dropdown.selected;
+
               return (
                 <Box
                   key={dropdown.id}
@@ -140,49 +139,63 @@ const Request = () => {
                   gap={1}
                   mb={2}
                 >
-                  <Autocomplete
-                    sx={{ flexGrow: 1 }}
-                    options={dropdownOptions}
-                    getOptionLabel={(option) => option.id}
-                    value={dropdown.selected}
-                    onChange={(event, newValue) => handleSelect(dropdown.id, newValue)}
-                    isOptionEqualToValue={(option, value) => option.id === value?.id}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Select ID"
-                        variant="outlined"
-                        error={hasError}
-                        helperText={hasError ? 'Please select a value' : ''}
-                      />
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Autocomplete
+                      options={dropdownOptions}
+                      getOptionLabel={(option) => option.id}
+                      value={dropdown.selected}
+                      onChange={(event, newValue) => handleSelect(dropdown.id, newValue)}
+                      isOptionEqualToValue={(option, value) => option.id === value?.id}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Select ID"
+                          variant="outlined"
+                          error={hasError}
+                          helperText={hasError ? 'Please select a value' : ''}
+                        />
+                      )}
+                      renderOption={(props, option) => (
+                        <li {...props} key={option.id}>
+                          <Box>
+                            <Typography variant="body1" fontWeight="bold">
+                              {option.id}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              SAM Version: {option.samVersion} <br />
+                              Pricing Version: {option.pricingVersion}
+                            </Typography>
+                          </Box>
+                        </li>
+                      )}
+                      renderTags={() => null} // single select, no tags
+                    />
+                    {/* Show selected value details below input */}
+                    {dropdown.selected && (
+                      <Box sx={{ mt: 0.5, ml: 1 }}>
+                        <Typography variant="subtitle2" fontWeight="bold" color="text.primary">
+                          {dropdown.selected.id}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          SAM Version: {dropdown.selected.samVersion}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Pricing Version: {dropdown.selected.pricingVersion}
+                        </Typography>
+                      </Box>
                     )}
-                    renderOption={(props, option) => (
-                      <li {...props} key={option.id}>
-                        <Box>
-                          <Typography variant="body1" fontWeight="bold">
-                            {option.id}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            SAM Version: {option.samVersion} <br />
-                            Pricing Version: {option.pricingVersion}
-                          </Typography>
-                        </Box>
-                      </li>
-                    )}
-                    renderTags={() => null} // Hide tags since single select
-                  />
+                  </Box>
 
                   {/* + Button */}
                   <IconButton onClick={handleAddDropdown} sx={{ color: cignaBlue }}>
                     <AddCircleOutlineIcon />
                   </IconButton>
 
-                  {/* X Button (only if not first dropdown) */}
+                  {/* X Button (only for dropdowns after first) */}
                   {index !== 0 && (
                     <IconButton
                       onClick={() => {
                         setDropdowns(dropdowns.filter((d) => d.id !== dropdown.id));
-                        // Clear validation if removing fixes it
                         if (validationError) {
                           const stillEmpty = dropdowns
                             .filter((d) => d.id !== dropdown.id)
