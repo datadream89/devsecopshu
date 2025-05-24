@@ -7,9 +7,7 @@ import {
   IconButton,
   Typography,
   TextField,
-  List,
-  ListItem,
-  ListItemText,
+  MenuItem,
   FormHelperText
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -24,7 +22,7 @@ const secondRowButtons = ['One-Way', 'Bi-Directional'];
 const Request = () => {
   const [firstSelection, setFirstSelection] = useState([]);
   const [secondSelection, setSecondSelection] = useState('');
-  const [dropdowns, setDropdowns] = useState([{ id: 1, query: '', filtered: [], selected: null }]);
+  const [dropdowns, setDropdowns] = useState([{ id: 1, selected: '' }]);
 
   const firstRowValid = firstSelection.length >= 2;
   const showDropdowns =
@@ -35,26 +33,15 @@ const Request = () => {
   const handleAddDropdown = () => {
     setDropdowns([
       ...dropdowns,
-      { id: dropdowns.length + 1, query: '', filtered: [], selected: null }
+      { id: dropdowns.length + 1, selected: '' }
     ]);
   };
 
-  const handleSearch = (id, value) => {
-    const filtered = dropdownOptions.filter((opt) =>
-      opt.id.startsWith(value)
-    );
-
+  const handleSelect = (dropdownId, selectedId) => {
+    const selectedItem = dropdownOptions.find((opt) => opt.id === selectedId);
     setDropdowns((prev) =>
       prev.map((d) =>
-        d.id === id ? { ...d, query: value, filtered } : d
-      )
-    );
-  };
-
-  const handleSelect = (dropdownId, option) => {
-    setDropdowns((prev) =>
-      prev.map((d) =>
-        d.id === dropdownId ? { ...d, selected: option } : d
+        d.id === dropdownId ? { ...d, selected: selectedItem.id } : d
       )
     );
   };
@@ -128,7 +115,7 @@ const Request = () => {
         {showDropdowns && (
           <Box mt={4}>
             <Typography variant="h6" gutterBottom>
-              Search for ID:
+              Select ID:
             </Typography>
 
             {dropdowns.map((dropdown, index) => (
@@ -140,25 +127,30 @@ const Request = () => {
                 mb={2}
               >
                 <TextField
+                  select
                   fullWidth
-                  label="Enter ID"
-                  value={dropdown.query}
-                  onChange={(e) => handleSearch(dropdown.id, e.target.value)}
+                  label="Select ID"
+                  value={dropdown.selected}
+                  onChange={(e) => handleSelect(dropdown.id, e.target.value)}
                   variant="outlined"
-                />
+                >
+                  {dropdownOptions.map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {`ID: ${item.id} — SAM: ${item.samVersion}, Pricing: ${item.pricingVersion}`}
+                    </MenuItem>
+                  ))}
+                </TextField>
 
-                {/* + button */}
+                {/* + Button */}
                 <IconButton onClick={handleAddDropdown} sx={{ color: cignaBlue }}>
                   <AddCircleOutlineIcon />
                 </IconButton>
 
-                {/* X button (not shown for first dropdown) */}
+                {/* X Button (not for first) */}
                 {index !== 0 && (
                   <IconButton
                     onClick={() => {
-                      if (dropdowns.length > 1) {
-                        setDropdowns(dropdowns.filter((d) => d.id !== dropdown.id));
-                      }
+                      setDropdowns(dropdowns.filter((d) => d.id !== dropdown.id));
                     }}
                     sx={{ color: cignaBlue }}
                   >
@@ -167,34 +159,6 @@ const Request = () => {
                 )}
               </Box>
             ))}
-
-            {/* Search Results */}
-            {dropdowns.map(
-              (dropdown) =>
-                dropdown.query && (
-                  <List dense key={dropdown.id}>
-                    {dropdown.filtered.length > 0 ? (
-                      dropdown.filtered.map((item) => (
-                        <ListItem
-                          button
-                          key={item.id}
-                          selected={dropdown.selected?.id === item.id}
-                          onClick={() => handleSelect(dropdown.id, item)}
-                        >
-                          <ListItemText
-                            primary={`ID: ${item.id}`}
-                            secondary={`SAM Version: ${item.samVersion}, Pricing Version: ${item.pricingVersion}`}
-                          />
-                        </ListItem>
-                      ))
-                    ) : (
-                      <ListItem>
-                        <ListItemText primary="ID not found" />
-                      </ListItem>
-                    )}
-                  </List>
-                )
-            )}
           </Box>
         )}
       </Box>
