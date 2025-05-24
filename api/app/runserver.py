@@ -7,7 +7,7 @@ import {
   IconButton,
   Typography,
   TextField,
-  FormHelperText
+  FormHelperText,
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -24,6 +24,9 @@ const Request = () => {
   const [dropdowns, setDropdowns] = useState([{ id: 1, selected: null }]);
   const [validationError, setValidationError] = useState(false);
 
+  // New state to control inputValue for each dropdown to enable search
+  const [inputValues, setInputValues] = useState({ 1: '' });
+
   const firstRowValid = firstSelection.length >= 2;
   const showDropdowns =
     firstRowValid &&
@@ -31,13 +34,18 @@ const Request = () => {
     (secondSelection === 'One-Way' || secondSelection === 'Bi-Directional');
 
   const handleAddDropdown = () => {
-    setDropdowns([...dropdowns, { id: dropdowns.length + 1, selected: null }]);
+    const newId = dropdowns.length + 1;
+    setDropdowns([...dropdowns, { id: newId, selected: null }]);
+    setInputValues((prev) => ({ ...prev, [newId]: '' }));
   };
 
   const handleSelect = (dropdownId, value) => {
     setDropdowns((prev) =>
       prev.map((d) => (d.id === dropdownId ? { ...d, selected: value } : d))
     );
+    // Reset input value to '' after select so input shows formatted text only
+    setInputValues((prev) => ({ ...prev, [dropdownId]: '' }));
+
     if (validationError) {
       setValidationError(false);
     }
@@ -52,7 +60,12 @@ const Request = () => {
     }
   };
 
-  // Call this on form submit or wherever you want to validate dropdowns
+  // Control the input value for search
+  const handleInputChange = (dropdownId, newInputValue) => {
+    setInputValues((prev) => ({ ...prev, [dropdownId]: newInputValue }));
+  };
+
+  // Validation check
   const checkValidation = () => {
     if (showDropdowns) {
       const anyEmpty = dropdowns.some((d) => !d.selected);
@@ -63,7 +76,11 @@ const Request = () => {
     return true;
   };
 
-  // Example: For now, just calling validation on blur of second row button selection or add your own submit logic
+  // Format the selected value for display inside input box with newlines
+  const formatSelectedValue = (selected) => {
+    if (!selected) return '';
+    return `${selected.id}\nSAM Version: ${selected.samVersion}\nPricing Version: ${selected.pricingVersion}`;
+  };
 
   return (
     <Container maxWidth="md">
@@ -112,7 +129,7 @@ const Request = () => {
                     },
                   }}
                   onClick={() => setSecondSelection(label)}
-                  onBlur={checkValidation} // example validation trigger
+                  onBlur={checkValidation}
                 >
                   {label}
                 </Button>
@@ -145,16 +162,11 @@ const Request = () => {
                       getOptionLabel={(option) => option.id}
                       value={dropdown.selected}
                       onChange={(event, newValue) => handleSelect(dropdown.id, newValue)}
+                      inputValue={inputValues[dropdown.id] || ''}
+                      onInputChange={(event, newInputValue) =>
+                        handleInputChange(dropdown.id, newInputValue)
+                      }
                       isOptionEqualToValue={(option, value) => option.id === value?.id}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Select ID"
-                          variant="outlined"
-                          error={hasError}
-                          helperText={hasError ? 'Please select a value' : ''}
-                        />
-                      )}
                       renderOption={(props, option) => (
                         <li {...props} key={option.id}>
                           <Box>
@@ -168,22 +180,28 @@ const Request = () => {
                           </Box>
                         </li>
                       )}
-                      renderTags={() => null} // single select, no tags
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Select ID"
+                          variant="outlined"
+                          error={hasError}
+                          helperText={hasError ? 'Please select a value' : ''}
+                          multiline
+                          minRows={3}
+                          value={
+                            // Show formatted selected value if input is empty (not typing)
+                            inputValues[dropdown.id]
+                              ? inputValues[dropdown.id]
+                              : formatSelectedValue(dropdown.selected)
+                          }
+                          inputProps={{
+                            ...params.inputProps,
+                            style: { whiteSpace: 'pre-line' },
+                          }}
+                        />
+                      )}
                     />
-                    {/* Show selected value details below input */}
-                    {dropdown.selected && (
-                      <Box sx={{ mt: 0.5, ml: 1 }}>
-                        <Typography variant="subtitle2" fontWeight="bold" color="text.primary">
-                          {dropdown.selected.id}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" display="block">
-                          SAM Version: {dropdown.selected.samVersion}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" display="block">
-                          Pricing Version: {dropdown.selected.pricingVersion}
-                        </Typography>
-                      </Box>
-                    )}
                   </Box>
 
                   {/* + Button */}
@@ -191,7 +209,7 @@ const Request = () => {
                     <AddCircleOutlineIcon />
                   </IconButton>
 
-                  {/* X Button (only for dropdowns after first) */}
+                  {/* X Button (only after first) */}
                   {index !== 0 && (
                     <IconButton
                       onClick={() => {
