@@ -11,7 +11,7 @@ import {
   TextField,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import dropdownOptions from './data/options.json'; // Ensure this path is correct
+import dropdownOptions from './data/options.json'; // Ensure the file path is correct
 
 const cignaBlue = '#004785';
 
@@ -105,7 +105,7 @@ export default function IntegratedUI() {
         ))}
       </Box>
 
-      {/* Searchable ID Selector */}
+      {/* Autocomplete for IDs */}
       {selectedTypes.includes('PSCRF Data') && (
         <Box>
           <Autocomplete
@@ -120,18 +120,21 @@ export default function IntegratedUI() {
                 component="li"
                 {...props}
                 sx={{
+                  px: 2,
+                  py: 1,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'flex-start',
                   width: '100%',
-                  px: 1,
                 }}
               >
-                <Typography fontWeight="bold">{option.id}</Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="subtitle2" fontWeight="bold" color="text.primary">
+                  {option.id}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
                   SAM Version: {option.samVersion}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary">
                   Pricing Version: {option.pricingVersion}
                 </Typography>
               </Box>
@@ -147,7 +150,7 @@ export default function IntegratedUI() {
             sx={{ mb: 3 }}
           />
 
-          {/* Selected IDs */}
+          {/* Selected ID Cards */}
           {selectedIds.length === 0 ? (
             <Typography color="text.secondary" textAlign="center">
               No IDs selected
@@ -165,6 +168,7 @@ export default function IntegratedUI() {
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
+                      height: '100%',
                     }}
                   >
                     <Box>
@@ -194,7 +198,7 @@ export default function IntegratedUI() {
         </Box>
       )}
 
-      {/* Validation message */}
+      {/* Validation Message */}
       {validationMsg && (
         <Typography color="error" mt={3} textAlign="center" fontWeight="bold">
           {validationMsg}
