@@ -75,7 +75,6 @@ const UploadModal = ({ open, onClose, onUpload }) => {
         <Button
           variant="contained"
           onClick={handleUpload}
-          disabled={!file}
           sx={{ mt: 2, backgroundColor: '#2196f3', color: '#fff' }}
           startIcon={<UploadFileIcon />}
         >
@@ -156,7 +155,7 @@ export default function IntegratedUI() {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
-      {/* Type Buttons */}
+      {/* Type and Compare Direction Buttons - Sticky */}
       <Box position="sticky" top={0} zIndex={10} bgcolor="#fff" pb={2}>
         <Typography variant="h6" gutterBottom>
           Type
@@ -181,7 +180,6 @@ export default function IntegratedUI() {
           ))}
         </Box>
 
-        {/* Compare Direction Buttons */}
         <Typography variant="h6" gutterBottom mt={4}>
           Compare Direction
         </Typography>
@@ -206,7 +204,6 @@ export default function IntegratedUI() {
         </Box>
       </Box>
 
-      {/* Autocomplete for IDs */}
       {selectedTypes.includes('PSCRF Data') && (
         <Box mt={4}>
           <Autocomplete
@@ -238,31 +235,40 @@ export default function IntegratedUI() {
         </Box>
       )}
 
-      {/* Unsigned Approved Contract Section */}
       {selectedTypes.includes('Unsigned Approved Contract') && (
         <Box mt={4}>
           {contractSections.map((section, idx) => (
             <Paper key={section.id} sx={{ p: 2, mb: 2, position: 'relative' }}>
-              <RadioGroup
-                row
-                value={section.type}
-                onChange={(e) => handleRadioChange(section.id, e.target.value)}
-              >
-                {['Agreement', 'Supplement', 'Addendum'].map((type) => (
-                  <FormControlLabel
-                    key={type}
-                    value={type}
-                    control={<Radio />}
-                    label={type}
-                  />
-                ))}
-              </RadioGroup>
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <RadioGroup
+                  row
+                  value={section.type}
+                  onChange={(e) => handleRadioChange(section.id, e.target.value)}
+                >
+                  {['Agreement', 'Supplement', 'Addendum'].map((type) => (
+                    <FormControlLabel
+                      key={type}
+                      value={type}
+                      control={<Radio />}
+                      label={type}
+                    />
+                  ))}
+                </RadioGroup>
+                <IconButton onClick={addContractSection} sx={{ position: 'absolute', top: 8, right: 8 }}>
+                  <AddIcon />
+                </IconButton>
+                {idx > 0 && (
+                  <IconButton onClick={() => removeContractSection(section.id)} sx={{ position: 'absolute', top: 8, right: 40 }}>
+                    <CloseIcon />
+                  </IconButton>
+                )}
+              </Box>
               <Box display="flex" alignItems="center" mt={2} gap={2}>
                 <Button
                   variant="outlined"
                   onClick={() => setModalOpenFor(section.id)}
                   startIcon={<UploadFileIcon />}
-                  sx={{ color: '#673ab7', borderColor: '#673ab7' }}
+                  sx={{ color: '#ff4081', borderColor: '#ff4081' }}
                 >
                   Upload File
                 </Button>
@@ -272,26 +278,11 @@ export default function IntegratedUI() {
                   </Typography>
                 )}
               </Box>
-              {idx > 0 && (
-                <IconButton
-                  onClick={() => removeContractSection(section.id)}
-                  sx={{ position: 'absolute', top: 8, right: 8 }}
-                >
-                  <CloseIcon />
-                </IconButton>
-              )}
-              <IconButton
-                onClick={addContractSection}
-                sx={{ position: 'absolute', top: 8, left: 8 }}
-              >
-                <AddIcon />
-              </IconButton>
             </Paper>
           ))}
         </Box>
       )}
 
-      {/* Validation Message */}
       {validationMsg && (
         <Typography color="error" mt={3} textAlign="center" fontWeight="bold">
           {validationMsg}
