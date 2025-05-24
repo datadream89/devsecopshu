@@ -7,11 +7,10 @@ import {
   IconButton,
   Typography,
   TextField,
-  MenuItem,
   FormHelperText
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import CloseIcon from '@mui/icons-material/Close';
+import Autocomplete from '@mui/material/Autocomplete';
 import dropdownOptions from './data/options.json';
 
 const cignaBlue = '#004785';
@@ -22,7 +21,8 @@ const secondRowButtons = ['One-Way', 'Bi-Directional'];
 const Request = () => {
   const [firstSelection, setFirstSelection] = useState([]);
   const [secondSelection, setSecondSelection] = useState('');
-  const [dropdowns, setDropdowns] = useState([{ id: 1, selected: '' }]);
+  const [dropdowns, setDropdowns] = useState([{ id: 1, selected: null }]);
+  const [validationError, setValidationError] = useState(false);
 
   const firstRowValid = firstSelection.length >= 2;
   const showDropdowns =
@@ -31,19 +31,17 @@ const Request = () => {
     (secondSelection === 'One-Way' || secondSelection === 'Bi-Directional');
 
   const handleAddDropdown = () => {
-    setDropdowns([
-      ...dropdowns,
-      { id: dropdowns.length + 1, selected: '' }
-    ]);
+    setDropdowns([...dropdowns, { id: dropdowns.length + 1, selected: null }]);
   };
 
-  const handleSelect = (dropdownId, selectedId) => {
-    const selectedItem = dropdownOptions.find((opt) => opt.id === selectedId);
+  const handleSelect = (dropdownId, value) => {
     setDropdowns((prev) =>
-      prev.map((d) =>
-        d.id === dropdownId ? { ...d, selected: selectedItem.id } : d
-      )
+      prev.map((d) => (d.id === dropdownId ? { ...d, selected: value } : d))
     );
+    if (validationError) {
+      // Clear validation error once user selects
+      setValidationError(false);
+    }
   };
 
   const toggleFirstSelection = (label) => {
@@ -54,6 +52,20 @@ const Request = () => {
       setFirstSelection([...firstSelection, label]);
     }
   };
+
+  // Validation check on dropdowns
+  const checkValidation = () => {
+    if (showDropdowns) {
+      const anyEmpty = dropdowns.some((d) => !d.selected);
+      setValidationError(anyEmpty);
+      return !anyEmpty;
+    }
+    setValidationError(false);
+    return true;
+  };
+
+  // Example: call checkValidation on form submit or on-demand (not in scope now)
+  // You can add a Submit button and call checkValidation before proceeding
 
   return (
     <Container maxWidth="md">
@@ -118,47 +130,74 @@ const Request = () => {
               Select ID:
             </Typography>
 
-            {dropdowns.map((dropdown, index) => (
-              <Box
-                key={dropdown.id}
-                display="flex"
-                alignItems="center"
-                gap={1}
-                mb={2}
-              >
-                <TextField
-                  select
-                  fullWidth
-                  label="Select ID"
-                  value={dropdown.selected}
-                  onChange={(e) => handleSelect(dropdown.id, e.target.value)}
-                  variant="outlined"
+            {dropdowns.map((dropdown, index) => {
+              const hasError = validationError && !dropdown.selected;
+              return (
+                <Box
+                  key={dropdown.id}
+                  display="flex"
+                  alignItems="center"
+                  gap={1}
+                  mb={2}
                 >
-                  {dropdownOptions.map((item) => (
-                    <MenuItem key={item.id} value={item.id}>
-                      {`ID: ${item.id} — SAM: ${item.samVersion}, Pricing: ${item.pricingVersion}`}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                  <Autocomplete
+                    sx={{ flexGrow: 1 }}
+                    options={dropdownOptions}
+                    getOptionLabel={(option) => option.id}
+                    value={dropdown.selected}
+                    onChange={(event, newValue) => handleSelect(dropdown.id, newValue)}
+                    isOptionEqualToValue={(option, value) => option.id === value?.id}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Select ID"
+                        variant="outlined"
+                        error={hasError}
+                        helperText={hasError ? 'Please select a value' : ''}
+                      />
+                    )}
+                    renderOption={(props, option) => (
+                      <li {...props} key={option.id}>
+                        <Box>
+                          <Typography variant="body1" fontWeight="bold">
+                            {option.id}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            SAM Version: {option.samVersion} <br />
+                            Pricing Version: {option.pricingVersion}
+                          </Typography>
+                        </Box>
+                      </li>
+                    )}
+                    renderTags={() => null} // Hide tags since single select
+                  />
 
-                {/* + Button */}
-                <IconButton onClick={handleAddDropdown} sx={{ color: cignaBlue }}>
-                  <AddCircleOutlineIcon />
-                </IconButton>
-
-                {/* X Button (not for first) */}
-                {index !== 0 && (
-                  <IconButton
-                    onClick={() => {
-                      setDropdowns(dropdowns.filter((d) => d.id !== dropdown.id));
-                    }}
-                    sx={{ color: cignaBlue }}
-                  >
-                    <CloseIcon />
+                  {/* + Button */}
+                  <IconButton onClick={handleAddDropdown} sx={{ color: cignaBlue }}>
+                    <AddCircleOutlineIcon />
                   </IconButton>
-                )}
-              </Box>
-            ))}
+
+                  {/* X Button (only if not first dropdown) */}
+                  {index !== 0 && (
+                    <IconButton
+                      onClick={() => {
+                        setDropdowns(dropdowns.filter((d) => d.id !== dropdown.id));
+                        // Clear validation if removing fixes it
+                        if (validationError) {
+                          const stillEmpty = dropdowns
+                            .filter((d) => d.id !== dropdown.id)
+                            .some((d) => !d.selected);
+                          if (!stillEmpty) setValidationError(false);
+                        }
+                      }}
+                      sx={{ color: cignaBlue }}
+                    >
+                      X
+                    </IconButton>
+                  )}
+                </Box>
+              );
+            })}
           </Box>
         )}
       </Box>
