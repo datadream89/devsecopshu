@@ -9,32 +9,92 @@ import {
   Grid,
   Autocomplete,
   TextField,
-  Radio,
   RadioGroup,
   FormControlLabel,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  Radio,
+  Modal,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
-import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
 import dropdownOptions from './data/options.json';
 
 const cignaBlue = '#004785';
-const typeButtons = ['PSCRF Data', 'Unsigned Approved Contract', 'Signed Client Contract'];
+
+const typeButtons = [
+  'PSCRF Data',
+  'Unsigned Approved Contract',
+  'Signed Client Contract',
+];
+
 const compareDirectionButtons = ['One-Way', 'Bi-Directional'];
-const fileTypes = ['Agreement', 'Supplement', 'Addendum'];
+
+const UploadModal = ({ open, onClose, onUpload }) => {
+  const [file, setFile] = useState(null);
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleUpload = () => {
+    if (file) {
+      onUpload(file);
+      onClose();
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 400,
+          bgcolor: 'background.paper',
+          border: '2px solid #000',
+          boxShadow: 24,
+          p: 4,
+        }}
+      >
+        <Typography variant="h6" mb={2}>
+          Upload File
+        </Typography>
+        <Button
+          component="label"
+          variant="contained"
+          startIcon={<AttachFileIcon />}
+          sx={{ mb: 2, backgroundColor: '#4caf50', color: '#fff' }}
+        >
+          Choose File
+          <input type="file" hidden onChange={handleFileChange} />
+        </Button>
+        {file && <Typography>{file.name}</Typography>}
+        <Button
+          variant="contained"
+          onClick={handleUpload}
+          disabled={!file}
+          sx={{ mt: 2, backgroundColor: '#2196f3', color: '#fff' }}
+          startIcon={<UploadFileIcon />}
+        >
+          Upload
+        </Button>
+      </Box>
+    </Modal>
+  );
+};
 
 export default function IntegratedUI() {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedCompareDirection, setSelectedCompareDirection] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
   const [validationMsg, setValidationMsg] = useState('');
-  const [fileSections, setFileSections] = useState([{ type: '', file: null, fileName: '' }]);
-  const [dialogIndex, setDialogIndex] = useState(null);
+  const [contractSections, setContractSections] = useState([
+    { id: Date.now(), type: '', file: null },
+  ]);
+  const [modalOpenFor, setModalOpenFor] = useState(null);
 
   const toggleTypeButton = (label) => {
     setSelectedTypes((prev) =>
@@ -50,27 +110,6 @@ export default function IntegratedUI() {
     setSelectedIds((prev) => prev.filter((opt) => opt.id !== id));
   };
 
-  const handleRadioChange = (index, value) => {
-    const updated = [...fileSections];
-    updated[index].type = value;
-    updated[index].file = null;
-    updated[index].fileName = '';
-    setFileSections(updated);
-  };
-
-  const handleFileUpload = (index, file) => {
-    const updated = [...fileSections];
-    updated[index].file = file;
-    updated[index].fileName = file.name;
-    setFileSections(updated);
-  };
-
-  const openDialog = (index) => setDialogIndex(index);
-  const closeDialog = () => setDialogIndex(null);
-
-  const addFileSection = () => setFileSections([...fileSections, { type: '', file: null, fileName: '' }]);
-  const removeFileSection = (index) => setFileSections(fileSections.filter((_, i) => i !== index));
-
   useEffect(() => {
     if (selectedTypes.length < 2) {
       setValidationMsg('Select at least 2 Types.');
@@ -80,23 +119,49 @@ export default function IntegratedUI() {
       setValidationMsg('Please select at least one ID when PSCRF Data is selected.');
     } else if (
       selectedTypes.includes('Unsigned Approved Contract') &&
-      fileSections.some((sec) => !sec.type || !sec.file)
+      contractSections.some((s) => !s.file)
     ) {
-      setValidationMsg('Please ensure all file sections have a type selected and a file uploaded.');
+      setValidationMsg('Please upload a file for each contract section.');
     } else {
       setValidationMsg('');
     }
-  }, [selectedTypes, selectedCompareDirection, selectedIds, fileSections]);
+  }, [selectedTypes, selectedCompareDirection, selectedIds, contractSections]);
+
+  const handleRadioChange = (id, value) => {
+    setContractSections((prev) =>
+      prev.map((s) =>
+        s.id === id ? { ...s, type: value, file: null } : s
+      )
+    );
+  };
+
+  const handleFileUpload = (file) => {
+    setContractSections((prev) =>
+      prev.map((s) =>
+        s.id === modalOpenFor ? { ...s, file } : s
+      )
+    );
+  };
+
+  const addContractSection = () => {
+    setContractSections((prev) => [
+      ...prev,
+      { id: Date.now(), type: '', file: null },
+    ]);
+  };
+
+  const removeContractSection = (id) => {
+    setContractSections((prev) => prev.filter((s) => s.id !== id));
+  };
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
-      {/* Sticky Header */}
-      <Box position="sticky" top={0} bgcolor="white" zIndex={2} pb={2}>
-        {/* Type Buttons */}
+      {/* Type Buttons */}
+      <Box position="sticky" top={0} zIndex={10} bgcolor="#fff" pb={2}>
         <Typography variant="h6" gutterBottom>
           Type
         </Typography>
-        <Box display="flex" justifyContent="center" gap={2} mb={2} flexWrap="wrap">
+        <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
           {typeButtons.map((label) => (
             <Button
               key={label}
@@ -116,11 +181,11 @@ export default function IntegratedUI() {
           ))}
         </Box>
 
-        {/* Compare Direction */}
+        {/* Compare Direction Buttons */}
         <Typography variant="h6" gutterBottom mt={4}>
           Compare Direction
         </Typography>
-        <Box display="flex" justifyContent="center" gap={2} mb={4} flexWrap="wrap">
+        <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
           {compareDirectionButtons.map((label) => (
             <Button
               key={label}
@@ -141,9 +206,9 @@ export default function IntegratedUI() {
         </Box>
       </Box>
 
-      {/* Autocomplete */}
+      {/* Autocomplete for IDs */}
       {selectedTypes.includes('PSCRF Data') && (
-        <Box>
+        <Box mt={4}>
           <Autocomplete
             options={dropdownOptions}
             getOptionLabel={(option) => option.id}
@@ -151,113 +216,93 @@ export default function IntegratedUI() {
             onChange={(e, newValue) => setSelectedIds(newValue)}
             multiple
             value={selectedIds}
-            renderInput={(params) => (
-              <TextField {...params} label="Search and select IDs" placeholder="Type to search..." />
+            renderOption={(props, option) => (
+              <li {...props} key={option.id} style={{ display: 'block' }}>
+                <Box display="flex" flexDirection="column" alignItems="flex-start">
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    {option.id}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    SAM Version: {option.samVersion}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Pricing Version: {option.pricingVersion}
+                  </Typography>
+                </Box>
+              </li>
             )}
-            sx={{ mb: 3 }}
+            renderInput={(params) => (
+              <TextField {...params} label="Search and select IDs" variant="outlined" />
+            )}
           />
-          {selectedIds.length === 0 ? (
-            <Typography color="text.secondary" textAlign="center">
-              No IDs selected
-            </Typography>
-          ) : (
-            <Grid container spacing={2}>
-              {selectedIds.map((option) => (
-                <Grid key={option.id} item xs={12} sm={6} md={4}>
-                  <Paper elevation={3} sx={{ p: 2, borderLeft: `5px solid ${cignaBlue}` }}>
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight="bold">
-                        {option.id}
-                      </Typography>
-                      <Typography variant="body2">SAM Version: {option.samVersion}</Typography>
-                      <Typography variant="body2">Pricing Version: {option.pricingVersion}</Typography>
-                    </Box>
-                    <IconButton onClick={() => handleRemoveId(option.id)} size="small">
-                      <CloseIcon />
-                    </IconButton>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          )}
         </Box>
       )}
 
-      {/* File Uploads */}
+      {/* Unsigned Approved Contract Section */}
       {selectedTypes.includes('Unsigned Approved Contract') && (
         <Box mt={4}>
-          {fileSections.map((section, index) => (
-            <Paper key={index} sx={{ p: 2, mb: 2, position: 'relative', borderLeft: `5px solid ${cignaBlue}` }}>
-              {index > 0 && (
+          {contractSections.map((section, idx) => (
+            <Paper key={section.id} sx={{ p: 2, mb: 2, position: 'relative' }}>
+              <RadioGroup
+                row
+                value={section.type}
+                onChange={(e) => handleRadioChange(section.id, e.target.value)}
+              >
+                {['Agreement', 'Supplement', 'Addendum'].map((type) => (
+                  <FormControlLabel
+                    key={type}
+                    value={type}
+                    control={<Radio />}
+                    label={type}
+                  />
+                ))}
+              </RadioGroup>
+              <Box display="flex" alignItems="center" mt={2} gap={2}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setModalOpenFor(section.id)}
+                  startIcon={<UploadFileIcon />}
+                  sx={{ color: '#673ab7', borderColor: '#673ab7' }}
+                >
+                  Upload File
+                </Button>
+                {section.file && (
+                  <Typography variant="body2" color="text.secondary">
+                    {section.file.name}
+                  </Typography>
+                )}
+              </Box>
+              {idx > 0 && (
                 <IconButton
-                  onClick={() => removeFileSection(index)}
-                  size="small"
+                  onClick={() => removeContractSection(section.id)}
                   sx={{ position: 'absolute', top: 8, right: 8 }}
                 >
                   <CloseIcon />
                 </IconButton>
               )}
-              <RadioGroup
-                row
-                value={section.type}
-                onChange={(e) => handleRadioChange(index, e.target.value)}
+              <IconButton
+                onClick={addContractSection}
+                sx={{ position: 'absolute', top: 8, left: 8 }}
               >
-                {fileTypes.map((type) => (
-                  <FormControlLabel
-                    key={type}
-                    value={type}
-                    control={<Radio sx={{ color: cignaBlue, '&.Mui-checked': { color: cignaBlue } }} />}
-                    label={type}
-                  />
-                ))}
-              </RadioGroup>
-              <Box mt={2} display="flex" alignItems="center" gap={2}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<UploadFileIcon />}
-                  onClick={() => openDialog(index)}
-                >
-                  {section.fileName ? section.fileName : 'Choose File'}
-                </Button>
-              </Box>
+                <AddIcon />
+              </IconButton>
             </Paper>
           ))}
-          <Button
-            onClick={addFileSection}
-            variant="outlined"
-            startIcon={<AddIcon />}
-            sx={{ color: cignaBlue, borderColor: cignaBlue }}
-          >
-            Add
-          </Button>
         </Box>
       )}
 
-      {/* File Upload Dialog */}
-      <Dialog open={dialogIndex !== null} onClose={closeDialog}>
-        <DialogTitle>Select File</DialogTitle>
-        <DialogContent>
-          <input
-            type="file"
-            accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            onChange={(e) => {
-              if (e.target.files[0]) handleFileUpload(dialogIndex, e.target.files[0]);
-              closeDialog();
-            }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDialog}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Validation */}
+      {/* Validation Message */}
       {validationMsg && (
         <Typography color="error" mt={3} textAlign="center" fontWeight="bold">
           {validationMsg}
         </Typography>
       )}
+
+      <UploadModal
+        open={!!modalOpenFor}
+        onClose={() => setModalOpenFor(null)}
+        onUpload={handleFileUpload}
+      />
     </Container>
   );
 }
