@@ -13,7 +13,6 @@ import {
   FormControlLabel,
   Radio,
   Modal,
-  Chip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
@@ -64,7 +63,7 @@ const UploadModal = ({ open, onClose, onUpload }) => {
           startIcon={<AttachFileIcon />}
           sx={{ backgroundColor: '#4caf50', color: '#fff' }}
         >
-          Upload File
+          Choose and Upload File
           <input type="file" hidden onChange={handleFileChange} />
         </Button>
       </Box>
@@ -142,52 +141,50 @@ export default function IntegratedUI() {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Box position="sticky" top={0} zIndex={10} bgcolor="#fff" pb={2}>
-        <Typography variant="h6" gutterBottom>
-          Type
-        </Typography>
-        <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
-          {typeButtons.map((label) => (
-            <Button
-              key={label}
-              variant={selectedTypes.includes(label) ? 'contained' : 'outlined'}
-              onClick={() => toggleTypeButton(label)}
-              sx={{
-                backgroundColor: selectedTypes.includes(label) ? cignaBlue : 'transparent',
-                color: selectedTypes.includes(label) ? 'white' : cignaBlue,
-                minWidth: 180,
-                fontWeight: 'bold',
-                textTransform: 'none',
-                '&:hover': { backgroundColor: cignaBlue, color: 'white' },
-              }}
-            >
-              {label}
-            </Button>
-          ))}
-        </Box>
+      <Typography variant="h6" gutterBottom>
+        Type
+      </Typography>
+      <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
+        {typeButtons.map((label) => (
+          <Button
+            key={label}
+            variant={selectedTypes.includes(label) ? 'contained' : 'outlined'}
+            onClick={() => toggleTypeButton(label)}
+            sx={{
+              backgroundColor: selectedTypes.includes(label) ? cignaBlue : 'transparent',
+              color: selectedTypes.includes(label) ? 'white' : cignaBlue,
+              minWidth: 180,
+              fontWeight: 'bold',
+              textTransform: 'none',
+              '&:hover': { backgroundColor: cignaBlue, color: 'white' },
+            }}
+          >
+            {label}
+          </Button>
+        ))}
+      </Box>
 
-        <Typography variant="h6" gutterBottom mt={4}>
-          Compare Direction
-        </Typography>
-        <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
-          {compareDirectionButtons.map((label) => (
-            <Button
-              key={label}
-              variant={selectedCompareDirection === label ? 'contained' : 'outlined'}
-              onClick={() => selectCompareDirectionButton(label)}
-              sx={{
-                backgroundColor: selectedCompareDirection === label ? cignaBlue : 'transparent',
-                color: selectedCompareDirection === label ? 'white' : cignaBlue,
-                minWidth: 120,
-                fontWeight: 'bold',
-                textTransform: 'none',
-                '&:hover': { backgroundColor: cignaBlue, color: 'white' },
-              }}
-            >
-              {label}
-            </Button>
-          ))}
-        </Box>
+      <Typography variant="h6" gutterBottom mt={4}>
+        Compare Direction
+      </Typography>
+      <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
+        {compareDirectionButtons.map((label) => (
+          <Button
+            key={label}
+            variant={selectedCompareDirection === label ? 'contained' : 'outlined'}
+            onClick={() => selectCompareDirectionButton(label)}
+            sx={{
+              backgroundColor: selectedCompareDirection === label ? cignaBlue : 'transparent',
+              color: selectedCompareDirection === label ? 'white' : cignaBlue,
+              minWidth: 120,
+              fontWeight: 'bold',
+              textTransform: 'none',
+              '&:hover': { backgroundColor: cignaBlue, color: 'white' },
+            }}
+          >
+            {label}
+          </Button>
+        ))}
       </Box>
 
       {selectedTypes.includes('PSCRF Data') && (
@@ -199,21 +196,6 @@ export default function IntegratedUI() {
             onChange={(e, newValue) => setSelectedIds(newValue)}
             multiple
             value={selectedIds}
-            renderOption={(props, option) => (
-              <li {...props} key={option.id} style={{ display: 'block' }}>
-                <Box display="flex" flexDirection="column" alignItems="flex-start">
-                  <Typography variant="subtitle2" fontWeight="bold">
-                    {option.id}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    SAM Version: {option.samVersion}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Pricing Version: {option.pricingVersion}
-                  </Typography>
-                </Box>
-              </li>
-            )}
             renderInput={(params) => (
               <TextField {...params} label="Search and select IDs" variant="outlined" />
             )}
@@ -246,33 +228,26 @@ export default function IntegratedUI() {
                   </IconButton>
                 </Box>
               </Box>
-              <Box display="flex" flexDirection="column" mt={2} gap={2}>
-                <Button
-                  variant="outlined"
-                  onClick={() => setModalOpenFor(section.id)}
-                  startIcon={<UploadFileIcon />}
-                  sx={{ color: '#673ab7', borderColor: '#673ab7', alignSelf: 'flex-start' }}
-                >
-                  Upload File
-                </Button>
-                {section.file && (
-                  <Chip
-                    label={section.file.name}
-                    onDelete={() =>
-                      setContractSections((prev) =>
-                        prev.map((s) =>
-                          s.id === section.id ? { ...s, file: null } : s
-                        )
-                      )
-                    }
-                    sx={{ maxWidth: '100%', backgroundColor: '#f0f0f0' }}
-                  />
+              <Box display="flex" alignItems="center" mt={2} gap={2}>
+                {section.file ? (
+                  <Typography variant="body2" color="text.secondary">
+                    {section.file.name}
+                  </Typography>
+                ) : (
+                  <Button
+                    variant="outlined"
+                    onClick={() => setModalOpenFor(section.id)}
+                    startIcon={<UploadFileIcon />}
+                    sx={{ color: '#673ab7', borderColor: '#673ab7' }}
+                  >
+                    Upload File
+                  </Button>
                 )}
               </Box>
               {idx > 0 && (
                 <IconButton
                   onClick={() => removeContractSection(section.id)}
-                  sx={{ position: 'absolute', top: 8, right: 8 }}
+                  sx={{ position: 'absolute', top: 8, right: 40 }}
                 >
                   <CloseIcon />
                 </IconButton>
