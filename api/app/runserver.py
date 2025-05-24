@@ -18,7 +18,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
-import dropdownOptions from './data/options.json';
+import dropdownOptions from './data/options.json'; // Your JSON with samVersion and pricingVersion
 
 const cignaBlue = '#004785';
 
@@ -52,8 +52,6 @@ const UploadModal = ({ open, onClose, onUpload }) => {
           border: '2px solid #000',
           boxShadow: 24,
           p: 4,
-          outline: 'none',
-          borderRadius: 2,
         }}
       >
         <Typography variant="h6" mb={2}>
@@ -87,49 +85,54 @@ export default function IntegratedUI() {
   const [modalOpenFor, setModalOpenFor] = useState(null);
   const [submitMsg, setSubmitMsg] = useState('');
 
-  // Toggle type button selection
+  // Toggle Type buttons
   const toggleTypeButton = (label) => {
     setSelectedTypes((prev) =>
       prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]
     );
   };
 
-  // Set compare direction button
+  // Select compare direction button
   const selectCompareDirectionButton = (label) => {
     setSelectedCompareDirection(label);
   };
 
-  // Validation effect
+  // Validation check on changes
   useEffect(() => {
     if (selectedTypes.length < 2) {
       setValidationMsg('Select at least 2 Types.');
+      setSubmitMsg('');
     } else if (!selectedCompareDirection) {
       setValidationMsg('Select one Compare Direction.');
+      setSubmitMsg('');
     } else if (selectedTypes.includes('PSCRF Data') && selectedIds.length === 0) {
       setValidationMsg('Please select at least one ID when PSCRF Data is selected.');
+      setSubmitMsg('');
     } else if (
       selectedTypes.includes('Unsigned Approved Contract') &&
       contractSections.some((s) => !s.file || !s.type)
     ) {
       setValidationMsg('Please select type and upload a file for each Unsigned Approved Contract section.');
+      setSubmitMsg('');
     } else if (
       selectedTypes.includes('Signed Client Contract') &&
       signedContractSections.some((s) => !s.file || !s.type)
     ) {
       setValidationMsg('Please select type and upload a file for each Signed Client Contract section.');
+      setSubmitMsg('');
     } else {
       setValidationMsg('');
     }
   }, [selectedTypes, selectedCompareDirection, selectedIds, contractSections, signedContractSections]);
 
-  // Handle radio button changes per section
+  // Handle radio changes in contract sections
   const handleRadioChange = (id, value, setter) => {
     setter((prev) =>
       prev.map((s) => (s.id === id ? { ...s, type: value, file: null } : s))
     );
   };
 
-  // Handle file upload from modal
+  // Handle file upload (for both contract and signed contract)
   const handleFileUpload = (file) => {
     setContractSections((prev) =>
       prev.map((s) => (s.id === modalOpenFor ? { ...s, file } : s))
@@ -137,19 +140,25 @@ export default function IntegratedUI() {
     setSignedContractSections((prev) =>
       prev.map((s) => (s.id === modalOpenFor ? { ...s, file } : s))
     );
+    setModalOpenFor(null);
   };
 
-  // Add a new contract section
+  // Add section
   const addSection = (setter) => {
     setter((prev) => [...prev, { id: Date.now(), type: '', file: null }]);
   };
 
-  // Remove a contract section by id
+  // Remove section
   const removeSection = (id, setter) => {
     setter((prev) => prev.filter((s) => s.id !== id));
   };
 
-  // Render contract sections (Unsigned or Signed)
+  // Remove selected PSCRF ID
+  const removeSelectedId = (id) => {
+    setSelectedIds((prev) => prev.filter((option) => option.id !== id));
+  };
+
+  // Render contract sections with vertical + and x buttons top-right
   const renderSections = (sections, setter) => (
     <Box mt={4}>
       {sections.map((section, idx) => (
@@ -164,53 +173,53 @@ export default function IntegratedUI() {
             gap: 2,
           }}
         >
+          {/* Add (+) and Remove (x) buttons vertically aligned top-right */}
           <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-            gap={1}
-            flexWrap="wrap"
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+            }}
           >
-            {/* Radio buttons + Add button aligned horizontally */}
-            <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-              <RadioGroup
-                row
-                value={section.type}
-                onChange={(e) => handleRadioChange(section.id, e.target.value, setter)}
-              >
-                {['Agreement', 'Supplement', 'Addendum'].map((type) => (
-                  <FormControlLabel
-                    key={type}
-                    value={type}
-                    control={<Radio />}
-                    label={type}
-                    sx={{ m: 0, mr: 1 }}
-                  />
-                ))}
-              </RadioGroup>
+            <IconButton
+              onClick={() => addSection(setter)}
+              size="small"
+              aria-label="Add Section"
+            >
+              <AddIcon />
+            </IconButton>
 
-              <IconButton
-                onClick={() => addSection(setter)}
-                size="small"
-                aria-label="Add Section"
-                sx={{ alignSelf: 'center' }}
-              >
-                <AddIcon />
-              </IconButton>
-            </Box>
-
-            {/* Remove button (except first section) */}
             {idx > 0 && (
               <IconButton
                 onClick={() => removeSection(section.id, setter)}
                 size="small"
                 aria-label="Remove Section"
-                sx={{ alignSelf: 'center' }}
               >
                 <CloseIcon />
               </IconButton>
             )}
           </Box>
+
+          {/* Radio buttons */}
+          <RadioGroup
+            row
+            value={section.type}
+            onChange={(e) => handleRadioChange(section.id, e.target.value, setter)}
+            sx={{ mt: 1 }}
+          >
+            {['Agreement', 'Supplement', 'Addendum'].map((type) => (
+              <FormControlLabel
+                key={type}
+                value={type}
+                control={<Radio />}
+                label={type}
+                sx={{ m: 0, mr: 2 }}
+              />
+            ))}
+          </RadioGroup>
 
           {/* Upload file button */}
           <Box display="flex" alignItems="center" gap={2}>
@@ -234,7 +243,7 @@ export default function IntegratedUI() {
     </Box>
   );
 
-  // Handle submit click
+  // Handle submit
   const handleSubmit = () => {
     if (!validationMsg) {
       setSubmitMsg('Submitted successfully request');
@@ -248,7 +257,7 @@ export default function IntegratedUI() {
     <Container maxWidth="md" sx={{ mt: 4, pb: 4 }}>
       {/* Type Buttons */}
       <Typography variant="h5" gutterBottom fontWeight="bold" mb={3}>
-        PSCRF Data
+        Select Types
       </Typography>
       <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap" mb={4}>
         {typeButtons.map((label) => (
@@ -294,38 +303,58 @@ export default function IntegratedUI() {
         ))}
       </Box>
 
-      {/* PSCRF Data selection with search dropdown */}
+      {/* PSCRF Data Section */}
       {selectedTypes.includes('PSCRF Data') && (
         <Box mb={4}>
           <Autocomplete
             options={dropdownOptions}
             getOptionLabel={(option) =>
-              `${option.id} | SAM Version: ${option.samVersion || 'N/A'} | Pricing Version: ${option.pricingVersion || 'N/A'}`
+              `${option.pscrfId} (Sam: ${option.samVersion}, Pricing: ${option.pricingVersion})`
             }
-            filterSelectedOptions
-            onChange={(e, newValue) => setSelectedIds(newValue)}
-            multiple
-            value={selectedIds}
+            value={null}
+            onChange={(event, newValue) => {
+              if (newValue && !selectedIds.find((opt) => opt.id === newValue.id)) {
+                setSelectedIds((prev) => [...prev, newValue]);
+              }
+            }}
             renderInput={(params) => (
-              <TextField {...params} label="Search and select IDs" variant="outlined" />
+              <TextField {...params} label="Select PSCRF ID" variant="outlined" />
             )}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
             sx={{ mb: 2 }}
           />
 
-          {/* Cards showing selected IDs and versions */}
-          <Grid container spacing={2} mt={2}>
-            {selectedIds.map((item) => (
-              <Grid item xs={12} sm={4} key={item.id}>
-                <Paper sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="bold">
-                    ID: {item.id}
-                  </Typography>
-                  <Typography variant="body2">
-                    SAM Version: {item.samVersion || 'N/A'}
-                  </Typography>
-                  <Typography variant="body2">
-                    Pricing Version: {item.pricingVersion || 'N/A'}
-                  </Typography>
+          {/* Selected IDs as cards with X button */}
+          <Grid container spacing={2}>
+            {selectedIds.map((option) => (
+              <Grid item key={option.id}>
+                <Paper
+                  sx={{
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    minWidth: 200,
+                    position: 'relative',
+                    bgcolor: '#e0e0e0',
+                  }}
+                >
+                  <Box>
+                    <Typography variant="body1" fontWeight="bold">
+                      {option.pscrfId}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Sam: {option.samVersion} | Pricing: {option.pricingVersion}
+                    </Typography>
+                  </Box>
+                  <IconButton
+                    size="small"
+                    sx={{ position: 'absolute', top: 0, right: 0 }}
+                    onClick={() => removeSelectedId(option.id)}
+                    aria-label="Remove ID"
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
                 </Paper>
               </Grid>
             ))}
@@ -336,8 +365,8 @@ export default function IntegratedUI() {
       {/* Unsigned Approved Contract Sections */}
       {selectedTypes.includes('Unsigned Approved Contract') && (
         <>
-          <Typography variant="h5" gutterBottom fontWeight="bold" mb={2}>
-            Unsigned Approved Contract
+          <Typography variant="h5" gutterBottom fontWeight="bold" mt={4}>
+            Unsigned Approved Contract Sections
           </Typography>
           {renderSections(contractSections, setContractSections)}
         </>
@@ -346,42 +375,45 @@ export default function IntegratedUI() {
       {/* Signed Client Contract Sections */}
       {selectedTypes.includes('Signed Client Contract') && (
         <>
-          <Typography variant="h5" gutterBottom fontWeight="bold" mb={2}>
-            Signed Client Contract
+          <Typography variant="h5" gutterBottom fontWeight="bold" mt={4}>
+            Signed Client Contract Sections
           </Typography>
           {renderSections(signedContractSections, setSignedContractSections)}
         </>
       )}
 
-      {/* Validation message */}
-      {validationMsg && (
-        <Typography color="error" mt={3} textAlign="center" fontWeight="bold">
-          {validationMsg}
-        </Typography>
-      )}
-
-      {/* Submit message */}
-      {submitMsg && (
-        <Typography color="success.main" mt={3} textAlign="center" fontWeight="bold">
-          {submitMsg}
-        </Typography>
-      )}
-
-      {/* Submit button */}
-      <Box textAlign="center" mt={4}>
+      {/* Submit and validation message */}
+      <Box mt={4} textAlign="center">
         <Button
           variant="contained"
           onClick={handleSubmit}
-          disabled={Boolean(validationMsg)}
-          sx={{ minWidth: 150, fontWeight: 'bold' }}
+          sx={{
+            backgroundColor: cignaBlue,
+            color: 'white',
+            minWidth: 160,
+            fontWeight: 'bold',
+            textTransform: 'none',
+            '&:hover': { backgroundColor: '#003666' },
+          }}
+          disabled={!!validationMsg}
         >
           Submit
         </Button>
+        {validationMsg && (
+          <Typography color="error" mt={2}>
+            {validationMsg}
+          </Typography>
+        )}
+        {submitMsg && (
+          <Typography color="success.main" mt={2} fontWeight="bold">
+            {submitMsg}
+          </Typography>
+        )}
       </Box>
 
-      {/* Upload modal */}
+      {/* Upload Modal */}
       <UploadModal
-        open={Boolean(modalOpenFor)}
+        open={!!modalOpenFor}
         onClose={() => setModalOpenFor(null)}
         onUpload={handleFileUpload}
       />
