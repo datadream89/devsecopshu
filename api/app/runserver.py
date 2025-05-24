@@ -79,7 +79,11 @@ export default function IntegratedUI() {
   const [contractSections, setContractSections] = useState([
     { id: Date.now(), type: '', file: null },
   ]);
+  const [signedContractSections, setSignedContractSections] = useState([
+    { id: Date.now() + 1, type: '', file: null },
+  ]);
   const [modalOpenFor, setModalOpenFor] = useState(null);
+  const [submitMsg, setSubmitMsg] = useState('');
 
   const toggleTypeButton = (label) => {
     setSelectedTypes((prev) =>
@@ -106,14 +110,19 @@ export default function IntegratedUI() {
       selectedTypes.includes('Unsigned Approved Contract') &&
       contractSections.some((s) => !s.file)
     ) {
-      setValidationMsg('Please upload a file for each contract section.');
+      setValidationMsg('Please upload a file for each Unsigned Approved Contract section.');
+    } else if (
+      selectedTypes.includes('Signed Client Contract') &&
+      signedContractSections.some((s) => !s.file)
+    ) {
+      setValidationMsg('Please upload a file for each Signed Client Contract section.');
     } else {
       setValidationMsg('');
     }
-  }, [selectedTypes, selectedCompareDirection, selectedIds, contractSections]);
+  }, [selectedTypes, selectedCompareDirection, selectedIds, contractSections, signedContractSections]);
 
-  const handleRadioChange = (id, value) => {
-    setContractSections((prev) =>
+  const handleRadioChange = (id, value, setter) => {
+    setter((prev) =>
       prev.map((s) => (s.id === id ? { ...s, type: value, file: null } : s))
     );
   };
@@ -122,21 +131,73 @@ export default function IntegratedUI() {
     setContractSections((prev) =>
       prev.map((s) => (s.id === modalOpenFor ? { ...s, file } : s))
     );
+    setSignedContractSections((prev) =>
+      prev.map((s) => (s.id === modalOpenFor ? { ...s, file } : s))
+    );
   };
 
-  const addContractSection = () => {
-    setContractSections((prev) => [
-      ...prev,
-      { id: Date.now(), type: '', file: null },
-    ]);
+  const addSection = (setter) => {
+    setter((prev) => [...prev, { id: Date.now(), type: '', file: null }]);
   };
 
-  const removeContractSection = (id) => {
-    setContractSections((prev) => prev.filter((s) => s.id !== id));
+  const removeSection = (id, setter) => {
+    setter((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const renderSections = (sections, setter) => (
+    <Box mt={4}>
+      {sections.map((section, idx) => (
+        <Paper key={section.id} sx={{ p: 2, mb: 2, position: 'relative' }}>
+          <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+            <RadioGroup
+              row
+              value={section.type}
+              onChange={(e) => handleRadioChange(section.id, e.target.value, setter)}
+            >
+              {['Agreement', 'Supplement', 'Addendum'].map((type) => (
+                <FormControlLabel
+                  key={type}
+                  value={type}
+                  control={<Radio />}
+                  label={type}
+                />
+              ))}
+            </RadioGroup>
+            <Box>
+              <IconButton onClick={() => addSection(setter)}>
+                <AddIcon />
+              </IconButton>
+            </Box>
+          </Box>
+          <Box display="flex" alignItems="center" mt={2} gap={2}>
+            <Button
+              variant="outlined"
+              onClick={() => setModalOpenFor(section.id)}
+              startIcon={<UploadFileIcon />}
+              sx={{ color: '#673ab7', borderColor: '#673ab7' }}
+            >
+              {section.file ? section.file.name : 'Upload File'}
+            </Button>
+          </Box>
+          {idx > 0 && (
+            <IconButton
+              onClick={() => removeSection(section.id, setter)}
+              sx={{ position: 'absolute', top: 8, right: 40 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          )}
+        </Paper>
+      ))}
+    </Box>
+  );
+
+  const handleSubmit = () => {
+    setSubmitMsg('Submitted successfully request');
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
+    <Container maxWidth="md" sx={{ mt: 4, pb: 4 }}>
       <Typography variant="h6" gutterBottom>
         Type
       </Typography>
@@ -199,59 +260,27 @@ export default function IntegratedUI() {
         </Box>
       )}
 
-      {selectedTypes.includes('Unsigned Approved Contract') && (
-        <Box mt={4}>
-          {contractSections.map((section, idx) => (
-            <Paper key={section.id} sx={{ p: 2, mb: 2, position: 'relative' }}>
-              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                <RadioGroup
-                  row
-                  value={section.type}
-                  onChange={(e) => handleRadioChange(section.id, e.target.value)}
-                >
-                  {['Agreement', 'Supplement', 'Addendum'].map((type) => (
-                    <FormControlLabel
-                      key={type}
-                      value={type}
-                      control={<Radio />}
-                      label={type}
-                    />
-                  ))}
-                </RadioGroup>
-                <Box>
-                  <IconButton onClick={addContractSection}>
-                    <AddIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-              <Box display="flex" alignItems="center" mt={2} gap={2}>
-                <Button
-                  variant="outlined"
-                  onClick={() => setModalOpenFor(section.id)}
-                  startIcon={<UploadFileIcon />}
-                  sx={{ color: '#673ab7', borderColor: '#673ab7' }}
-                >
-                  {section.file ? section.file.name : 'Upload File'}
-                </Button>
-              </Box>
-              {idx > 0 && (
-                <IconButton
-                  onClick={() => removeContractSection(section.id)}
-                  sx={{ position: 'absolute', top: 8, right: 40 }}
-                >
-                  <CloseIcon />
-                </IconButton>
-              )}
-            </Paper>
-          ))}
-        </Box>
-      )}
+      {selectedTypes.includes('Unsigned Approved Contract') && renderSections(contractSections, setContractSections)}
+
+      {selectedTypes.includes('Signed Client Contract') && renderSections(signedContractSections, setSignedContractSections)}
 
       {validationMsg && (
         <Typography color="error" mt={3} textAlign="center" fontWeight="bold">
           {validationMsg}
         </Typography>
       )}
+
+      {submitMsg && (
+        <Typography color="success.main" mt={3} textAlign="center" fontWeight="bold">
+          {submitMsg}
+        </Typography>
+      )}
+
+      <Box display="flex" justifyContent="center" mt={4}>
+        <Button variant="contained" color="primary" onClick={handleSubmit}>
+          Submit
+        </Button>
+      </Box>
 
       <UploadModal
         open={!!modalOpenFor}
