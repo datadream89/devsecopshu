@@ -1,98 +1,69 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Card,
   Typography,
+  Card,
   IconButton,
-  Stack,
-  Autocomplete,
   TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button
+  Autocomplete
 } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { styled } from '@mui/system';
+import CloseIcon from '@mui/icons-material/Close';
 import options from './options.json';
 
-const StyledCard = styled(Card)(({ theme, selected }) => ({
-  padding: theme.spacing(2),
-  minHeight: 180,
-  minWidth: 280,
-  border: selected ? `2px solid ${theme.palette.primary.main}` : '1px solid #ccc',
-  boxShadow: selected ? theme.shadows[4] : theme.shadows[1],
-  textAlign: 'center',
-  transition: 'all 0.3s'
-}));
-
 const Request = () => {
-  const [direction, setDirection] = useState('left-to-right');
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
+  const [selectedOptions, setSelectedOptions] = useState([]);
 
-  const handleOptionChange = (event, value) => {
-    setSelectedOption(value);
-    if (value) setOpenModal(true);
+  const handleSelectionChange = (event, values) => {
+    setSelectedOptions(values);
   };
 
-  const handleClose = () => {
-    setOpenModal(false);
+  const removeOption = (idToRemove) => {
+    setSelectedOptions(prev => prev.filter(opt => opt.id !== idToRemove));
   };
 
   return (
-    <Box display="flex" justifyContent="center" alignItems="flex-start" gap={4}>
-      {/* Left Box - PSCRF Data */}
-      <StyledCard selected={direction === 'right-to-left'}>
-        <Typography variant="h6" gutterBottom>
-          PSCRF Data
-        </Typography>
+    <Box sx={{ p: 4, maxWidth: 600 }}>
+      <Typography variant="h6" gutterBottom>
+        PSCRF Data
+      </Typography>
 
-        <Autocomplete
-          options={options}
-          getOptionLabel={(option) => option.id || ''}
-          onChange={handleOptionChange}
-          renderInput={(params) => <TextField {...params} label="Select PSCRF ID" />}
-        />
+      <Autocomplete
+        multiple
+        options={options}
+        getOptionLabel={(option) => option.id}
+        value={selectedOptions}
+        onChange={handleSelectionChange}
+        filterSelectedOptions
+        renderInput={(params) => (
+          <TextField {...params} label="Select PSCRF IDs" variant="outlined" />
+        )}
+      />
 
-        <Dialog open={openModal} onClose={handleClose}>
-          <DialogTitle>{selectedOption?.id}</DialogTitle>
-          <DialogContent>
-            <Typography><strong>Client:</strong> {selectedOption?.clientName}</Typography>
-            <Typography><strong>SAM Version:</strong> {selectedOption?.samVersion}</Typography>
-            <Typography><strong>Pricing Version:</strong> {selectedOption?.pricingVersion}</Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose} color="primary">
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </StyledCard>
-
-      {/* Arrows */}
-      <Stack spacing={1} alignItems="center" pt={6}>
-        <IconButton
-          color={direction === 'left-to-right' ? 'primary' : 'default'}
-          onClick={() => setDirection('left-to-right')}
+      {selectedOptions.map((opt) => (
+        <Card
+          key={opt.id}
+          sx={{
+            mt: 2,
+            p: 2,
+            position: 'relative',
+            backgroundColor: '#f5f5f5',
+            borderRadius: 2,
+            boxShadow: 2
+          }}
         >
-          <ArrowForwardIcon fontSize="large" />
-        </IconButton>
-        <IconButton
-          color={direction === 'right-to-left' ? 'primary' : 'default'}
-          onClick={() => setDirection('right-to-left')}
-        >
-          <ArrowBackIcon fontSize="large" />
-        </IconButton>
-      </Stack>
-
-      {/* Right Box - Empty for now */}
-      <StyledCard selected={direction === 'left-to-right'}>
-        <Typography variant="h6">Pricing Version</Typography>
-        {/* Placeholder for future content */}
-      </StyledCard>
+          <IconButton
+            size="small"
+            onClick={() => removeOption(opt.id)}
+            sx={{ position: 'absolute', top: 8, right: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+          <Typography variant="subtitle1" fontWeight="bold">{opt.id}</Typography>
+          <Typography variant="body2"><strong>Client:</strong> {opt.clientName}</Typography>
+          <Typography variant="body2"><strong>SAM Version:</strong> {opt.samVersion}</Typography>
+          <Typography variant="body2"><strong>Pricing Version:</strong> {opt.pricingVersion}</Typography>
+        </Card>
+      ))}
     </Box>
   );
 };
