@@ -1,423 +1,409 @@
 import React, { useState } from "react";
 import {
   Box,
-  Grid,
-  Typography,
+  Button,
   Checkbox,
+  Collapse,
   FormControlLabel,
+  IconButton,
+  Paper,
+  Radio,
+  RadioGroup,
+  Stack,
+  Typography,
   Autocomplete,
   TextField,
-  Paper,
-  RadioGroup,
-  Radio,
-  FormControlLabel as RadioFormControlLabel,
-  Button,
-  IconButton,
+  Card,
+  CardContent,
 } from "@mui/material";
-
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import AddIcon from "@mui/icons-material/Add";
-import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
+import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
+import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 
-import options from "./options.json";
+const options = [
+  {
+    id: "7",
+    samVersion: "v1.0",
+    pricingVersion: "pv1.1",
+    clientName: "Client A",
+  },
+  {
+    id: "5",
+    samVersion: "v2.0",
+    pricingVersion: "pv2.1",
+    clientName: "Client B",
+  },
+  {
+    id: "7",
+    samVersion: "v1.1",
+    pricingVersion: "pv1.2",
+    clientName: "Client A",
+  },
+];
 
-function LeftBoxCard({ item, onRemove }) {
+function ApprovedContractSection({
+  section,
+  onTypeChange,
+  onFileChange,
+  onRemove,
+  disabled,
+  isFirst,
+}) {
+  const handleTypeChange = (e) => {
+    onTypeChange(section.id, e.target.value);
+    onFileChange(section.id, null); // clear file on radio change
+  };
+
   return (
     <Paper
+      variant="outlined"
       sx={{
         p: 2,
         mb: 1,
-        borderRadius: 1,
-        border: "1px solid #ccc",
-        backgroundColor: "#f9f9f9",
+        opacity: disabled ? 0.5 : 1,
         position: "relative",
       }}
-      elevation={1}
     >
-      <Typography variant="subtitle2" fontWeight="bold">
-        {item.id}
-      </Typography>
-      <Typography variant="body2">Client: {item.clientName}</Typography>
-      <Typography variant="body2">SAM Version: {item.samVersion}</Typography>
-      <Typography variant="body2">Pricing Version: {item.pricingVersion}</Typography>
-      <IconButton
-        size="small"
-        onClick={() => onRemove(item)}
-        sx={{ position: "absolute", top: 4, right: 4 }}
-        aria-label="Remove"
-      >
-        <CloseIcon fontSize="small" />
-      </IconButton>
-    </Paper>
-  );
-}
-
-function ApprovedContractSection({
-  index,
-  section,
-  handleTypeChange,
-  handleFileChange,
-  addSection,
-  removeSection,
-  disabled,
-}) {
-  return (
-    <Paper
-      sx={{
-        p: 2,
-        mb: 2,
-        position: "relative",
-        borderRadius: 2,
-        border: "1px solid #ccc",
-        backgroundColor: disabled ? "#f0f0f0" : "inherit",
-        pointerEvents: disabled ? "none" : "auto",
-        opacity: disabled ? 0.6 : 1,
-      }}
-      elevation={1}
-    >
-      <Typography variant="subtitle1" fontWeight="bold" mb={1}>
-        Approved Contract {index + 1}
-      </Typography>
-
       <RadioGroup
         row
         value={section.contractType}
-        onChange={(e) => {
-          handleTypeChange(section.id, e.target.value);
-          handleFileChange(section.id, null);
-        }}
+        onChange={handleTypeChange}
         sx={{
           "& .Mui-checked": {
-            color: "darkgrey",
+            color: "gray",
           },
+          mb: 1,
         }}
+        disabled={disabled}
       >
-        <RadioFormControlLabel
-          value="Agreement"
-          control={<Radio disabled={disabled} />}
-          label="Agreement"
-        />
-        <RadioFormControlLabel
-          value="Supplement"
-          control={<Radio disabled={disabled} />}
-          label="Supplement"
-        />
-        <RadioFormControlLabel
-          value="Addendum"
-          control={<Radio disabled={disabled} />}
-          label="Addendum"
-        />
+        <FormControlLabel value="Agreement" control={<Radio />} label="Agreement" />
+        <FormControlLabel value="Supplement" control={<Radio />} label="Supplement" />
+        <FormControlLabel value="Addendum" control={<Radio />} label="Addendum" />
       </RadioGroup>
 
+      <Button
+        variant="outlined"
+        startIcon={<CloudUploadIcon />}
+        component="span"
+        sx={{
+          mt: 1,
+          color: "rgb(64,64,64)",
+          borderColor: "rgb(64,64,64)",
+          "&:hover": {
+            borderColor: "black",
+            color: "black",
+          },
+        }}
+        disabled={disabled}
+        onClick={() => {
+          if (!disabled) {
+            document.getElementById(`file-input-${section.id}`).click();
+          }
+        }}
+      >
+        Upload File
+      </Button>
       <input
-        id={`file-upload-${section.id}`}
         type="file"
-        accept=".pdf,.docx"
+        id={`file-input-${section.id}`}
         style={{ display: "none" }}
-        onChange={(e) => handleFileChange(section.id, e.target.files[0])}
+        accept=".pdf,.docx"
+        onChange={(e) => {
+          const file = e.target.files[0];
+          onFileChange(section.id, file);
+          e.target.value = null; // reset input
+        }}
         disabled={disabled}
       />
-      <label htmlFor={`file-upload-${section.id}`}>
-        <Button
-          variant="outlined"
-          startIcon={<CloudUploadIcon />}
-          component="span"
-          sx={{
-            mt: 1,
-            color: "darkgrey",
-            borderColor: "darkgrey",
-            "&:hover": {
-              borderColor: "black",
-              color: "black",
-            },
-          }}
-          disabled={disabled}
-        >
-          Upload File
-        </Button>
-      </label>
       {section.file && (
         <Typography variant="body2" mt={1}>
-          Selected: {section.file.name}
+          Selected file: {section.file.name}
         </Typography>
       )}
 
-      <Box
-        sx={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          display: "flex",
-          gap: 1,
-          pointerEvents: disabled ? "none" : "auto",
-          opacity: disabled ? 0.6 : 1,
-        }}
-      >
-        <IconButton size="small" onClick={addSection} title="Add section" disabled={disabled}>
-          <AddIcon fontSize="small" />
+      {!isFirst && !disabled && (
+        <IconButton
+          aria-label="remove section"
+          onClick={() => onRemove(section.id)}
+          size="small"
+          sx={{ position: "absolute", top: 8, right: 8 }}
+        >
+          ✕
         </IconButton>
-        {index > 0 && (
-          <IconButton
-            size="small"
-            onClick={() => removeSection(section.id)}
-            title="Remove section"
-            disabled={disabled}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        )}
-      </Box>
+      )}
     </Paper>
   );
 }
 
 export default function Request() {
-  const [compareEnabled, setCompareEnabled] = useState(true);
-  const [direction, setDirection] = useState("right");
-  const [collapsed, setCollapsed] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState([]);
-  const [contractSections, setContractSections] = useState([
-    { id: 0, contractType: "Agreement", file: null },
+  const [compare, setCompare] = useState(false);
+  const [direction, setDirection] = useState("right"); // 'right' or 'left'
+  const [collapsed, setCollapsed] = useState(false);
+  const [approvedSections, setApprovedSections] = useState([
+    {
+      id: 1,
+      contractType: "Agreement",
+      file: null,
+    },
   ]);
 
-  const addSection = () => {
-    const newId = contractSections.length
-      ? Math.max(...contractSections.map((s) => s.id)) + 1
-      : 0;
-    setContractSections([
-      ...contractSections,
-      { id: newId, contractType: "Agreement", file: null },
+  // Handle autocomplete changes
+  const handleSelect = (event, values) => {
+    setSelectedOptions(values);
+  };
+
+  // Direction toggle
+  const toggleDirection = () => {
+    setDirection(direction === "right" ? "left" : "right");
+  };
+
+  // Add approved contract section
+  const addApprovedSection = () => {
+    setApprovedSections((prev) => [
+      ...prev,
+      {
+        id: prev.length ? prev[prev.length - 1].id + 1 : 1,
+        contractType: "Agreement",
+        file: null,
+      },
     ]);
   };
 
-  const removeSection = (id) => {
-    setContractSections(contractSections.filter((s) => s.id !== id));
+  // Remove approved contract section
+  const removeApprovedSection = (id) => {
+    setApprovedSections((prev) => prev.filter((sec) => sec.id !== id));
   };
 
-  const handleTypeChange = (id, newType) => {
-    setContractSections(
-      contractSections.map((s) => (s.id === id ? { ...s, contractType: newType, file: null } : s))
+  // Change contract type in approved contract section
+  const changeContractType = (id, type) => {
+    setApprovedSections((prev) =>
+      prev.map((sec) =>
+        sec.id === id ? { ...sec, contractType: type, file: null } : sec
+      )
     );
   };
 
-  const handleFileChange = (id, file) => {
-    setContractSections(
-      contractSections.map((s) => (s.id === id ? { ...s, file } : s))
+  // Change uploaded file in approved contract section
+  const changeFile = (id, file) => {
+    setApprovedSections((prev) =>
+      prev.map((sec) => (sec.id === id ? { ...sec, file } : sec))
     );
   };
 
-  // Outline colors for boxes (flipped compared to direction)
-  const getBoxBorder = (boxSide) => {
-    if (!compareEnabled) return "2px solid lightgray";
-
-    if (direction === "right") {
-      return boxSide === "left" ? "2px solid darkgrey" : "2px solid lightgrey";
-    } else {
-      return boxSide === "left" ? "2px solid lightgrey" : "2px solid darkgrey";
+  // Toggle compare checkbox
+  const toggleCompare = () => {
+    setCompare(!compare);
+    if (compare) {
+      // If turning off compare, reset direction outline and such if needed
     }
   };
 
-  // Arrow colors
-  const getArrowColor = (arrowDirection) => {
-    if (!compareEnabled) return "lightgray";
+  // Styles for outlines depending on direction and compare enabled
+  const getOutlineColor = (box) => {
+    if (!compare) return "lightgray";
+    if (direction === "right") {
+      if (box === 1) return "lightgray";
+      if (box === 2) return "darkgray";
+    }
+    if (direction === "left") {
+      if (box === 1) return "darkgray";
+      if (box === 2) return "lightgray";
+    }
+    return "lightgray";
+  };
+
+  // Styles for arrow colors depending on selected direction and compare enabled
+  const arrowColor = (arrowDirection) => {
+    if (!compare) return "lightgray";
     if (direction === arrowDirection) return "darkgray";
     return "lightgray";
   };
 
-  // Remove selected option from dropdown
-  const removeOption = (item) => {
-    setSelectedOptions(selectedOptions.filter((o) => o.id !== item.id || o.samVersion !== item.samVersion || o.pricingVersion !== item.pricingVersion));
-  };
-
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
-      {/* Collapsible container header */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: 1,
-          userSelect: "none",
-          border: "1px solid #ccc",
-          borderRadius: 1,
-          p: 1,
-          backgroundColor: "#f5f5f5",
-          cursor: "pointer",
-        }}
-        onClick={() => setCollapsed(!collapsed)}
-      >
-        <Typography variant="subtitle1" fontWeight="bold" sx={{ ml: 1 }}>
-          Compare PSCRF and Approved Contract
-        </Typography>
-        <IconButton
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            setCollapsed(!collapsed);
-          }}
-          aria-label={collapsed ? "Expand" : "Collapse"}
-        >
-          {collapsed ? <AddIcon /> : <CloseIcon />}
-        </IconButton>
-      </Box>
-
-      {!collapsed && (
-        <>
-          {/* Compare checkbox */}
-          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={compareEnabled}
-                  onChange={(e) => setCompareEnabled(e.target.checked)}
-                  sx={{
-                    color: "darkgrey",
-                    "&.Mui-checked": {
-                      color: "darkgrey",
-                    },
-                  }}
-                />
-              }
-              label="Compare"
-              sx={{ mr: 4 }}
-            />
-
-            {/* Boxes and arrows container */}
-            <Grid container spacing={2} alignItems="center" sx={{ minHeight: 420 }}>
-              {/* Left Box */}
-              <Grid item xs={5}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    border: getBoxBorder("left"),
-                    minHeight: 400,
-                    boxSizing: "border-box",
-                    overflowY: "auto",
-                    backgroundColor: compareEnabled ? "inherit" : "#f0f0f0",
-                  }}
-                  elevation={2}
-                >
-                  <Typography variant="h6" mb={2}>
-                    Pscerf Data
-                  </Typography>
-
-                  <Autocomplete
-                    multiple
-                    options={options}
-                    filterSelectedOptions
-                    value={selectedOptions}
-                    onChange={(e, newValue) => setSelectedOptions(newValue)}
-                    getOptionLabel={(option) =>
-                      `${option.id} (Client: ${option.clientName}, SAM: ${option.samVersion}, Pricing: ${option.pricingVersion})`
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Select PSCRF IDs"
-                        placeholder="Start typing..."
-                        size="small"
-                      />
-                    )}
-                    disabled={!compareEnabled}
-                    sx={{ mb: 2 }}
-                  />
-
-                  {selectedOptions.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      No selections yet.
-                    </Typography>
-                  )}
-
-                  {selectedOptions.map((item) => (
-                    <LeftBoxCard key={`${item.id}-${item.samVersion}-${item.pricingVersion}`} item={item} onRemove={removeOption} />
-                  ))}
-                </Paper>
-              </Grid>
-
-              {/* Center arrows and expand/collapse buttons */}
-              <Grid
-                item
-                xs={2}
+    <Box sx={{ width: "100%", maxWidth: 900, m: "auto", mt: 4 }}>
+      <Paper variant="outlined" sx={{ p: 2 }}>
+        {/* Compare Checkbox on left */}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={compare}
+                onChange={toggleCompare}
                 sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: 400,
-                  position: "relative",
+                  color: "gray",
+                  "&.Mui-checked": {
+                    color: "gray",
+                  },
                 }}
-              >
-                <IconButton
-                  onClick={() => setDirection("left")}
-                  sx={{ color: getArrowColor("left") }}
-                  disabled={!compareEnabled}
-                  aria-label="Left direction"
-                >
-                  <ArrowBackIcon fontSize="large" />
-                </IconButton>
-                <IconButton
-                  onClick={() => setDirection("right")}
-                  sx={{ color: getArrowColor("right") }}
-                  disabled={!compareEnabled}
-                  aria-label="Right direction"
-                >
-                  <ArrowForwardIcon fontSize="large" />
-                </IconButton>
+              />
+            }
+            label="Compare"
+          />
+        </Box>
 
-                {/* Expand/Collapse toggle button below arrows */}
-                <IconButton
-                  onClick={() => setCollapsed(!collapsed)}
-                  aria-label={collapsed ? "Expand" : "Collapse"}
-                  sx={{ mt: 3 }}
-                >
-                  {collapsed ? <AddIcon /> : <CloseIcon />}
-                </IconButton>
-              </Grid>
+        {/* Collapsible container */}
+        <Collapse in={!collapsed}>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="center"
+            sx={{ mb: 1 }}
+          >
+            {/* Box 1 */}
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 280,
+                border: `2px solid ${getOutlineColor(1)}`,
+                p: 2,
+                borderRadius: 1,
+              }}
+            >
+              <Typography variant="h6" gutterBottom>
+                Pscerf Data
+              </Typography>
 
-              {/* Right Box */}
-              <Grid item xs={5}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    border: getBoxBorder("right"),
-                    minHeight: 400,
-                    boxSizing: "border-box",
-                    overflowY: "auto",
-                    backgroundColor: compareEnabled ? "inherit" : "#f0f0f0",
-                  }}
-                  elevation={2}
-                >
-                  <Typography variant="h6" mb={2}>
-                    Approved Contract
-                  </Typography>
+              <Autocomplete
+                multiple
+                options={options}
+                getOptionLabel={(option) =>
+                  `${option.id} - client: ${option.clientName}, SAM: ${option.samVersion}, Pricing: ${option.pricingVersion}`
+                }
+                value={selectedOptions}
+                onChange={handleSelect}
+                filterSelectedOptions
+                disabled={!compare}
+                renderInput={(params) => (
+                  <TextField {...params} label="Select PSCRF IDs" variant="outlined" />
+                )}
+                sx={{ mb: 2 }}
+              />
 
-                  {contractSections.map((section, index) => (
-                    <ApprovedContractSection
-                      key={section.id}
-                      index={index}
-                      section={section}
-                      handleTypeChange={handleTypeChange}
-                      handleFileChange={handleFileChange}
-                      addSection={addSection}
-                      removeSection={removeSection}
-                      disabled={!compareEnabled}
-                    />
-                  ))}
-
-                  {contractSections.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      No contract sections.
+              {/* Render cards for each selected */}
+              {selectedOptions.map((opt) => (
+                <Card key={`${opt.id}-${opt.samVersion}`} sx={{ mb: 1 }}>
+                  <CardContent>
+                    <Typography variant="body2">
+                      <strong>id:</strong> {opt.id}, <strong>clientName:</strong>{" "}
+                      {opt.clientName}, <strong>SAM Version:</strong> {opt.samVersion},{" "}
+                      <strong>Pricing Version:</strong> {opt.pricingVersion}
                     </Typography>
-                  )}
-                </Paper>
-              </Grid>
-            </Grid>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+
+            {/* Arrows and toggle direction */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 1,
+              }}
+            >
+              <IconButton
+                size="small"
+                onClick={toggleDirection}
+                sx={{ color: arrowColor("right") }}
+                disabled={!compare}
+                aria-label="Toggle direction"
+              >
+                {direction === "right" ? <ArrowRightAltIcon /> : <ArrowLeftIcon />}
+              </IconButton>
+
+              {/* Plus and minus buttons under arrows */}
+              <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
+                {/* Show + only when collapsed */}
+                {collapsed && (
+                  <IconButton
+                    size="small"
+                    onClick={() => setCollapsed(false)}
+                    aria-label="Expand"
+                  >
+                    <AddIcon />
+                  </IconButton>
+                )}
+                {!collapsed && (
+                  <IconButton
+                    size="small"
+                    onClick={() => setCollapsed(true)}
+                    aria-label="Collapse"
+                  >
+                    <RemoveIcon />
+                  </IconButton>
+                )}
+              </Box>
+            </Box>
+
+            {/* Box 2 */}
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 280,
+                border: `2px solid ${getOutlineColor(2)}`,
+                p: 2,
+                borderRadius: 1,
+              }}
+            >
+              <Typography variant="h6" gutterBottom>
+                Approved Contract
+              </Typography>
+
+              {approvedSections.map((section, index) => (
+                <ApprovedContractSection
+                  key={section.id}
+                  section={section}
+                  onTypeChange={changeContractType}
+                  onFileChange={changeFile}
+                  onRemove={removeApprovedSection}
+                  disabled={!compare}
+                  isFirst={index === 0}
+                />
+              ))}
+
+              <Box sx={{ mt: 1 }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={addApprovedSection}
+                  disabled={!compare}
+                >
+                  Add Section
+                </Button>
+              </Box>
+            </Box>
+          </Stack>
+        </Collapse>
+
+        {/* Collapsed label and expand button */}
+        {collapsed && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              mt: 1,
+              justifyContent: "center",
+            }}
+          >
+            <Typography>Compare Pscrf and Approved contract</Typography>
+            <IconButton
+              size="small"
+              onClick={() => setCollapsed(false)}
+              aria-label="Expand"
+            >
+              <AddIcon />
+            </IconButton>
           </Box>
-        </>
-      )}
+        )}
+      </Paper>
     </Box>
   );
 }
