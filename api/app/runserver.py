@@ -23,27 +23,10 @@ import {
   ArrowForwardIos,
 } from "@mui/icons-material";
 
-const pscrfOptions = [
-  { id: "PS001", samVersion: "v1", pricingVersion: "p1", clientName: "Client A" },
-  { id: "PS002", samVersion: "v2", pricingVersion: "p2", clientName: "Client B" },
-  { id: "PS003", samVersion: "v3", pricingVersion: "p3", clientName: "Client C" },
-];
+// ... (keep pscrfOptions and FILE_TYPES as before)
 
-const FILE_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-];
-
-const PSCRFSection = () => {
-  const [selectedOptions, setSelectedOptions] = useState([]);
-
-  const handleRemove = (index) => {
-    const updated = [...selectedOptions];
-    updated.splice(index, 1);
-    setSelectedOptions(updated);
-  };
-
+const PSCRFSection = ({ selectedOptions, onChange }) => {
+  // Removed internal state - fully controlled by parent
   return (
     <Box p={2} border={1} borderColor="grey.300" borderRadius={2} bgcolor="white" minHeight={220}>
       <Autocomplete
@@ -52,7 +35,8 @@ const PSCRFSection = () => {
         getOptionLabel={(option) =>
           `${option.id}, ${option.samVersion}, ${option.pricingVersion}, ${option.clientName}`
         }
-        onChange={(event, value) => setSelectedOptions(value)}
+        value={selectedOptions}
+        onChange={(event, value) => onChange(value)}
         renderInput={(params) => <TextField {...params} label="Select PSCRF" variant="outlined" />}
       />
       <Box display="flex" flexWrap="wrap" mt={2} gap={2} sx={{ maxHeight: 300, overflowY: "auto" }}>
@@ -70,7 +54,10 @@ const PSCRFSection = () => {
               </Typography>
               <IconButton
                 size="small"
-                onClick={() => handleRemove(index)}
+                onClick={() => {
+                  const newSelected = selectedOptions.filter((_, i) => i !== index);
+                  onChange(newSelected);
+                }}
                 sx={{ position: "absolute", top: 4, right: 4 }}
                 aria-label="remove card"
               >
@@ -84,11 +71,7 @@ const PSCRFSection = () => {
   );
 };
 
-const ContractSection = ({ title }) => {
-  const [sections, setSections] = useState([
-    { id: Date.now(), type: "Agreement", file: null, filename: "" },
-  ]);
-
+const ContractSection = ({ title, sections, setSections }) => {
   const handleAddSection = () => {
     setSections([
       ...sections,
@@ -189,75 +172,21 @@ const ContractSection = ({ title }) => {
   );
 };
 
-const BidirectionalArrow = ({ leftSelected, rightSelected, onLeftClick, onRightClick }) => {
-  return (
-    <Box
-      sx={{
-        width: 40,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        userSelect: "none",
-      }}
-    >
-      <ArrowBackIosNew
-        sx={{
-          cursor: "pointer",
-          color: leftSelected ? "grey.800" : "grey.400",
-          fontSize: 20,
-          transform: "rotate(0deg)",
-        }}
-        onClick={onLeftClick}
-        title="Left arrow"
-      />
-      <ArrowForwardIos
-        sx={{
-          cursor: "pointer",
-          color: rightSelected ? "grey.800" : "grey.400",
-          fontSize: 20,
-          transform: "rotate(0deg)",
-        }}
-        onClick={onRightClick}
-        title="Right arrow"
-      />
-    </Box>
-  );
-};
+// ... BidirectionalArrow and TitleBar components stay unchanged
 
-const TitleBar = ({ title, expanded, toggleExpanded, checked, onCheckChange }) => (
-  <Box
-    display="flex"
-    alignItems="center"
-    bgcolor="#f5f5f5"
-    px={2}
-    py={1}
-    borderTop={1}
-    borderBottom={1}
-    borderColor="grey.400"
-    mb={1}
-    sx={{ userSelect: "none" }}
-  >
-    <Checkbox checked={checked} onChange={onCheckChange} sx={{ mr: 2 }} inputProps={{ "aria-label": `${title} checkbox` }} />
-    <Typography variant="subtitle1" flex={1} sx={{ userSelect: "none", fontWeight: 600 }}>
-      {title}
-    </Typography>
-    <IconButton onClick={toggleExpanded} aria-label={expanded ? "Collapse section" : "Expand section"} size="small">
-      {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-    </IconButton>
-  </Box>
-);
-
-const BoxPair = ({ leftComponent, rightComponent, title, checked, onCheckChange }) => {
-  const [expanded, setExpanded] = useState(true);
-  const [leftArrowSelected, setLeftArrowSelected] = useState(false);
-  const [rightArrowSelected, setRightArrowSelected] = useState(false);
-
-  const toggleExpanded = () => setExpanded((v) => !v);
-  const toggleLeftArrow = () => setLeftArrowSelected((v) => !v);
-  const toggleRightArrow = () => setRightArrowSelected((v) => !v);
-
+const BoxPair = ({
+  leftComponent,
+  rightComponent,
+  title,
+  checked,
+  onCheckChange,
+  leftArrowSelected,
+  rightArrowSelected,
+  toggleLeftArrow,
+  toggleRightArrow,
+  expanded,
+  toggleExpanded,
+}) => {
   const leftBoxStyle = {
     opacity: checked ? 1 : 0.4,
     borderColor: leftArrowSelected ? "grey.800" : "grey.300",
@@ -293,7 +222,37 @@ const BoxPair = ({ leftComponent, rightComponent, title, checked, onCheckChange 
 };
 
 const ComparisonLayout = () => {
+  // Track checkbox states
   const [rowChecks, setRowChecks] = useState([true, true, true, true]);
+
+  // For validation, keep PSCRF selections and Contract sections lifted for each row and side
+  // Row 0 left: PSCRFSection
+  const [row0LeftSelected, setRow0LeftSelected] = useState([]);
+  // Row 0 right: ContractSection
+  const [row0RightSections, setRow0RightSections] = useState([
+    { id: Date.now(), type: "Agreement", file: null, filename: "" },
+  ]);
+
+  // Row 1 left: ContractSection
+  const [row1LeftSections, setRow1LeftSections] = useState([
+    { id: Date.now(), type: "Agreement", file: null, filename: "" },
+  ]);
+  // Row 1 right: ContractSection
+  const [row1RightSections, setRow1RightSections] = useState([
+    { id: Date.now(), type: "Agreement", file: null, filename: "" },
+  ]);
+
+  // Row 2 left: ContractSection
+  const [row2LeftSections, setRow2LeftSections] = useState([
+    { id: Date.now(), type: "Agreement", file: null, filename: "" },
+  ]);
+  // Row 2 right: PSCRFSection
+  const [row2RightSelected, setRow2RightSelected] = useState([]);
+
+  // Row 3 left: PSCRFSection
+  const [row3LeftSelected, setRow3LeftSelected] = useState([]);
+  // Row 3 right: PSCRFSection
+  const [row3RightSelected, setRow3RightSelected] = useState([]);
 
   const toggleRowCheck = (index) => {
     const newChecks = [...rowChecks];
@@ -301,52 +260,128 @@ const ComparisonLayout = () => {
     setRowChecks(newChecks);
   };
 
-  return (<Box
-  sx={{
-    width: "95vw",
-    maxWidth: 1200,
-    mx: "auto",
-    mt: 3,
-    mb: 6,
-    px: 1,
-    userSelect: "none",
+  // Validation funcs for each pair, only if checked
+  // PSCRFSection valid if selectedOptions.length > 0
+  // ContractSection valid if at least one section has file !== null
+
+  const validatePSCRF = (selectedOptions) => selectedOptions.length > 0;
+
+  const validateContract = (sections) => sections.some((sec) => sec.file !== null);
+
+  // Validate pairs by index:
+  const isRow0Valid = !rowChecks[0] || (validatePSCRF(row0LeftSelected) && validateContract(row0RightSections));
+  const isRow1Valid = !rowChecks[1] || (validateContract(row1LeftSections) && validateContract(row1RightSections));
+  const isRow2Valid = !rowChecks[2] || (validateContract(row2LeftSections) && validatePSCRF(row2RightSelected));
+  const isRow3Valid = !rowChecks[3] || (validatePSCRF(row3LeftSelected) && validatePSCRF(row3RightSelected));
+
+  const isFormValid = isRow0Valid && isRow1Valid && isRow2Valid && isRow3Valid;
+
+  // For arrows and expansion states for each row, keep them local here:
+  const [expandedStates, setExpandedStates] = useState([true, true, true, true]);
+  const [leftArrowStates, setLeftArrowStates] = useState([false, false, false, false]);
+  const [rightArrowStates, setRightArrowStates] = useState([false, false, false, false]);
+
+  const toggleExpanded = (index) => {
+    const newExpanded = [...expandedStates];
+    newExpanded[index] = !newExpanded[index];
+    setExpandedStates(newExpanded);
+  };
+  const toggleLeftArrow = (index) => {
+    const newLeft = [...leftArrowStates];
+    newLeft[index] = !newLeft[index];
+    setLeftArrowStates(newLeft);
+  };
+  const toggleRightArrow = (index) => {
+    const newRight = [...rightArrowStates];
+    newRight[index] = !newRight[index];
+    setRightArrowStates(newRight);
+  };
+
+  const handleSubmit = () => {
+    alert("Submitted successfully!");
+    // Add your submit logic here
+  };
+
+  return (
+    <Box
+      sx={{
+        width: "95vw",
+        maxWidth: 1200,
+    margin: "auto",
+    backgroundColor: "grey.100",
+    borderRadius: 3,
+    p: 3,
+    overflowY: "auto",
+    maxHeight: "90vh",
   }}
 >
-  {/* Row 1 */}
   <BoxPair
     title="Row 1"
     checked={rowChecks[0]}
     onCheckChange={() => toggleRowCheck(0)}
-    leftComponent={<PSCRFSection />}
-    rightComponent={<ContractSection title="Approved Contract" />}
+    leftArrowSelected={leftArrowStates[0]}
+    rightArrowSelected={rightArrowStates[0]}
+    toggleLeftArrow={() => toggleLeftArrow(0)}
+    toggleRightArrow={() => toggleRightArrow(0)}
+    expanded={expandedStates[0]}
+    toggleExpanded={() => toggleExpanded(0)}
+    leftComponent={
+      <PSCRFSection selectedOptions={row0LeftSelected} onChange={setRow0LeftSelected} />
+    }
+    rightComponent={
+      <ContractSection title="Contract Section Right" sections={row0RightSections} setSections={setRow0RightSections} />
+    }
   />
-
-  {/* Row 2 */}
   <BoxPair
     title="Row 2"
     checked={rowChecks[1]}
     onCheckChange={() => toggleRowCheck(1)}
-    leftComponent={<ContractSection title="Approved Contract" />}
-    rightComponent={<ContractSection title="Signed Contract" />}
+    leftArrowSelected={leftArrowStates[1]}
+    rightArrowSelected={rightArrowStates[1]}
+    toggleLeftArrow={() => toggleLeftArrow(1)}
+    toggleRightArrow={() => toggleRightArrow(1)}
+    expanded={expandedStates[1]}
+    toggleExpanded={() => toggleExpanded(1)}
+    leftComponent={
+      <ContractSection title="Contract Section Left" sections={row1LeftSections} setSections={setRow1LeftSections} />
+    }
+    rightComponent={
+      <ContractSection title="Contract Section Right" sections={row1RightSections} setSections={setRow1RightSections} />
+    }
   />
-
-  {/* Row 3 */}
   <BoxPair
     title="Row 3"
     checked={rowChecks[2]}
     onCheckChange={() => toggleRowCheck(2)}
-    leftComponent={<ContractSection title="Signed Contract" />}
-    rightComponent={<PSCRFSection />}
+    leftArrowSelected={leftArrowStates[2]}
+    rightArrowSelected={rightArrowStates[2]}
+    toggleLeftArrow={() => toggleLeftArrow(2)}
+    toggleRightArrow={() => toggleRightArrow(2)}
+    expanded={expandedStates[2]}
+    toggleExpanded={() => toggleExpanded(2)}
+    leftComponent={
+      <ContractSection title="Contract Section Left" sections={row2LeftSections} setSections={setRow2LeftSections} />
+    }
+    rightComponent={<PSCRFSection selectedOptions={row2RightSelected} onChange={setRow2RightSelected} />}
   />
-
-  {/* Row 4 */}
   <BoxPair
     title="Row 4"
     checked={rowChecks[3]}
     onCheckChange={() => toggleRowCheck(3)}
-    leftComponent={<PSCRFSection />}
-    rightComponent={<PSCRFSection />}
+    leftArrowSelected={leftArrowStates[3]}
+    rightArrowSelected={rightArrowStates[3]}
+    toggleLeftArrow={() => toggleLeftArrow(3)}
+    toggleRightArrow={() => toggleRightArrow(3)}
+    expanded={expandedStates[3]}
+    toggleExpanded={() => toggleExpanded(3)}
+    leftComponent={<PSCRFSection selectedOptions={row3LeftSelected} onChange={setRow3LeftSelected} />}
+    rightComponent={<PSCRFSection selectedOptions={row3RightSelected} onChange={setRow3RightSelected} />}
   />
-</Box>);};
-export default ComparisonLayout
 
+  <Box mt={3} display="flex" justifyContent="flex-end">
+    <Button variant="contained" disabled={!isFormValid} onClick={handleSubmit}>
+      Submit
+    </Button>
+  </Box>
+</Box>
+);
