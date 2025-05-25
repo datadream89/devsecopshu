@@ -1,7 +1,14 @@
 import React, { useState } from "react";
-import { Box, Checkbox, Typography } from "@mui/material";
-import { Collapse, ActionIcon, Group } from "@mantine/core";
-import { IconPlus, IconX } from "@tabler/icons-react";
+import {
+  Box,
+  Checkbox,
+  Collapse,
+  IconButton,
+  Typography,
+  Stack,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import CloseIcon from "@mui/icons-material/Close";
 
 const randomTitles = [
   "Project Alpha",
@@ -10,7 +17,7 @@ const randomTitles = [
   "User Research",
 ];
 
-export default function BoxPairsMUI() {
+export default function BoxPairsMUIOnly() {
   const [collapsed, setCollapsed] = useState(Array(4).fill(false));
   const [highlight, setHighlight] = useState(Array(4).fill(null)); // null | 'left' | 'right'
 
@@ -40,11 +47,20 @@ export default function BoxPairsMUI() {
       }}
     >
       {randomTitles.map((title, idx) => (
-        <Box key={idx} sx={{ mb: 4, border: "1px solid #ccc", borderRadius: 1 }}>
+        <Box
+          key={idx}
+          sx={{
+            mb: 4,
+            border: "1px solid #ccc",
+            borderRadius: 1,
+            overflow: "hidden",
+          }}
+        >
           {/* Title Bar */}
-          <Group
-            position="apart"
-            align="center"
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
             sx={{
               backgroundColor: "#007acc",
               color: "white",
@@ -56,23 +72,29 @@ export default function BoxPairsMUI() {
             onClick={() => toggleCollapse(idx)}
           >
             <Typography variant="subtitle1">{title}</Typography>
-            <ActionIcon color="white" variant="transparent" size={24} sx={{ color: 'white' }}>
-              {collapsed[idx] ? <IconPlus size={18} /> : <IconX size={18} />}
-            </ActionIcon>
-          </Group>
+            <IconButton
+              size="small"
+              sx={{ color: "white" }}
+              aria-label={collapsed[idx] ? "expand" : "collapse"}
+            >
+              {collapsed[idx] ? <AddIcon /> : <CloseIcon />}
+            </IconButton>
+          </Stack>
 
           {/* Collapsible content */}
           <Collapse in={!collapsed[idx]}>
-            <Group
-              spacing={3}
+            <Stack
+              direction="row"
+              spacing={2}
               sx={{
                 px: 2,
                 py: 2,
                 borderTop: "1px solid #ccc",
+                alignItems: "center",
               }}
             >
               {/* Left box with checkbox */}
-              <Group spacing={1} sx={{ flex: 1 }}>
+              <Stack direction="row" spacing={1} sx={{ flex: 1 }} alignItems="center">
                 <Checkbox />
                 <Box
                   sx={{
@@ -88,7 +110,7 @@ export default function BoxPairsMUI() {
                     transition: "background-color 0.3s",
                   }}
                 />
-              </Group>
+              </Stack>
 
               {/* Bidirectional arrow */}
               <Box
@@ -98,6 +120,8 @@ export default function BoxPairsMUI() {
                   color: "#007acc",
                   userSelect: "none",
                   px: 1,
+                  display: "flex",
+                  alignItems: "center",
                 }}
                 onClick={() => toggleHighlight(idx)}
                 title="Click to toggle highlight"
@@ -106,7 +130,7 @@ export default function BoxPairsMUI() {
               </Box>
 
               {/* Right box with checkbox */}
-              <Group spacing={1} sx={{ flex: 1 }}>
+              <Stack direction="row" spacing={1} sx={{ flex: 1 }} alignItems="center">
                 <Checkbox />
                 <Box
                   sx={{
@@ -122,8 +146,8 @@ export default function BoxPairsMUI() {
                     transition: "background-color 0.3s",
                   }}
                 />
-              </Group>
-            </Group>
+              </Stack>
+            </Stack>
           </Collapse>
         </Box>
       ))}
