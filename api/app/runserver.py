@@ -1,279 +1,319 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect } from "react";
 import {
   Box,
-  Typography,
-  Checkbox,
   Button,
+  Checkbox,
   FormControlLabel,
-  FormControl,
-  FormLabel,
-  RadioGroup,
-  Radio,
+  Typography,
+  Alert,
+  IconButton,
+  Collapse,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
-const FILE_TYPES = [
-  "application/pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/msword",
-];
+// PSCRFSection component with ref and validation method
+const PSCRFSection = forwardRef((props, ref) => {
+  const [selectedOptions, setSelectedOptions] = useState([]);
 
-const ContractSection = ({ title, sections: initialSections, onSectionsChange }) => {
-  const [sections, setSections] = useState(
-    initialSections && initialSections.length > 0
-      ? initialSections
-      : [{ id: Date.now(), type: "Agreement", file: null, filename: "" }]
+  useImperativeHandle(ref, () => ({
+    hasSelectedOptions: () => selectedOptions.length > 0,
+  }));
+
+  // Simulated selection UI
+  return (
+    <Box
+      sx={{
+        p: 2,
+        bgcolor: "#fff",
+        border: "1px solid #ccc",
+        borderRadius: 1,
+        height: 250,
+        overflowY: "auto",
+      }}
+    >
+      <Typography variant="subtitle1" gutterBottom>
+        PSCRF Section
+      </Typography>
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={selectedOptions.includes("option1")}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedOptions((prev) => [...prev, "option1"]);
+              } else {
+                setSelectedOptions((prev) => prev.filter((o) => o !== "option1"));
+              }
+            }}
+          />
+        }
+        label="Option 1"
+      />
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={selectedOptions.includes("option2")}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedOptions((prev) => [...prev, "option2"]);
+              } else {
+                setSelectedOptions((prev) => prev.filter((o) => o !== "option2"));
+              }
+            }}
+          />
+        }
+        label="Option 2"
+      />
+    </Box>
   );
+});
 
-  useEffect(() => {
-    if (initialSections) setSections(initialSections);
-  }, [initialSections]);
+// ContractSection component with ref and validation method
+const ContractSection = forwardRef(({ title }, ref) => {
+  const [files, setFiles] = useState([]);
 
-  const updateSections = (updatedSections) => {
-    setSections(updatedSections);
-    if (onSectionsChange) onSectionsChange(updatedSections);
-  };
+  useImperativeHandle(ref, () => ({
+    hasFileUploaded: () => files.length > 0,
+  }));
 
-  const handleAddSection = () => {
-    updateSections([
-      ...sections,
-      { id: Date.now() + Math.random(), type: "Agreement", file: null, filename: "" },
-    ]);
-  };
-
-  const handleRemoveSection = (id) => {
-    updateSections(sections.filter((section) => section.id !== id));
-  };
-
-  const handleRadioChange = (id, type) => {
-    updateSections(
-      sections.map((section) =>
-        section.id === id ? { ...section, type, file: null, filename: "" } : section
-      )
-    );
-  };
-
-  const handleFileChange = (id, event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    if (!FILE_TYPES.includes(file.type)) {
-      alert("Only PDF and Word files are allowed.");
-      return;
-    }
-    updateSections(
-      sections.map((section) =>
-        section.id === id ? { ...section, file, filename: file.name } : section
-      )
-    );
+  const handleFileChange = (e) => {
+    setFiles(Array.from(e.target.files));
   };
 
   return (
     <Box
       sx={{
+        p: 2,
+        bgcolor: "#fff",
         border: "1px solid #ccc",
         borderRadius: 1,
-        p: 2,
-        mt: 1,
-        position: "relative",
+        height: 250,
+        overflowY: "auto",
       }}
     >
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="subtitle1" gutterBottom>
         {title}
       </Typography>
-
-      {sections.map((section, idx) => (
-        <Box
-          key={section.id}
-          sx={{
-            mb: 2,
-            p: 1,
-            border: "1px dashed #999",
-            borderRadius: 1,
-            position: "relative",
-          }}
-        >
-          <FormControl component="fieldset">
-            <FormLabel component="legend">Type</FormLabel>
-            <RadioGroup
-              row
-              value={section.type}
-              onChange={(e) => handleRadioChange(section.id, e.target.value)}
-            >
-              <FormControlLabel value="Agreement" control={<Radio />} label="Agreement" />
-              <FormControlLabel value="PO" control={<Radio />} label="PO" />
-              <FormControlLabel value="Invoice" control={<Radio />} label="Invoice" />
-            </RadioGroup>
-          </FormControl>
-
-          <Box mt={1}>
-            <Button variant="outlined" component="label" size="small">
-              Upload File
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                hidden
-                onChange={(e) => handleFileChange(section.id, e)}
-              />
-            </Button>
-            {section.filename && (
-              <Typography variant="body2" component="span" sx={{ ml: 2 }}>
-                {section.filename}
-              </Typography>
-            )}
-          </Box>
-
-          {sections.length > 1 && (
-            <Button
-              variant="text"
-              color="error"
-              size="small"
-              sx={{ position: "absolute", top: 8, right: 8 }}
-              onClick={() => handleRemoveSection(section.id)}
-            >
-              ×
-            </Button>
-          )}
+      <input type="file" multiple onChange={handleFileChange} />
+      {files.length > 0 && (
+        <Box mt={1}>
+          <Typography variant="body2">
+            Uploaded files:
+            <ul>
+              {files.map((f, i) => (
+                <li key={i}>{f.name}</li>
+              ))}
+            </ul>
+          </Typography>
         </Box>
-      ))}
-
-      <Button variant="text" size="small" onClick={handleAddSection}>
-        + Add Section
-      </Button>
+      )}
     </Box>
   );
-};
+});
 
-const PSCRFSection = () => {
+// BoxPair component for each row
+const BoxPair = ({
+  title,
+  checked,
+  onCheckChange,
+  validationMessage,
+  leftComponent,
+  rightComponent,
+}) => {
+  const [showValidation, setShowValidation] = useState(true);
+
+  useEffect(() => {
+    if (!validationMessage) setShowValidation(false);
+    else setShowValidation(true);
+  }, [validationMessage]);
+
   return (
-    <Box
-      sx={{
-        border: "1px solid #ccc",
-        borderRadius: 1,
-        p: 2,
-        mt: 1,
-        height: 150,
-        textAlign: "center",
-        color: "#666",
-      }}
-    >
-      <Typography>PSCRF Section (placeholder)</Typography>
+    <Box mb={3} p={2} bgcolor="#fafafa" borderRadius={2} boxShadow={1}>
+      <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+        <FormControlLabel
+          control={<Checkbox checked={checked} onChange={onCheckChange} />}
+          label={<Typography variant="h6">{title}</Typography>}
+        />
+        {validationMessage && (
+          <Collapse in={showValidation} timeout="auto" unmountOnExit>
+            <Alert
+              severity="error"
+              action={
+                <IconButton
+                  aria-label="close"
+                  color="inherit"
+                  size="small"
+                  onClick={() => setShowValidation(false)}
+                >
+                  <CloseIcon fontSize="inherit" />
+                </IconButton>
+              }
+              sx={{ ml: 2, maxWidth: 400 }}
+            >
+              {validationMessage}
+            </Alert>
+          </Collapse>
+        )}
+      </Box>
+      <Box display="flex" gap={2}>
+        <Box flex={1}>{leftComponent}</Box>
+        <Box flex={1}>{rightComponent}</Box>
+      </Box>
     </Box>
   );
 };
 
-const BoxPair = ({ title, checked, onCheckChange, leftComponent, rightComponent }) => {
-  return (
-    <Box sx={{ display: "flex", gap: 2, mb: 3, alignItems: "center" }}>
-      <FormControlLabel
-        control={<Checkbox checked={checked} onChange={onCheckChange} />}
-        label={title}
-        sx={{ width: 100 }}
-      />
-      <Box sx={{ flex: 1 }}>{leftComponent}</Box>
-      <Box sx={{ flex: 1 }}>{rightComponent}</Box>
-    </Box>
-  );
-};
-
+// Main layout component
 const ComparisonLayout = () => {
-  const [rowChecks, setRowChecks] = useState([true, true, true, true]);
+  // Checkbox checked state for 4 rows
+  const [rowChecks, setRowChecks] = useState([false, false, false, false]);
 
-  // Lifted ContractSection states
-  const [contractData, setContractData] = useState({
-    approved1: [{ id: Date.now(), type: "Agreement", file: null, filename: "" }],
-    approved2: [{ id: Date.now() + 1, type: "Agreement", file: null, filename: "" }],
-    signed1: [{ id: Date.now() + 2, type: "Agreement", file: null, filename: "" }],
-  });
+  // Refs for PSCRF and Contract sections per row and side
+  const pscrfLeftRefs = [useRef(), useRef(), useRef(), useRef()];
+  const pscrfRightRefs = [useRef(), useRef(), useRef(), useRef()];
+  const contractLeftRefs = [useRef(), useRef(), useRef(), useRef()];
+  const contractRightRefs = [useRef(), useRef(), useRef(), useRef()];
 
-  const updateContractSection = (key, sections) => {
-    setContractData((prev) => ({ ...prev, [key]: sections }));
+  // Validation messages per row
+  const [validationMessages, setValidationMessages] = useState(["", "", "", ""]);
+
+  // Helper to check if a section is present on a side
+  const isPSCRFPresent = (rowIndex, side) => {
+    if (rowIndex === 0 && side === "left") return true;
+    if (rowIndex === 2 && side === "right") return true;
+    if (rowIndex === 3) return true;
+    return false;
+  };
+  const isContractPresent = (rowIndex, side) => {
+    if (rowIndex === 0 && side === "right") return true;
+    if (rowIndex === 1 && side === "left") return true;
+    if (rowIndex === 2 && side === "left") return true;
+    return false;
   };
 
-  const toggleRowCheck = (index) => {
-    const newChecks = [...rowChecks];
-    newChecks[index] = !newChecks[index];
-    setRowChecks(newChecks);
-  };
+  const validateRow = (rowIndex) => {
+    if (!rowChecks[rowIndex]) return ""; // Not checked => no validation error
 
-  const handleSubmit = () => {
-    for (const [sectionName, sections] of Object.entries(contractData)) {
-      const hasValidSection = sections.some(
-        (sec) => sec.type && sec.file != null
-      );
-      if (!hasValidSection) {
-        alert(
-          `Please upload at least one file and select type in ${sectionName
-            .replace(/([A-Z])/g, " $1")
-            .trim()}`
-        );
-        return;
-      }
+    // Validate PSCRF if present on left and/or right
+    let pscrfValid = true;
+    if (isPSCRFPresent(rowIndex, "left")) {
+      const hasSelected = pscrfLeftRefs[rowIndex].current?.hasSelectedOptions() || false;
+      if (!hasSelected) pscrfValid = false;
     }
-    alert("Validation passed! Submitting form...");
-    // Add your submit logic here
+    if (isPSCRFPresent(rowIndex, "right")) {
+      const hasSelected = pscrfRightRefs[rowIndex].current?.hasSelectedOptions() || false;
+      if (!hasSelected) pscrfValid = false;
+    }
+
+    // Validate Contract if present on left and/or right
+    let contractValid = true;
+    if (isContractPresent(rowIndex, "left")) {
+      const hasFile = contractLeftRefs[rowIndex].current?.hasFileUploaded() || false;
+      if (!hasFile) contractValid = false;
+    }
+    if (isContractPresent(rowIndex, "right")) {
+      const hasFile = contractRightRefs[rowIndex].current?.hasFileUploaded() || false;
+      if (!hasFile) contractValid = false;
+    }
+
+    if (!pscrfValid && !contractValid)
+      return "Please select at least one PSCRF and upload at least one contract file.";
+
+    if (!pscrfValid) return "Please select at least one PSCRF.";
+
+    if (!contractValid) return "Please upload at least one contract file.";
+
+    return "";
   };
+
+  // Validate all rows and update messages on checkbox change
+  useEffect(() => {
+    const msgs = [];
+    for (let i = 0; i < 4; i++) {
+      msgs.push(validateRow(i));
+    }
+    setValidationMessages(msgs);
+  }, [rowChecks]);
+
+  // Force re-validation state for internal triggers
+  const [forceValidate, setForceValidate] = useState(0);
+
+  // Re-validate on forceValidate changes
+  useEffect(() => {
+    const msgs = [];
+    for (let i = 0; i < 4; i++) {
+      msgs.push(validateRow(i));
+    }
+    setValidationMessages(msgs);
+  }, [forceValidate]);
+
+  const handleCheckboxChange = (index) => {
+    const updatedChecks = [...rowChecks];
+    updatedChecks[index] = !updatedChecks[index];
+    setRowChecks(updatedChecks);
+    setForceValidate((f) => f + 1); // force re-validate on toggle
+  };
+
+  // Submit enabled only if all checked rows have no validation errors
+  const submitEnabled = rowChecks.every(
+    (checked, i) => !checked || (validationMessages[i] === "")
+  );
 
   return (
-    <Box
-      sx={{ width: "95vw", maxWidth: 1200, mx: "auto", mt: 3, mb: 6, px: 1, userSelect: "none" }}
-    >
-      {/* Row 1 */}
+    <Box p={3} maxWidth={1200} mx="auto" bgcolor="#e0e0e0" borderRadius={2} my={4}>
       <BoxPair
         title="Row 1"
         checked={rowChecks[0]}
-        onCheckChange={() => toggleRowCheck(0)}
-        leftComponent={<PSCRFSection />}
-        rightComponent={
-          <ContractSection
-            title="Approved Contract"
-            sections={contractData.approved1}
-            onSectionsChange={(sections) => updateContractSection("approved1", sections)}
-          />
-        }
+        onCheckChange={() => handleCheckboxChange(0)}
+        validationMessage={validationMessages[0]}
+        leftComponent={<PSCRFSection ref={pscrfLeftRefs[0]} />}
+        rightComponent={<ContractSection ref={contractRightRefs[0]} title="Contract Section (Right)" />}
       />
-
-      {/* Row 2 */}
       <BoxPair
         title="Row 2"
         checked={rowChecks[1]}
-        onCheckChange={() => toggleRowCheck(1)}
-        leftComponent={
-          <ContractSection
-            title="Approved Contract"
-            sections={contractData.approved2}
-            onSectionsChange={(sections) => updateContractSection("approved2", sections)}
-          />
-        }
-        rightComponent={
-          <ContractSection
-            title="Signed Contract"
-            sections={contractData.signed1}
-            onSectionsChange={(sections) => updateContractSection("signed1", sections)}
-          />
-        }
+        onCheckChange={() => handleCheckboxChange(1)}
+        validationMessage={validationMessages[1]}
+        leftComponent={<ContractSection ref={contractLeftRefs[1]} title="Contract Section (Left)" />}
+        rightComponent={<Box sx={{ height: 250, bgcolor: "#f0f0f0" }} />}
       />
-
-      {/* Row 3 */}
       <BoxPair
         title="Row 3"
         checked={rowChecks[2]}
-        onCheckChange={() => toggleRowCheck(2)}
-        leftComponent={<ContractSection title="Signed Contract" />}
-        rightComponent={<PSCRFSection />}
+        onCheckChange={() => handleCheckboxChange(2)}
+        validationMessage={validationMessages[2]}
+        leftComponent={<ContractSection ref={contractLeftRefs[2]} title="Contract Section (Left)" />}
+        rightComponent={<PSCRFSection ref={pscrfRightRefs[2]} />}
       />
-
-      {/* Row 4 */}
       <BoxPair
         title="Row 4"
         checked={rowChecks[3]}
-        onCheckChange={() => toggleRowCheck(3)}
-        leftComponent={<PSCRFSection />}
-        rightComponent={<PSCRFSection />}
+        onCheckChange={() => handleCheckboxChange(3)}
+        validationMessage={validationMessages[3]}
+        leftComponent={<PSCRFSection ref={pscrfLeftRefs[3]} />}
+        rightComponent={<PSCRFSection ref={pscrfRightRefs[3]} />}
       />
 
       <Box mt={4} textAlign="center">
-        <Button variant="contained" color="primary" onClick={handleSubmit}>
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={!submitEnabled}
+          onClick={() => alert("Submit successful!")}
+          sx={{ minWidth: 140, fontWeight: 600, fontSize: 16 }}
+        >
           Submit
         </Button>
+        {!submitEnabled && (
+          <Typography
+            variant="body2"
+            color="error"
+            mt={1}
+            sx={{ userSelect: "none", fontWeight: 500 }}
+          >
+            Please fix validation errors above before submitting.
+          </Typography>
+        )}
       </Box>
     </Box>
   );
