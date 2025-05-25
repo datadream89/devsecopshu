@@ -1,227 +1,281 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Autocomplete, TextField, Chip } from "@mui/material";
-import { ArrowLeftRight } from "lucide-react";
+  Box,
+  Typography,
+  Checkbox,
+  Button,
+  FormControlLabel,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  Radio,
+} from "@mui/material";
 
-type PSCRF = {
-  pscrfId: string;
-  samVersion: string;
-  pricingVersion: string;
-  clientName: string;
-};
-
-type ContractSection = {
-  id: number;
-  contractType: string;
-  file: File | null;
-  checked: boolean;
-};
-
-const defaultPSCRFList: PSCRF[] = [
-  {
-    pscrfId: "PSCRF-101",
-    samVersion: "1.0",
-    pricingVersion: "2.0",
-    clientName: "Client A",
-  },
-  {
-    pscrfId: "PSCRF-102",
-    samVersion: "1.1",
-    pricingVersion: "2.2",
-    clientName: "Client B",
-  },
+const FILE_TYPES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/msword",
 ];
 
-const ComparisonLayout: React.FC = () => {
-  const [selectedPSCRFs, setSelectedPSCRFs] = useState<PSCRF[]>([]);
-  const [sections, setSections] = useState<ContractSection[]>([
-    { id: 1, contractType: "", file: null, checked: false },
-  ]);
+const ContractSection = ({ title, sections: initialSections, onSectionsChange }) => {
+  const [sections, setSections] = useState(
+    initialSections && initialSections.length > 0
+      ? initialSections
+      : [{ id: Date.now(), type: "Agreement", file: null, filename: "" }]
+  );
+
+  useEffect(() => {
+    if (initialSections) setSections(initialSections);
+  }, [initialSections]);
+
+  const updateSections = (updatedSections) => {
+    setSections(updatedSections);
+    if (onSectionsChange) onSectionsChange(updatedSections);
+  };
 
   const handleAddSection = () => {
-    setSections((prev) => [
-      ...prev,
-      { id: Date.now(), contractType: "", file: null, checked: false },
+    updateSections([
+      ...sections,
+      { id: Date.now() + Math.random(), type: "Agreement", file: null, filename: "" },
     ]);
   };
 
-  const handleRemoveSection = (id: number) => {
-    setSections((prev) => prev.filter((s) => s.id !== id));
+  const handleRemoveSection = (id) => {
+    updateSections(sections.filter((section) => section.id !== id));
   };
 
-  const handleCheckboxChange = (id: number, checked: boolean) => {
-    setSections((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, checked } : s))
+  const handleRadioChange = (id, type) => {
+    updateSections(
+      sections.map((section) =>
+        section.id === id ? { ...section, type, file: null, filename: "" } : section
+      )
     );
   };
 
-  const handleFileChange = (id: number, file: File | null) => {
-    setSections((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, file } : s))
-    );
-  };
-
-  const handleContractTypeChange = (id: number, contractType: string) => {
-    setSections((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, contractType } : s))
-    );
-  };
-
-  const handleSubmit = () => {
-    const errors = sections.filter(
-      (s) => s.checked && (!s.contractType.trim() || !s.file)
-    );
-    if (errors.length > 0) {
-      alert("Please fill in all required fields for checked sections.");
+  const handleFileChange = (id, event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!FILE_TYPES.includes(file.type)) {
+      alert("Only PDF and Word files are allowed.");
       return;
     }
-    const output = {
-      selectedPSCRFs,
-      enabledSections: sections.filter((s) => s.checked),
-    };
-    console.log("Submitting:", output);
-    alert("Submitted successfully! Check console.");
-  };
-
-  const getBoxContent = (row: number, side: "left" | "right") => {
-    if (row === 1) return side === "left" ? "PSCRF" : "Approved Contract";
-    if (row === 2) return side === "left" ? "Approved Contract" : "PSCRF";
-    if (row === 3) return side === "left" ? "Approved Contract" : "PSCRF";
-    return "PSCRF"; // Row 4 both
+    updateSections(
+      sections.map((section) =>
+        section.id === id ? { ...section, file, filename: file.name } : section
+      )
+    );
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h2 className="text-2xl font-bold">PSCRF Comparison</h2>
+    <Box
+      sx={{
+        border: "1px solid #ccc",
+        borderRadius: 1,
+        p: 2,
+        mt: 1,
+        position: "relative",
+      }}
+    >
+      <Typography variant="h6" gutterBottom>
+        {title}
+      </Typography>
 
-      {/* PSCRF Dropdown */}
-      <Autocomplete
-        multiple
-        options={defaultPSCRFList}
-        getOptionLabel={(option) => option.pscrfId}
-        value={selectedPSCRFs}
-        onChange={(event, newValue) => setSelectedPSCRFs(newValue)}
-        renderInput={(params) => (
-          <TextField {...params} label="Select PSCRF IDs" />
-        )}
-        renderTags={(value: readonly PSCRF[], getTagProps) =>
-          value.map((option: PSCRF, index: number) => (
-            <Chip
-              label={option.pscrfId}
-              {...getTagProps({ index })}
-              key={option.pscrfId}
-            />
-          ))
+      {sections.map((section, idx) => (
+        <Box
+          key={section.id}
+          sx={{
+            mb: 2,
+            p: 1,
+            border: "1px dashed #999",
+            borderRadius: 1,
+            position: "relative",
+          }}
+        >
+          <FormControl component="fieldset">
+            <FormLabel component="legend">Type</FormLabel>
+            <RadioGroup
+              row
+              value={section.type}
+              onChange={(e) => handleRadioChange(section.id, e.target.value)}
+            >
+              <FormControlLabel value="Agreement" control={<Radio />} label="Agreement" />
+              <FormControlLabel value="PO" control={<Radio />} label="PO" />
+              <FormControlLabel value="Invoice" control={<Radio />} label="Invoice" />
+            </RadioGroup>
+          </FormControl>
+
+          <Box mt={1}>
+            <Button variant="outlined" component="label" size="small">
+              Upload File
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                hidden
+                onChange={(e) => handleFileChange(section.id, e)}
+              />
+            </Button>
+            {section.filename && (
+              <Typography variant="body2" component="span" sx={{ ml: 2 }}>
+                {section.filename}
+              </Typography>
+            )}
+          </Box>
+
+          {sections.length > 1 && (
+            <Button
+              variant="text"
+              color="error"
+              size="small"
+              sx={{ position: "absolute", top: 8, right: 8 }}
+              onClick={() => handleRemoveSection(section.id)}
+            >
+              ×
+            </Button>
+          )}
+        </Box>
+      ))}
+
+      <Button variant="text" size="small" onClick={handleAddSection}>
+        + Add Section
+      </Button>
+    </Box>
+  );
+};
+
+const PSCRFSection = () => {
+  return (
+    <Box
+      sx={{
+        border: "1px solid #ccc",
+        borderRadius: 1,
+        p: 2,
+        mt: 1,
+        height: 150,
+        textAlign: "center",
+        color: "#666",
+      }}
+    >
+      <Typography>PSCRF Section (placeholder)</Typography>
+    </Box>
+  );
+};
+
+const BoxPair = ({ title, checked, onCheckChange, leftComponent, rightComponent }) => {
+  return (
+    <Box sx={{ display: "flex", gap: 2, mb: 3, alignItems: "center" }}>
+      <FormControlLabel
+        control={<Checkbox checked={checked} onChange={onCheckChange} />}
+        label={title}
+        sx={{ width: 100 }}
+      />
+      <Box sx={{ flex: 1 }}>{leftComponent}</Box>
+      <Box sx={{ flex: 1 }}>{rightComponent}</Box>
+    </Box>
+  );
+};
+
+const ComparisonLayout = () => {
+  const [rowChecks, setRowChecks] = useState([true, true, true, true]);
+
+  // Lifted ContractSection states
+  const [contractData, setContractData] = useState({
+    approved1: [{ id: Date.now(), type: "Agreement", file: null, filename: "" }],
+    approved2: [{ id: Date.now() + 1, type: "Agreement", file: null, filename: "" }],
+    signed1: [{ id: Date.now() + 2, type: "Agreement", file: null, filename: "" }],
+  });
+
+  const updateContractSection = (key, sections) => {
+    setContractData((prev) => ({ ...prev, [key]: sections }));
+  };
+
+  const toggleRowCheck = (index) => {
+    const newChecks = [...rowChecks];
+    newChecks[index] = !newChecks[index];
+    setRowChecks(newChecks);
+  };
+
+  const handleSubmit = () => {
+    for (const [sectionName, sections] of Object.entries(contractData)) {
+      const hasValidSection = sections.some(
+        (sec) => sec.type && sec.file != null
+      );
+      if (!hasValidSection) {
+        alert(
+          `Please upload at least one file and select type in ${sectionName
+            .replace(/([A-Z])/g, " $1")
+            .trim()}`
+        );
+        return;
+      }
+    }
+    alert("Validation passed! Submitting form...");
+    // Add your submit logic here
+  };
+
+  return (
+    <Box
+      sx={{ width: "95vw", maxWidth: 1200, mx: "auto", mt: 3, mb: 6, px: 1, userSelect: "none" }}
+    >
+      {/* Row 1 */}
+      <BoxPair
+        title="Row 1"
+        checked={rowChecks[0]}
+        onCheckChange={() => toggleRowCheck(0)}
+        leftComponent={<PSCRFSection />}
+        rightComponent={
+          <ContractSection
+            title="Approved Contract"
+            sections={contractData.approved1}
+            onSectionsChange={(sections) => updateContractSection("approved1", sections)}
+          />
         }
       />
 
-      {/* Modal Cards for Each PSCRF */}
-      {selectedPSCRFs.map((pscrf) => (
-        <Card key={pscrf.pscrfId} className="mt-4">
-          <CardHeader>
-            <CardTitle>{pscrf.pscrfId}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>SAM Version: {pscrf.samVersion}</p>
-            <p>Pricing Version: {pscrf.pricingVersion}</p>
-            <p>Client: {pscrf.clientName}</p>
-          </CardContent>
-        </Card>
-      ))}
+      {/* Row 2 */}
+      <BoxPair
+        title="Row 2"
+        checked={rowChecks[1]}
+        onCheckChange={() => toggleRowCheck(1)}
+        leftComponent={
+          <ContractSection
+            title="Approved Contract"
+            sections={contractData.approved2}
+            onSectionsChange={(sections) => updateContractSection("approved2", sections)}
+          />
+        }
+        rightComponent={
+          <ContractSection
+            title="Signed Contract"
+            sections={contractData.signed1}
+            onSectionsChange={(sections) => updateContractSection("signed1", sections)}
+          />
+        }
+      />
 
-      {/* Contract Sections */}
-      <div>
-        <h3 className="text-xl font-semibold mt-6 mb-2">Contract Sections</h3>
-        {sections.map((section) => (
-          <Card key={section.id} className="p-4 mb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={section.checked}
-                  onCheckedChange={(checked) =>
-                    handleCheckboxChange(section.id, Boolean(checked))
-                  }
-                />
-                <span>Enable Section</span>
-              </div>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => handleRemoveSection(section.id)}
-              >
-                x
-              </Button>
-            </div>
+      {/* Row 3 */}
+      <BoxPair
+        title="Row 3"
+        checked={rowChecks[2]}
+        onCheckChange={() => toggleRowCheck(2)}
+        leftComponent={<ContractSection title="Signed Contract" />}
+        rightComponent={<PSCRFSection />}
+      />
 
-            <div className="mt-4 space-y-4">
-              <div>
-                <label className="font-medium">Contract Type</label>
-                <Input
-                  value={section.contractType}
-                  onChange={(e) =>
-                    handleContractTypeChange(section.id, e.target.value)
-                  }
-                  placeholder="Enter contract type"
-                  disabled={!section.checked}
-                />
-              </div>
+      {/* Row 4 */}
+      <BoxPair
+        title="Row 4"
+        checked={rowChecks[3]}
+        onCheckChange={() => toggleRowCheck(3)}
+        leftComponent={<PSCRFSection />}
+        rightComponent={<PSCRFSection />}
+      />
 
-              <div>
-                <label className="font-medium">Upload File</label>
-                <Input
-                  type="file"
-                  onChange={(e) =>
-                    handleFileChange(
-                      section.id,
-                      e.target.files?.[0] || null
-                    )
-                  }
-                  disabled={!section.checked}
-                />
-              </div>
-            </div>
-          </Card>
-        ))}
-
-        <div className="flex gap-4">
-          <Button onClick={handleAddSection}>+ Add Section</Button>
-          <Button onClick={handleSubmit} className="bg-green-600 hover:bg-green-700">
-            Submit
-          </Button>
-        </div>
-      </div>
-
-      {/* 4-row layout */}
-      <div className="grid grid-cols-2 gap-6 mt-10">
-        {[1, 2, 3, 4].map((row) => (
-          <>
-            {["left", "right"].map((side) => (
-              <div
-                key={`${row}-${side}`}
-                className="border p-4 rounded-xl shadow"
-              >
-                <h4 className="font-semibold mb-2">
-                  {getBoxContent(row, side as "left" | "right")}
-                </h4>
-                {row === 1 && side === "left" && (
-                  <div className="flex items-center justify-center text-gray-400">
-                    <ArrowLeftRight />
-                  </div>
-                )}
-              </div>
-            ))}
-          </>
-        ))}
-      </div>
-    </div>
+      <Box mt={4} textAlign="center">
+        <Button variant="contained" color="primary" onClick={handleSubmit}>
+          Submit
+        </Button>
+      </Box>
+    </Box>
   );
 };
 
