@@ -1,14 +1,21 @@
 import React, { useState } from "react";
 import {
   Box,
+  Grid,
   Typography,
   Checkbox,
   FormControlLabel,
+  Autocomplete,
+  TextField,
   Paper,
   RadioGroup,
   Radio,
   Button,
   IconButton,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -17,9 +24,10 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
-import options from "./options.json"; // your options file
+import options from "./options.json"; // Your PSCRF options data
 
-function LeftBoxCard({ item, onRemove }) {
+// Left box card representing one PSCRF selection
+function LeftBoxCard({ item, onRemove, disabled }) {
   return (
     <Paper
       sx={{
@@ -27,8 +35,10 @@ function LeftBoxCard({ item, onRemove }) {
         mb: 1,
         borderRadius: 1,
         border: "1px solid #ccc",
-        backgroundColor: "#f9f9f9",
+        backgroundColor: disabled ? "#e0e0e0" : "#f9f9f9",
         position: "relative",
+        opacity: disabled ? 0.6 : 1,
+        pointerEvents: disabled ? "none" : "auto",
       }}
       elevation={1}
     >
@@ -38,18 +48,21 @@ function LeftBoxCard({ item, onRemove }) {
       <Typography variant="body2">Client: {item.clientName}</Typography>
       <Typography variant="body2">SAM Version: {item.samVersion}</Typography>
       <Typography variant="body2">Pricing Version: {item.pricingVersion}</Typography>
-      <IconButton
-        size="small"
-        onClick={() => onRemove(item)}
-        sx={{ position: "absolute", top: 4, right: 4 }}
-        aria-label="Remove"
-      >
-        <CloseIcon fontSize="small" />
-      </IconButton>
+      {!disabled && (
+        <IconButton
+          size="small"
+          onClick={() => onRemove(item)}
+          sx={{ position: "absolute", top: 4, right: 4 }}
+          aria-label="Remove"
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      )}
     </Paper>
   );
 }
 
+// Right box: approved contract section UI
 function ApprovedContractSection({
   index,
   section,
@@ -67,7 +80,7 @@ function ApprovedContractSection({
         position: "relative",
         borderRadius: 2,
         border: "1px solid #ccc",
-        backgroundColor: disabled ? "#f0f0f0" : "inherit",
+        backgroundColor: disabled ? "#e0e0e0" : "inherit",
         pointerEvents: disabled ? "none" : "auto",
         opacity: disabled ? 0.6 : 1,
       }}
@@ -86,7 +99,7 @@ function ApprovedContractSection({
         }}
         sx={{
           "& .Mui-checked": {
-            color: "darkgrey",
+            color: disabled ? "gray" : "darkgrey",
           },
         }}
       >
@@ -122,11 +135,11 @@ function ApprovedContractSection({
           component="span"
           sx={{
             mt: 1,
-            color: "darkgrey",
-            borderColor: "darkgrey",
+            color: disabled ? "gray" : "darkgrey",
+            borderColor: disabled ? "gray" : "darkgrey",
             "&:hover": {
-              borderColor: "black",
-              color: "black",
+              borderColor: disabled ? "gray" : "black",
+              color: disabled ? "gray" : "black",
             },
           }}
           disabled={disabled}
@@ -135,7 +148,7 @@ function ApprovedContractSection({
         </Button>
       </label>
       {section.file && (
-        <Typography variant="body2" mt={1}>
+        <Typography variant="body2" mt={1} sx={{ opacity: disabled ? 0.6 : 1 }}>
           Selected: {section.file.name}
         </Typography>
       )}
@@ -169,39 +182,28 @@ function ApprovedContractSection({
   );
 }
 
-export default function Request() {
+// One full pair setup: checkbox + two boxes + arrows
+function ComparePair({ pairIndex, globalDirection, globalContractType }) {
   const [compareEnabled, setCompareEnabled] = useState(true);
-  const [direction, setDirection] = useState("right");
-  const [collapsed, setCollapsed] = useState(false);
-
-  // State for pair 1
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [contractSections, setContractSections] = useState([
-    { id: 0, contractType: "Agreement", file: null },
+    { id: 0, contractType: globalContractType, file: null },
   ]);
 
-  // States placeholders for pairs 2, 3, 4
-  const [selectedOptions2, setSelectedOptions2] = useState([]);
-  const [contractSections2, setContractSections2] = useState([
-    { id: 0, contractType: "Agreement", file: null },
-  ]);
-  const [selectedOptions3, setSelectedOptions3] = useState([]);
-  const [contractSections3, setContractSections3] = useState([
-    { id: 0, contractType: "Agreement", file: null },
-  ]);
-  const [selectedOptions4, setSelectedOptions4] = useState([]);
-  const [contractSections4, setContractSections4] = useState([
-    { id: 0, contractType: "Agreement", file: null },
-  ]);
+  // Update contractSections if globalContractType changes
+  React.useEffect(() => {
+    setContractSections((oldSections) =>
+      oldSections.map((s) => ({ ...s, contractType: globalContractType, file: null }))
+    );
+  }, [globalContractType]);
 
-  // Handlers for pair 1 contract sections
   const addSection = () => {
     const newId = contractSections.length
       ? Math.max(...contractSections.map((s) => s.id)) + 1
       : 0;
     setContractSections([
       ...contractSections,
-      { id: newId, contractType: "Agreement", file: null },
+      { id: newId, contractType: globalContractType, file: null },
     ]);
   };
 
@@ -211,9 +213,7 @@ export default function Request() {
 
   const handleTypeChange = (id, newType) => {
     setContractSections(
-      contractSections.map((s) =>
-        s.id === id ? { ...s, contractType: newType, file: null } : s
-      )
+      contractSections.map((s) => (s.id === id ? { ...s, contractType: newType, file: null } : s))
     );
   };
 
@@ -223,25 +223,25 @@ export default function Request() {
     );
   };
 
-  // Utility for border color based on compareEnabled and direction
+  // Border styles for boxes
   const getBoxBorder = (boxSide) => {
     if (!compareEnabled) return "2px solid lightgray";
 
-    if (direction === "right") {
+    if (globalDirection === "right") {
       return boxSide === "left" ? "2px solid darkgrey" : "2px solid lightgrey";
     } else {
       return boxSide === "left" ? "2px solid lightgrey" : "2px solid darkgrey";
     }
   };
 
-  // Utility for arrow color
+  // Arrow colors
   const getArrowColor = (arrowDirection) => {
     if (!compareEnabled) return "lightgray";
-    if (direction === arrowDirection) return "darkgray";
+    if (globalDirection === arrowDirection) return "darkgray";
     return "lightgray";
   };
 
-  // Remove option from left box selections (pair 1)
+  // Remove selected option from dropdown
   const removeOption = (item) => {
     setSelectedOptions(
       selectedOptions.filter(
@@ -255,215 +255,152 @@ export default function Request() {
     );
   };
 
-  // Render the pairs with all UI pieces duplicated
-  // For brevity, pairs 2-4 left and right boxes will be placeholders,
-  // You can expand the state and handlers for those pairs similarly if needed.
-
-  const renderLeftBox = (selectedOptions, setSelectedOptions, pairNumber) => (
-    <Box
-      sx={{
-        p: 2,
-        borderRadius: 2,
-        border: getBoxBorder("left"),
-        minWidth: 320,
-        minHeight: 350,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Autocomplete
-        multiple
-        options={options}
-        getOptionLabel={(option) =>
-          `${option.id} (SAM: ${option.samVersion}, Pricing: ${option.pricingVersion})`
-        }
-        value={selectedOptions}
-        onChange={(event, newValue) => {
-          setSelectedOptions(newValue);
-        }}
-        renderInput={(params) => <TextField {...params} label="PSCRF IDs" />}
-        disableCloseOnSelect
-        sx={{ mb: 1 }}
-      />
-      <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
-        {selectedOptions.map((item) => (
-          <LeftBoxCard
-            key={`${item.id}-${item.samVersion}-${item.pricingVersion}`}
-            item={item}
-            onRemove={(item) => {
-              if (pairNumber === 1) removeOption(item);
-              // Extend for pairs 2-4 if needed
-            }}
-          />
-        ))}
-      </Box>
-    </Box>
-  );
-
-  const renderRightBoxPair1 = () => (
-    <Box
-      sx={{
-        p: 2,
-        borderRadius: 2,
-        border: getBoxBorder("right"),
-        minWidth: 320,
-        minHeight: 350,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {/* Parent container titled "Approved Contract" */}
-      <Typography
-        variant="h6"
-        fontWeight="bold"
-        sx={{ mb: 2, borderBottom: "1px solid #ccc", pb: 1 }}
-      >
-        Approved Contract
-      </Typography>
-
-      <Box sx={{ overflowY: "auto", flexGrow: 1 }}>
-        {contractSections.map((section, idx) => (
-          <ApprovedContractSection
-            key={section.id}
-            index={idx}
-            section={section}
-            handleTypeChange={handleTypeChange}
-            handleFileChange={handleFileChange}
-            addSection={addSection}
-            removeSection={removeSection}
-            disabled={!compareEnabled}
-          />
-        ))}
-      </Box>
-    </Box>
-  );
-
-  // Placeholder right boxes for pairs 2, 3, 4 (you can implement like pair 1)
-  const renderRightBoxPlaceholder = () => (
-    <Box
-      sx={{
-        p: 2,
-        borderRadius: 2,
-        border: getBoxBorder("right"),
-        minWidth: 320,
-        minHeight: 350,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: "gray",
-        fontStyle: "italic",
-      }}
-    >
-      Right Box Placeholder
-    </Box>
-  );
-
-  // Arrows and checkboxes for each pair (same style)
-  const renderControls = (pairIndex) => (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        mx: 1,
-      }}
-    >
-      <Checkbox
-        checked={compareEnabled}
-        onChange={(e) => setCompareEnabled(e.target.checked)}
-        sx={{
-          color: "darkgrey",
-          "&.Mui-checked": {
-            color: "darkgrey",
-          },
-          mb: 1,
-        }}
-      />
-      <IconButton
-        onClick={() => setDirection("left")}
-        size="small"
-        sx={{ color: getArrowColor("left") }}
-        aria-label="Compare left"
-      >
-        <ArrowBackIcon />
-      </IconButton>
-      <IconButton
-        onClick={() => setDirection("right")}
-        size="small"
-        sx={{ color: getArrowColor("right") }}
-        aria-label="Compare right"
-      >
-        <ArrowForwardIcon />
-      </IconButton>
-    </Box>
-  );
-
   return (
-    <Box sx={{ p: 3, maxWidth: 1300, mx: "auto" }}>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: 1,
-          userSelect: "none",
-          border: "1px solid #ccc",
-          borderRadius: 1,
-          p: 1,
-          backgroundColor: "#f5f5f5",
-          cursor: "pointer",
-        }}
-        onClick={() => setCollapsed(!collapsed)}
-      >
-        <Typography variant="subtitle1" fontWeight="bold" sx={{ ml: 1 }}>
-          Compare PSCRF and Approved Contract
-        </Typography>
-        <IconButton
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            setCollapsed(!collapsed);
-          }}
-          aria-label={collapsed ? "Expand" : "Collapse"}
-        >
-          {collapsed ? <AddIcon /> : <CloseIcon />}
-        </IconButton>
-      </Box>
-
-      {!collapsed && (
-        <>
-          <Box sx={{ mb: 3 }}>
-            {[1, 2, 3, 4].map((pair) => (
-              <Box
-                key={pair}
+    <Box
+      key={pairIndex}
+      sx={{
+        border: "1px solid #ddd",
+        borderRadius: 2,
+        p: 2,
+        mb: 4,
+        userSelect: "none",
+      }}
+    >
+      <Grid container spacing={2} alignItems="center" sx={{ minHeight: 420 }}>
+        {/* Checkbox on left */}
+        <Grid item xs={1}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={compareEnabled}
+                onChange={(e) => setCompareEnabled(e.target.checked)}
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  mb: 4,
-                  gap: 1,
+                  color: "darkgrey",
+                  "&.Mui-checked": {
+                    color: "darkgrey",
+                  },
                 }}
-              >
-                {/* Left box */}
-                {pair === 1
-                  ? renderLeftBox(selectedOptions, setSelectedOptions, 1)
-                  : renderLeftBox(
-                      pair === 2 ? selectedOptions2 : pair === 3 ? selectedOptions3 : selectedOptions4,
-                      pair === 2 ? setSelectedOptions2 : pair === 3 ? setSelectedOptions3 : setSelectedOptions4,
-                      pair
-                    )}
+                inputProps={{ "aria-label": `Compare checkbox ${pairIndex + 1}` }}
+              />
+            }
+            label="Compare"
+          />
+        </Grid>
 
-                {/* Controls */}
-                {renderControls(pair)}
+        {/* Left Box */}
+        <Grid item xs={5}>
+          <Paper
+            sx={{
+              p: 2,
+              border: getBoxBorder("left"),
+              minHeight: 400,
+              boxSizing: "border-box",
+              overflowY: "auto",
+              backgroundColor: compareEnabled ? "inherit" : "#f0f0f0",
+              opacity: compareEnabled ? 1 : 0.6,
+              pointerEvents: compareEnabled ? "auto" : "none",
+            }}
+            elevation={2}
+          >
+            <Typography variant="h6" mb={2}>
+              Pscerf Data (Pair {pairIndex + 1})
+            </Typography>
 
-                {/* Right box */}
-                {pair === 1
-                  ? renderRightBoxPair1()
-                  : renderRightBoxPlaceholder()}
-              </Box>
+            <Autocomplete
+              multiple
+              options={options}
+              filterSelectedOptions
+              value={selectedOptions}
+              onChange={(e, newValue) => setSelectedOptions(newValue)}
+              getOptionLabel={(option) =>
+                `${option.id} (Client: ${option.clientName}, SAM: ${option.samVersion}, Pricing: ${option.pricingVersion})`
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select PSCRF IDs"
+                  placeholder="Start typing..."
+                  size="small"
+                />
+              )}
+              disabled={!compareEnabled}
+              sx={{ mb: 2 }}
+            />
+
+            {selectedOptions.length === 0 && (
+              <Typography variant="body2" color="text.secondary">
+                No selections yet.
+              </Typography>
+            )}
+
+            {selectedOptions.map((item) => (
+              <LeftBoxCard
+                key={`${item.id}-${item.samVersion}-${item.pricingVersion}`}
+                item={item}
+                onRemove={removeOption}
+                disabled={!compareEnabled}
+              />
             ))}
-          </Box>
-        </>
-      )}
-    </Box>
-  );
-}
+          </Paper>
+        </Grid>
+
+        {/* Center arrows */}
+        <Grid
+          item
+          xs={1}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            height: 400,
+            position: "relative",
+            pointerEvents: compareEnabled ? "auto" : "none",
+            opacity: compareEnabled ? 1 : 0.6,
+          }}
+        >
+          <ArrowBackIcon
+            fontSize="large"
+            sx={{ color: getArrowColor("left"), cursor: "default", mb: 1 }}
+          />
+          <ArrowForwardIcon
+            fontSize="large"
+            sx={{ color: getArrowColor("right"), cursor: "default" }}
+          />
+        </Grid>
+
+        {/* Right Box */}
+        <Grid item xs={5}>
+          <Paper
+            sx={{
+              p: 2,
+              border: getBoxBorder("right"),
+              minHeight: 400,
+              boxSizing: "border-box",
+              overflowY: "auto",
+              backgroundColor: compareEnabled ? "inherit" : "#f0f0f0",
+              opacity: compareEnabled ? 1 : 0.6,
+              pointerEvents: compareEnabled ? "auto" : "none",
+            }}
+            elevation={2}
+          >
+            <Typography variant="h6" mb={2} fontWeight="bold">
+              Approved Contract (Pair {pairIndex + 1})
+            </Typography>
+
+            {contractSections.map((section, index) => (
+              <ApprovedContractSection
+                key={section.id}
+                index={index}
+                section={section}
+                handleTypeChange={handleTypeChange}
+                handleFileChange={handleFileChange}
+                addSection={addSection}
+                removeSection={removeSection}
+                disabled={!compareEnabled}
+              />
+            ))}
+          </Paper>
+        </Grid>
+      </Grid>
+    </
