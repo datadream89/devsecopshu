@@ -7,6 +7,10 @@ import {
   Checkbox,
   FormControlLabel,
   Stack,
+  Card,
+  CardContent,
+  Autocomplete,
+  TextField,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
@@ -15,6 +19,72 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const titles = ["Section 1", "Section 2", "Section 3", "Section 4"];
 
+const pscrfData = [
+  { id: "PSCRF001", samVersion: "v1.2", pricingVersion: "p3.4", clientName: "Client A" },
+  { id: "PSCRF002", samVersion: "v2.1", pricingVersion: "p2.8", clientName: "Client B" },
+  { id: "PSCRF003", samVersion: "v1.5", pricingVersion: "p4.0", clientName: "Client C" },
+];
+
+// PSCRFSection component
+function PSCRFSection() {
+  const [selectedOptions, setSelectedOptions] = useState([]);
+
+  const handleRemove = (id) => {
+    setSelectedOptions((prev) => prev.filter((option) => option.id !== id));
+  };
+
+  return (
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <Autocomplete
+        multiple
+        options={pscrfData}
+        getOptionLabel={(option) =>
+          `${option.id}, ${option.samVersion}, ${option.pricingVersion}, ${option.clientName}`
+        }
+        value={selectedOptions}
+        onChange={(event, newValue) => setSelectedOptions(newValue)}
+        renderInput={(params) => (
+          <TextField {...params} label="Search PSCRF" variant="outlined" size="small" />
+        )}
+        sx={{ mb: 2 }}
+      />
+
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+        }}
+      >
+        {selectedOptions.map((option) => (
+          <Card key={option.id} variant="outlined" sx={{ position: "relative" }}>
+            <CardContent sx={{ pr: 5 }}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {option.id}
+              </Typography>
+              <Typography>Sam Version: {option.samVersion}</Typography>
+              <Typography>Pricing Version: {option.pricingVersion}</Typography>
+              <Typography>Client: {option.clientName}</Typography>
+            </CardContent>
+
+            <IconButton
+              size="small"
+              onClick={() => handleRemove(option.id)}
+              sx={{ position: "absolute", top: 4, right: 4 }}
+              aria-label="remove"
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Card>
+        ))}
+      </Box>
+    </Box>
+  );
+}
+
+// Main component
 export default function BoxPairs() {
   const [collapsed, setCollapsed] = useState(Array(4).fill(false));
   const [highlight, setHighlight] = useState(Array(4).fill(null)); // 'left' | 'right' | null
@@ -47,13 +117,14 @@ export default function BoxPairs() {
               alignItems: "center",
               borderBottom: "1px solid #ccc",
               borderRadius: 1,
+              cursor: "pointer",
             }}
             onClick={() => toggleCollapse(idx)}
           >
             <Typography variant="subtitle1" fontWeight="bold">
               {title}
             </Typography>
-            <IconButton size="small">
+            <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleCollapse(idx); }}>
               {collapsed[idx] ? <AddIcon /> : <CloseIcon />}
             </IconButton>
           </Box>
@@ -61,7 +132,7 @@ export default function BoxPairs() {
           {/* Collapsible content */}
           <Collapse in={!collapsed[idx]}>
             <Box sx={{ p: 3, bgcolor: "#fff" }}>
-              <Stack direction="row" spacing={2} alignItems="center">
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ minHeight: 320 }}>
                 {/* Compare checkbox */}
                 <FormControlLabel
                   control={<Checkbox />}
@@ -83,10 +154,14 @@ export default function BoxPairs() {
                         : "#ccc",
                     borderRadius: 2,
                     p: 2,
+                    overflowY: "auto",
+                    backgroundColor: "#fff",
                   }}
-                ></Box>
+                >
+                  {(idx === 0 || idx === 2) && <PSCRFSection />}
+                </Box>
 
-                {/* Arrows - standalone, no buttons */}
+                {/* Arrows */}
                 <Stack spacing={2} alignItems="center">
                   <ArrowBackIcon
                     onClick={() => handleArrowClick(idx, "left")}
@@ -122,8 +197,12 @@ export default function BoxPairs() {
                         : "#ccc",
                     borderRadius: 2,
                     p: 2,
+                    overflowY: "auto",
+                    backgroundColor: "#fff",
                   }}
-                ></Box>
+                >
+                  {idx === 3 && <PSCRFSection />}
+                </Box>
               </Stack>
             </Box>
           </Collapse>
