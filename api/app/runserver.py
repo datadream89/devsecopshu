@@ -1,423 +1,187 @@
-import React, { useState } from "react";
-import {
-  Box,
-  Grid,
-  Typography,
-  Checkbox,
-  FormControlLabel,
-  Autocomplete,
-  TextField,
-  Paper,
-  RadioGroup,
-  Radio,
-  FormControlLabel as RadioFormControlLabel,
-  Button,
-  IconButton,
-} from "@mui/material";
+import React, { useState } from 'react';
+import { Card, Typography } from "@/components/ui/card";
+import { TextField, Autocomplete } from "@mui/material";
+import LeftBoxCard from "./LeftBoxCard"; // Update path as needed
 
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import AddIcon from "@mui/icons-material/Add";
-import CloseIcon from "@mui/icons-material/Close";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+const options = [
+  { id: 'PS001', samVersion: 'v1', pricingVersion: 'p1', clientName: 'Client A' },
+  { id: 'PS002', samVersion: 'v2', pricingVersion: 'p2', clientName: 'Client B' },
+  { id: 'PS003', samVersion: 'v3', pricingVersion: 'p3', clientName: 'Client C' }
+];
 
-import options from "./options.json";
-
-function LeftBoxCard({ item, onRemove }) {
-  return (
-    <Paper
-      sx={{
-        p: 2,
-        mb: 1,
-        borderRadius: 1,
-        border: "1px solid #ccc",
-        backgroundColor: "#f9f9f9",
-        position: "relative",
-      }}
-      elevation={1}
-    >
-      <Typography variant="subtitle2" fontWeight="bold">
-        {item.id}
-      </Typography>
-      <Typography variant="body2">Client: {item.clientName}</Typography>
-      <Typography variant="body2">SAM Version: {item.samVersion}</Typography>
-      <Typography variant="body2">Pricing Version: {item.pricingVersion}</Typography>
-      <IconButton
-        size="small"
-        onClick={() => onRemove(item)}
-        sx={{ position: "absolute", top: 4, right: 4 }}
-        aria-label="Remove"
-      >
-        <CloseIcon fontSize="small" />
-      </IconButton>
-    </Paper>
-  );
-}
-
-function ApprovedContractSection({
-  index,
-  section,
-  handleTypeChange,
-  handleFileChange,
-  addSection,
-  removeSection,
-  disabled,
-}) {
-  return (
-    <Paper
-      sx={{
-        p: 2,
-        mb: 2,
-        position: "relative",
-        borderRadius: 2,
-        border: "1px solid #ccc",
-        backgroundColor: disabled ? "#f0f0f0" : "inherit",
-        pointerEvents: disabled ? "none" : "auto",
-        opacity: disabled ? 0.6 : 1,
-      }}
-      elevation={1}
-    >
-      <Typography variant="subtitle1" fontWeight="bold" mb={1}>
-        Approved Contract {index + 1}
-      </Typography>
-
-      <RadioGroup
-        row
-        value={section.contractType}
-        onChange={(e) => {
-          handleTypeChange(section.id, e.target.value);
-          handleFileChange(section.id, null);
-        }}
-        sx={{
-          "& .Mui-checked": {
-            color: "darkgrey",
-          },
-        }}
-      >
-        <RadioFormControlLabel
-          value="Agreement"
-          control={<Radio disabled={disabled} />}
-          label="Agreement"
-        />
-        <RadioFormControlLabel
-          value="Supplement"
-          control={<Radio disabled={disabled} />}
-          label="Supplement"
-        />
-        <RadioFormControlLabel
-          value="Addendum"
-          control={<Radio disabled={disabled} />}
-          label="Addendum"
-        />
-      </RadioGroup>
-
-      <input
-        id={`file-upload-${section.id}`}
-        type="file"
-        accept=".pdf,.docx"
-        style={{ display: "none" }}
-        onChange={(e) => handleFileChange(section.id, e.target.files[0])}
-        disabled={disabled}
-      />
-      <label htmlFor={`file-upload-${section.id}`}>
-        <Button
-          variant="outlined"
-          startIcon={<CloudUploadIcon />}
-          component="span"
-          sx={{
-            mt: 1,
-            color: "darkgrey",
-            borderColor: "darkgrey",
-            "&:hover": {
-              borderColor: "black",
-              color: "black",
-            },
-          }}
-          disabled={disabled}
-        >
-          Upload File
-        </Button>
-      </label>
-      {section.file && (
-        <Typography variant="body2" mt={1}>
-          Selected: {section.file.name}
-        </Typography>
-      )}
-
-      <Box
-        sx={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          display: "flex",
-          gap: 1,
-          pointerEvents: disabled ? "none" : "auto",
-          opacity: disabled ? 0.6 : 1,
-        }}
-      >
-        <IconButton size="small" onClick={addSection} title="Add section" disabled={disabled}>
-          <AddIcon fontSize="small" />
-        </IconButton>
-        {index > 0 && (
-          <IconButton
-            size="small"
-            onClick={() => removeSection(section.id)}
-            title="Remove section"
-            disabled={disabled}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        )}
-      </Box>
-    </Paper>
-  );
-}
-
-export default function Request() {
+const PSCRFComparison = () => {
   const [compareEnabled, setCompareEnabled] = useState(true);
-  const [direction, setDirection] = useState("right");
-  const [collapsed, setCollapsed] = useState(false);
-  const [selectedOptions, setSelectedOptions] = useState([]);
-  const [contractSections, setContractSections] = useState([
-    { id: 0, contractType: "Agreement", file: null },
-  ]);
 
-  const addSection = () => {
-    const newId = contractSections.length
-      ? Math.max(...contractSections.map((s) => s.id)) + 1
-      : 0;
-    setContractSections([
-      ...contractSections,
-      { id: newId, contractType: "Agreement", file: null },
-    ]);
-  };
+  const [selectedPSCRF, setSelectedPSCRF] = useState([]);
+  const [selectedContract, setSelectedContract] = useState([]);
+  const [selectedOptionsLeft, setSelectedOptionsLeft] = useState([]);
+  const [selectedOptionsRight, setSelectedOptionsRight] = useState([]);
+  const [selectedOptionsLeft2, setSelectedOptionsLeft2] = useState([]);
+  const [selectedOptionsRight2, setSelectedOptionsRight2] = useState([]);
 
-  const removeSection = (id) => {
-    setContractSections(contractSections.filter((s) => s.id !== id));
-  };
-
-  const handleTypeChange = (id, newType) => {
-    setContractSections(
-      contractSections.map((s) => (s.id === id ? { ...s, contractType: newType, file: null } : s))
-    );
-  };
-
-  const handleFileChange = (id, file) => {
-    setContractSections(
-      contractSections.map((s) => (s.id === id ? { ...s, file } : s))
-    );
-  };
-
-  // Outline colors for boxes (flipped compared to direction)
-  const getBoxBorder = (boxSide) => {
-    if (!compareEnabled) return "2px solid lightgray";
-
-    if (direction === "right") {
-      return boxSide === "left" ? "2px solid darkgrey" : "2px solid lightgrey";
-    } else {
-      return boxSide === "left" ? "2px solid lightgrey" : "2px solid darkgrey";
-    }
-  };
-
-  // Arrow colors
-  const getArrowColor = (arrowDirection) => {
-    if (!compareEnabled) return "lightgray";
-    if (direction === arrowDirection) return "darkgray";
-    return "lightgray";
-  };
-
-  // Remove selected option from dropdown
-  const removeOption = (item) => {
-    setSelectedOptions(selectedOptions.filter((o) => o.id !== item.id || o.samVersion !== item.samVersion || o.pricingVersion !== item.pricingVersion));
+  const removeOption = (setFn, currentList, itemToRemove) => {
+    setFn(currentList.filter(item => item !== itemToRemove));
   };
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
-      {/* Collapsible container header */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: 1,
-          userSelect: "none",
-          border: "1px solid #ccc",
-          borderRadius: 1,
-          p: 1,
-          backgroundColor: "#f5f5f5",
-          cursor: "pointer",
-        }}
-        onClick={() => setCollapsed(!collapsed)}
-      >
-        <Typography variant="subtitle1" fontWeight="bold" sx={{ ml: 1 }}>
-          Compare PSCRF and Approved Contract
-        </Typography>
-        <IconButton
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            setCollapsed(!collapsed);
-          }}
-          aria-label={collapsed ? "Expand" : "Collapse"}
-        >
-          {collapsed ? <AddIcon /> : <CloseIcon />}
-        </IconButton>
-      </Box>
-
-      {!collapsed && (
-        <>
-          {/* Compare checkbox */}
-          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={compareEnabled}
-                  onChange={(e) => setCompareEnabled(e.target.checked)}
-                  sx={{
-                    color: "darkgrey",
-                    "&.Mui-checked": {
-                      color: "darkgrey",
-                    },
-                  }}
-                />
-              }
-              label="Compare"
-              sx={{ mr: 4 }}
+    <div className="p-8">
+      {/* === FIRST ROW: PSCRF vs Approved Contract === */}
+      <Typography variant="h5" className="mt-8 mb-4">
+        Compare PSCRF Data and Approved Contract
+      </Typography>
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="p-4">
+          <Typography variant="h6" mb={2}>PSCRF Data</Typography>
+          <Autocomplete
+            multiple
+            options={options}
+            filterSelectedOptions
+            value={selectedPSCRF}
+            onChange={(e, newValue) => setSelectedPSCRF(newValue)}
+            renderInput={(params) => (
+              <TextField {...params} label="Select PSCRF IDs" placeholder="Start typing..." size="small" />
+            )}
+            disabled={!compareEnabled}
+            sx={{ mb: 2 }}
+          />
+          {selectedPSCRF.map((item) => (
+            <LeftBoxCard
+              key={`pscrf-${item.id}-${item.samVersion}-${item.pricingVersion}`}
+              item={item}
+              onRemove={() => removeOption(setSelectedPSCRF, selectedPSCRF, item)}
             />
+          ))}
+        </Card>
 
-            {/* Boxes and arrows container */}
-            <Grid container spacing={2} alignItems="center" sx={{ minHeight: 420 }}>
-              {/* Left Box */}
-              <Grid item xs={5}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    border: getBoxBorder("left"),
-                    minHeight: 400,
-                    boxSizing: "border-box",
-                    overflowY: "auto",
-                    backgroundColor: compareEnabled ? "inherit" : "#f0f0f0",
-                  }}
-                  elevation={2}
-                >
-                  <Typography variant="h6" mb={2}>
-                    Pscerf Data
-                  </Typography>
+        <Card className="p-4">
+          <Typography variant="h6" mb={2}>Approved Contract</Typography>
+          <Autocomplete
+            multiple
+            options={options}
+            filterSelectedOptions
+            value={selectedContract}
+            onChange={(e, newValue) => setSelectedContract(newValue)}
+            renderInput={(params) => (
+              <TextField {...params} label="Select Contract IDs" placeholder="Start typing..." size="small" />
+            )}
+            disabled={!compareEnabled}
+            sx={{ mb: 2 }}
+          />
+          {selectedContract.map((item) => (
+            <LeftBoxCard
+              key={`contract-${item.id}-${item.samVersion}-${item.pricingVersion}`}
+              item={item}
+              onRemove={() => removeOption(setSelectedContract, selectedContract, item)}
+            />
+          ))}
+        </Card>
+      </div>
 
-                  <Autocomplete
-                    multiple
-                    options={options}
-                    filterSelectedOptions
-                    value={selectedOptions}
-                    onChange={(e, newValue) => setSelectedOptions(newValue)}
-                    getOptionLabel={(option) =>
-                      `${option.id} (Client: ${option.clientName}, SAM: ${option.samVersion}, Pricing: ${option.pricingVersion})`
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Select PSCRF IDs"
-                        placeholder="Start typing..."
-                        size="small"
-                      />
-                    )}
-                    disabled={!compareEnabled}
-                    sx={{ mb: 2 }}
-                  />
+      {/* === SECOND ROW: PSCRF vs PSCRF === */}
+      <Typography variant="h5" className="mt-12 mb-4">
+        Compare PSCRF Data and PSCRF Data
+      </Typography>
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="p-4">
+          <Typography variant="h6" mb={2}>PSCRF Data (Left)</Typography>
+          <Autocomplete
+            multiple
+            options={options}
+            filterSelectedOptions
+            value={selectedOptionsLeft}
+            onChange={(e, newValue) => setSelectedOptionsLeft(newValue)}
+            renderInput={(params) => (
+              <TextField {...params} label="Select PSCRF IDs" placeholder="Start typing..." size="small" />
+            )}
+            disabled={!compareEnabled}
+            sx={{ mb: 2 }}
+          />
+          {selectedOptionsLeft.map((item) => (
+            <LeftBoxCard
+              key={`left-${item.id}-${item.samVersion}-${item.pricingVersion}`}
+              item={item}
+              onRemove={() => removeOption(setSelectedOptionsLeft, selectedOptionsLeft, item)}
+            />
+          ))}
+        </Card>
 
-                  {selectedOptions.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      No selections yet.
-                    </Typography>
-                  )}
+        <Card className="p-4">
+          <Typography variant="h6" mb={2}>PSCRF Data (Right)</Typography>
+          <Autocomplete
+            multiple
+            options={options}
+            filterSelectedOptions
+            value={selectedOptionsRight}
+            onChange={(e, newValue) => setSelectedOptionsRight(newValue)}
+            renderInput={(params) => (
+              <TextField {...params} label="Select PSCRF IDs" placeholder="Start typing..." size="small" />
+            )}
+            disabled={!compareEnabled}
+            sx={{ mb: 2 }}
+          />
+          {selectedOptionsRight.map((item) => (
+            <LeftBoxCard
+              key={`right-${item.id}-${item.samVersion}-${item.pricingVersion}`}
+              item={item}
+              onRemove={() => removeOption(setSelectedOptionsRight, selectedOptionsRight, item)}
+            />
+          ))}
+        </Card>
+      </div>
 
-                  {selectedOptions.map((item) => (
-                    <LeftBoxCard key={`${item.id}-${item.samVersion}-${item.pricingVersion}`} item={item} onRemove={removeOption} />
-                  ))}
-                </Paper>
-              </Grid>
+      {/* === THIRD ROW: PSCRF vs PSCRF (2) === */}
+      <Typography variant="h5" className="mt-12 mb-4">
+        Compare PSCRF Data and PSCRF Data (Second Pair)
+      </Typography>
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="p-4">
+          <Typography variant="h6" mb={2}>PSCRF Data (Left 2)</Typography>
+          <Autocomplete
+            multiple
+            options={options}
+            filterSelectedOptions
+            value={selectedOptionsLeft2}
+            onChange={(e, newValue) => setSelectedOptionsLeft2(newValue)}
+            renderInput={(params) => (
+              <TextField {...params} label="Select PSCRF IDs" placeholder="Start typing..." size="small" />
+            )}
+            disabled={!compareEnabled}
+            sx={{ mb: 2 }}
+          />
+          {selectedOptionsLeft2.map((item) => (
+            <LeftBoxCard
+              key={`left2-${item.id}-${item.samVersion}-${item.pricingVersion}`}
+              item={item}
+              onRemove={() => removeOption(setSelectedOptionsLeft2, selectedOptionsLeft2, item)}
+            />
+          ))}
+        </Card>
 
-              {/* Center arrows and expand/collapse buttons */}
-              <Grid
-                item
-                xs={2}
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: 400,
-                  position: "relative",
-                }}
-              >
-                <IconButton
-                  onClick={() => setDirection("left")}
-                  sx={{ color: getArrowColor("left") }}
-                  disabled={!compareEnabled}
-                  aria-label="Left direction"
-                >
-                  <ArrowBackIcon fontSize="large" />
-                </IconButton>
-                <IconButton
-                  onClick={() => setDirection("right")}
-                  sx={{ color: getArrowColor("right") }}
-                  disabled={!compareEnabled}
-                  aria-label="Right direction"
-                >
-                  <ArrowForwardIcon fontSize="large" />
-                </IconButton>
-
-                {/* Expand/Collapse toggle button below arrows */}
-                <IconButton
-                  onClick={() => setCollapsed(!collapsed)}
-                  aria-label={collapsed ? "Expand" : "Collapse"}
-                  sx={{ mt: 3 }}
-                >
-                  {collapsed ? <AddIcon /> : <CloseIcon />}
-                </IconButton>
-              </Grid>
-
-              {/* Right Box */}
-              <Grid item xs={5}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    border: getBoxBorder("right"),
-                    minHeight: 400,
-                    boxSizing: "border-box",
-                    overflowY: "auto",
-                    backgroundColor: compareEnabled ? "inherit" : "#f0f0f0",
-                  }}
-                  elevation={2}
-                >
-                  <Typography variant="h6" mb={2}>
-                    Approved Contract
-                  </Typography>
-
-                  {contractSections.map((section, index) => (
-                    <ApprovedContractSection
-                      key={section.id}
-                      index={index}
-                      section={section}
-                      handleTypeChange={handleTypeChange}
-                      handleFileChange={handleFileChange}
-                      addSection={addSection}
-                      removeSection={removeSection}
-                      disabled={!compareEnabled}
-                    />
-                  ))}
-
-                  {contractSections.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      No contract sections.
-                    </Typography>
-                  )}
-                </Paper>
-              </Grid>
-            </Grid>
-          </Box>
-        </>
-      )}
-    </Box>
+        <Card className="p-4">
+          <Typography variant="h6" mb={2}>PSCRF Data (Right 2)</Typography>
+          <Autocomplete
+            multiple
+            options={options}
+            filterSelectedOptions
+            value={selectedOptionsRight2}
+            onChange={(e, newValue) => setSelectedOptionsRight2(newValue)}
+            renderInput={(params) => (
+              <TextField {...params} label="Select PSCRF IDs" placeholder="Start typing..." size="small" />
+            )}
+            disabled={!compareEnabled}
+            sx={{ mb: 2 }}
+          />
+          {selectedOptionsRight2.map((item) => (
+            <LeftBoxCard
+              key={`right2-${item.id}-${item.samVersion}-${item.pricingVersion}`}
+              item={item}
+              onRemove={() => removeOption(setSelectedOptionsRight2, selectedOptionsRight2, item)}
+            />
+          ))}
+        </Card>
+      </div>
+    </div>
   );
-}
+};
+
+export default PSCRFComparison;
