@@ -21,8 +21,9 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
-import options from "./options.json";
+import options from "./options.json"; // Your PSCRF options list JSON file
 
+// Left box card showing selected PSCRF items with remove button
 function LeftBoxCard({ item, onRemove }) {
   return (
     <Paper
@@ -46,7 +47,7 @@ function LeftBoxCard({ item, onRemove }) {
         size="small"
         onClick={() => onRemove(item)}
         sx={{ position: "absolute", top: 4, right: 4 }}
-        aria-label="Remove"
+        aria-label={`Remove ${item.id}`}
       >
         <CloseIcon fontSize="small" />
       </IconButton>
@@ -54,6 +55,7 @@ function LeftBoxCard({ item, onRemove }) {
   );
 }
 
+// Approved Contract Section card with contract type radios, file upload, add/remove section buttons
 function ApprovedContractSection({
   index,
   section,
@@ -173,7 +175,8 @@ function ApprovedContractSection({
   );
 }
 
-export default function Request() {
+// The entire pair UI component
+function ComparePair({ pairIndex }) {
   const [compareEnabled, setCompareEnabled] = useState(true);
   const [direction, setDirection] = useState("right");
   const [collapsed, setCollapsed] = useState(false);
@@ -198,7 +201,9 @@ export default function Request() {
 
   const handleTypeChange = (id, newType) => {
     setContractSections(
-      contractSections.map((s) => (s.id === id ? { ...s, contractType: newType, file: null } : s))
+      contractSections.map((s) =>
+        s.id === id ? { ...s, contractType: newType, file: null } : s
+      )
     );
   };
 
@@ -208,7 +213,6 @@ export default function Request() {
     );
   };
 
-  // Outline colors for boxes (flipped compared to direction)
   const getBoxBorder = (boxSide) => {
     if (!compareEnabled) return "2px solid lightgray";
 
@@ -219,21 +223,34 @@ export default function Request() {
     }
   };
 
-  // Arrow colors
   const getArrowColor = (arrowDirection) => {
     if (!compareEnabled) return "lightgray";
     if (direction === arrowDirection) return "darkgray";
     return "lightgray";
   };
 
-  // Remove selected option from dropdown
   const removeOption = (item) => {
-    setSelectedOptions(selectedOptions.filter((o) => o.id !== item.id || o.samVersion !== item.samVersion || o.pricingVersion !== item.pricingVersion));
+    setSelectedOptions(
+      selectedOptions.filter(
+        (o) =>
+          o.id !== item.id ||
+          o.samVersion !== item.samVersion ||
+          o.pricingVersion !== item.pricingVersion
+      )
+    );
   };
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
-      {/* Collapsible container header */}
+    <Box
+      sx={{
+        p: 3,
+        mb: 5,
+        border: "1px solid #ccc",
+        borderRadius: 2,
+        backgroundColor: "#fafafa",
+      }}
+    >
+      {/* Header with collapse toggle */}
       <Box
         sx={{
           display: "flex",
@@ -241,16 +258,12 @@ export default function Request() {
           justifyContent: "space-between",
           mb: 1,
           userSelect: "none",
-          border: "1px solid #ccc",
-          borderRadius: 1,
-          p: 1,
-          backgroundColor: "#f5f5f5",
           cursor: "pointer",
         }}
         onClick={() => setCollapsed(!collapsed)}
       >
         <Typography variant="subtitle1" fontWeight="bold" sx={{ ml: 1 }}>
-          Compare PSCRF and Approved Contract
+          Compare PSCRF and Approved Contract #{pairIndex + 1}
         </Typography>
         <IconButton
           size="small"
@@ -266,7 +279,6 @@ export default function Request() {
 
       {!collapsed && (
         <>
-          {/* Compare checkbox */}
           <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
             <FormControlLabel
               control={
@@ -285,7 +297,6 @@ export default function Request() {
               sx={{ mr: 4 }}
             />
 
-            {/* Boxes and arrows container */}
             <Grid container spacing={2} alignItems="center" sx={{ minHeight: 420 }}>
               {/* Left Box */}
               <Grid item xs={5}>
@@ -332,12 +343,16 @@ export default function Request() {
                   )}
 
                   {selectedOptions.map((item) => (
-                    <LeftBoxCard key={`${item.id}-${item.samVersion}-${item.pricingVersion}`} item={item} onRemove={removeOption} />
+                    <LeftBoxCard
+                      key={`${item.id}-${item.samVersion}-${item.pricingVersion}`}
+                      item={item}
+                      onRemove={removeOption}
+                    />
                   ))}
                 </Paper>
               </Grid>
 
-              {/* Center arrows and expand/collapse buttons */}
+              {/* Center arrows */}
               <Grid
                 item
                 xs={2}
@@ -366,58 +381,44 @@ export default function Request() {
                 >
                   <ArrowForwardIcon fontSize="large" />
                 </IconButton>
-
-                {/* Expand/Collapse toggle button below arrows */}
-                <IconButton
-                  onClick={() => setCollapsed(!collapsed)}
-                  aria-label={collapsed ? "Expand" : "Collapse"}
-                  sx={{ mt: 3 }}
-                >
-                  {collapsed ? <AddIcon /> : <CloseIcon />}
-                </IconButton>
               </Grid>
 
               {/* Right Box */}
               <Grid item xs={5}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    border: getBoxBorder("right"),
-                    minHeight: 400,
-                    boxSizing: "border-box",
-                    overflowY: "auto",
-                    backgroundColor: compareEnabled ? "inherit" : "#f0f0f0",
-                  }}
-                  elevation={2}
-                >
-                  <Typography variant="h6" mb={2}>
-                    Approved Contract
+                {contractSections.length === 0 && (
+                  <Typography variant="body2" color="text.secondary">
+                    No approved contract sections.
                   </Typography>
+                )}
 
-                  {contractSections.map((section, index) => (
-                    <ApprovedContractSection
-                      key={section.id}
-                      index={index}
-                      section={section}
-                      handleTypeChange={handleTypeChange}
-                      handleFileChange={handleFileChange}
-                      addSection={addSection}
-                      removeSection={removeSection}
-                      disabled={!compareEnabled}
-                    />
-                  ))}
-
-                  {contractSections.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      No contract sections.
-                    </Typography>
-                  )}
-                </Paper>
+                {contractSections.map((section, index) => (
+                  <ApprovedContractSection
+                    key={section.id}
+                    index={index}
+                    section={section}
+                    handleTypeChange={handleTypeChange}
+                    handleFileChange={handleFileChange}
+                    addSection={addSection}
+                    removeSection={removeSection}
+                    disabled={!compareEnabled}
+                  />
+                ))}
               </Grid>
             </Grid>
           </Box>
         </>
       )}
+    </Box>
+  );
+}
+
+// Main component rendering 4 pairs
+export default function Request() {
+  return (
+    <Box sx={{ p: 3 }}>
+      {[...Array(4)].map((_, i) => (
+        <ComparePair key={i} pairIndex={i} />
+      ))}
     </Box>
   );
 }
