@@ -11,16 +11,20 @@ import {
   Grid,
   Checkbox,
   FormControlLabel,
+  Collapse,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import options from './options.json';
 
 const Request = () => {
   const [selectedOptions, setSelectedOptions] = useState([]);
-  const [direction, setDirection] = useState('right'); // 'right' or 'left'
-  const [enabled, setEnabled] = useState(true); // checkbox state
+  const [direction, setDirection] = useState('right');
+  const [enabled, setEnabled] = useState(true);
+  const [expanded, setExpanded] = useState(true);
 
   const handleSelectionChange = (event, values) => {
     setSelectedOptions(values);
@@ -89,136 +93,147 @@ const Request = () => {
   });
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Grid container spacing={2} alignItems="center">
-        {/* Checkbox */}
-        <Grid item xs="auto">
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={enabled}
-                onChange={(e) => setEnabled(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Enable Compare"
-          />
-        </Grid>
+    <Box sx={{ p: 4, position: 'relative' }}>
+      {/* Toggle button on top right */}
+      <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+        <IconButton onClick={() => setExpanded(!expanded)}>
+          {expanded ? <RemoveIcon /> : <AddIcon />}
+        </IconButton>
+      </Box>
 
-        {/* Main Content */}
-        <Grid item xs>
-          <Grid container spacing={4} alignItems="center" justifyContent="center">
-            {/* First Box */}
-            <Grid item xs={5}>
-              <Box sx={getBoxStyles(1)}>
-                <Typography variant="h6" gutterBottom>
-                  PSCRF Data
-                </Typography>
-
-                <Autocomplete
-                  multiple
-                  options={options}
-                  getOptionLabel={(option) =>
-                    `${option.id} | ${option.samVersion} | ${option.pricingVersion} | ${option.clientName}`
-                  }
-                  value={selectedOptions}
-                  onChange={handleSelectionChange}
-                  filterSelectedOptions
-                  isOptionEqualToValue={(option, value) =>
-                    option.id === value.id &&
-                    option.samVersion === value.samVersion &&
-                    option.pricingVersion === value.pricingVersion
-                  }
-                  filterOptions={(options, { inputValue }) =>
-                    options.filter(
-                      (opt) =>
-                        opt.id.toLowerCase().includes(inputValue.toLowerCase()) ||
-                        opt.samVersion.toLowerCase().includes(inputValue.toLowerCase()) ||
-                        opt.pricingVersion.toLowerCase().includes(inputValue.toLowerCase()) ||
-                        opt.clientName.toLowerCase().includes(inputValue.toLowerCase())
-                    )
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Select PSCRF IDs"
-                      variant="outlined"
-                      disabled={!enabled}
-                    />
-                  )}
-                  renderOption={(props, option) => (
-                    <li
-                      {...props}
-                      key={`${option.id}-${option.samVersion}-${option.pricingVersion}`}
-                    >
-                      {`id: ${option.id}, clientName: ${option.clientName}, samVersion: ${option.samVersion}, pricingVersion: ${option.pricingVersion}`}
-                    </li>
-                  )}
+      <Collapse in={expanded}>
+        <Grid container spacing={2} alignItems="center">
+          {/* Checkbox */}
+          <Grid item xs="auto">
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={enabled}
+                  onChange={(e) => setEnabled(e.target.checked)}
+                  color="primary"
                 />
+              }
+              label="Enable Compare"
+            />
+          </Grid>
 
-                {selectedOptions.map((opt) => (
-                  <Card
-                    key={`${opt.id}-${opt.samVersion}-${opt.pricingVersion}`}
-                    sx={{
-                      mt: 2,
-                      p: 2,
-                      position: 'relative',
-                      backgroundColor: '#f5f5f5',
-                      borderRadius: 2,
-                      boxShadow: 2,
-                      opacity: enabled ? 1 : 0.6,
-                    }}
-                  >
-                    <IconButton
-                      size="small"
-                      onClick={() => removeOption(opt.id, opt.samVersion, opt.pricingVersion)}
-                      sx={{ position: 'absolute', top: 8, right: 8 }}
-                      disabled={!enabled}
+          {/* Main Content */}
+          <Grid item xs>
+            <Grid container spacing={4} alignItems="center" justifyContent="center">
+              {/* First Box */}
+              <Grid item xs={5}>
+                <Box sx={getBoxStyles(1)}>
+                  <Typography variant="h6" gutterBottom>
+                    PSCRF Data
+                  </Typography>
+
+                  <Autocomplete
+                    multiple
+                    options={options}
+                    getOptionLabel={(option) =>
+                      `${option.id} | ${option.samVersion} | ${option.pricingVersion} | ${option.clientName}`
+                    }
+                    value={selectedOptions}
+                    onChange={handleSelectionChange}
+                    filterSelectedOptions
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value.id &&
+                      option.samVersion === value.samVersion &&
+                      option.pricingVersion === value.pricingVersion
+                    }
+                    filterOptions={(options, { inputValue }) =>
+                      options.filter(
+                        (opt) =>
+                          opt.id.toLowerCase().includes(inputValue.toLowerCase()) ||
+                          opt.samVersion.toLowerCase().includes(inputValue.toLowerCase()) ||
+                          opt.pricingVersion.toLowerCase().includes(inputValue.toLowerCase()) ||
+                          opt.clientName.toLowerCase().includes(inputValue.toLowerCase())
+                      )
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Select PSCRF IDs"
+                        variant="outlined"
+                        disabled={!enabled}
+                      />
+                    )}
+                    renderOption={(props, option) => (
+                      <li
+                        {...props}
+                        key={`${option.id}-${option.samVersion}-${option.pricingVersion}`}
+                      >
+                        {`id: ${option.id}, clientName: ${option.clientName}, samVersion: ${option.samVersion}, pricingVersion: ${option.pricingVersion}`}
+                      </li>
+                    )}
+                  />
+
+                  {selectedOptions.map((opt) => (
+                    <Card
+                      key={`${opt.id}-${opt.samVersion}-${opt.pricingVersion}`}
+                      sx={{
+                        mt: 2,
+                        p: 2,
+                        position: 'relative',
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: 2,
+                        boxShadow: 2,
+                        opacity: enabled ? 1 : 0.6,
+                      }}
                     >
-                      <CloseIcon />
-                    </IconButton>
-                    <Typography variant="subtitle1" fontWeight="bold">{opt.id}</Typography>
-                    <Typography variant="body2"><strong>Client:</strong> {opt.clientName}</Typography>
-                    <Typography variant="body2"><strong>SAM Version:</strong> {opt.samVersion}</Typography>
-                    <Typography variant="body2"><strong>Pricing Version:</strong> {opt.pricingVersion}</Typography>
-                  </Card>
-                ))}
-              </Box>
-            </Grid>
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          removeOption(opt.id, opt.samVersion, opt.pricingVersion)
+                        }
+                        sx={{ position: 'absolute', top: 8, right: 8 }}
+                        disabled={!enabled}
+                      >
+                        <CloseIcon />
+                      </IconButton>
+                      <Typography variant="subtitle1" fontWeight="bold">{opt.id}</Typography>
+                      <Typography variant="body2"><strong>Client:</strong> {opt.clientName}</Typography>
+                      <Typography variant="body2"><strong>SAM Version:</strong> {opt.samVersion}</Typography>
+                      <Typography variant="body2"><strong>Pricing Version:</strong> {opt.pricingVersion}</Typography>
+                    </Card>
+                  ))}
+                </Box>
+              </Grid>
 
-            {/* Arrows */}
-            <Grid item xs={2} sx={{ display: 'flex', justifyContent: 'center' }}>
-              <ButtonGroup orientation="vertical">
-                <Button
-                  onClick={() => enabled && setDirection('right')}
-                  sx={arrowStyle('right')}
-                  startIcon={<ArrowForwardIcon />}
-                  disabled={!enabled}
-                >
-                  →
-                </Button>
-                <Button
-                  onClick={() => enabled && setDirection('left')}
-                  sx={arrowStyle('left')}
-                  startIcon={<ArrowBackIcon />}
-                  disabled={!enabled}
-                >
-                  ←
-                </Button>
-              </ButtonGroup>
-            </Grid>
+              {/* Arrows */}
+              <Grid item xs={2} sx={{ display: 'flex', justifyContent: 'center' }}>
+                <ButtonGroup orientation="vertical">
+                  <Button
+                    onClick={() => enabled && setDirection('right')}
+                    sx={arrowStyle('right')}
+                    startIcon={<ArrowForwardIcon />}
+                    disabled={!enabled}
+                  >
+                    →
+                  </Button>
+                  <Button
+                    onClick={() => enabled && setDirection('left')}
+                    sx={arrowStyle('left')}
+                    startIcon={<ArrowBackIcon />}
+                    disabled={!enabled}
+                  >
+                    ←
+                  </Button>
+                </ButtonGroup>
+              </Grid>
 
-            {/* Second Box */}
-            <Grid item xs={5}>
-              <Box sx={getBoxStyles(2)}>
-                <Typography variant="h6" gutterBottom>
-                  Destination (Empty for now)
-                </Typography>
-              </Box>
+              {/* Second Box */}
+              <Grid item xs={5}>
+                <Box sx={getBoxStyles(2)}>
+                  <Typography variant="h6" gutterBottom>
+                    Destination (Empty for now)
+                  </Typography>
+                </Box>
+              </Grid>
             </Grid>
           </Grid>
         </Grid>
-      </Grid>
+      </Collapse>
     </Box>
   );
 };
