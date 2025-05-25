@@ -21,46 +21,14 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
-// Sample options for PSCRF dropdown
+// Sample PSCRF options
 const options = [
   { id: "PSCRF-001", clientName: "ABC Corp", samVersion: "v1", pricingVersion: "p1" },
   { id: "PSCRF-002", clientName: "XYZ Ltd", samVersion: "v2", pricingVersion: "p2" },
   { id: "PSCRF-003", clientName: "DEF Inc", samVersion: "v3", pricingVersion: "p3" },
 ];
 
-// Left box card (for Pscerf Data)
-function LeftBoxCard({ item, onRemove }) {
-  return (
-    <Paper
-      sx={{
-        p: 2,
-        mb: 1,
-        borderRadius: 1,
-        border: "1px solid #ccc",
-        backgroundColor: "#f9f9f9",
-        position: "relative",
-      }}
-      elevation={1}
-    >
-      <Typography variant="subtitle2" fontWeight="bold">
-        {item.id}
-      </Typography>
-      <Typography variant="body2">Client: {item.clientName}</Typography>
-      <Typography variant="body2">SAM Version: {item.samVersion}</Typography>
-      <Typography variant="body2">Pricing Version: {item.pricingVersion}</Typography>
-      <IconButton
-        size="small"
-        onClick={() => onRemove(item)}
-        sx={{ position: "absolute", top: 4, right: 4 }}
-        aria-label="Remove"
-      >
-        <CloseIcon fontSize="small" />
-      </IconButton>
-    </Paper>
-  );
-}
-
-// Contract section for approved or signed contracts
+// Contract Section Component
 function ContractSection({
   index,
   section,
@@ -186,34 +154,30 @@ function ComparisonUnit({
   leftBoxType = "pscerf", // "pscerf" or "approved"
   rightBoxTitle = "Approved Contract",
 }) {
-  // State for compare enable checkbox and direction
+  // State
   const [compareEnabled, setCompareEnabled] = useState(true);
   const [direction, setDirection] = useState("right");
   const [collapsed, setCollapsed] = useState(false);
 
-  // PSCRF dropdown selection for left box if leftBoxType === 'pscerf'
+  // PSCRF selections (if leftBoxType === 'pscerf')
   const [selectedOptions, setSelectedOptions] = useState([]);
 
-  // Approved Contract sections on left if leftBoxType === 'approved'
+  // Left contract sections (if leftBoxType === 'approved')
   const [leftContractSections, setLeftContractSections] = useState([
     { id: 0, contractType: "Agreement", file: null },
   ]);
 
-  // Contract sections on right box
+  // Right contract sections
   const [rightContractSections, setRightContractSections] = useState([
     { id: 0, contractType: "Agreement", file: null },
   ]);
 
-  // Handlers for PSCRF dropdown
+  // PSCRF dropdown change
   const handleSelect = (event, values) => {
     setSelectedOptions(values);
   };
 
-  const removeOption = (item) => {
-    setSelectedOptions(selectedOptions.filter((o) => o.id !== item.id));
-  };
-
-  // Add/remove/change handlers for left contract sections (only if leftBoxType === 'approved')
+  // Left contract handlers
   const addLeftSection = () => {
     const newId = leftContractSections.length
       ? Math.max(...leftContractSections.map((s) => s.id)) + 1
@@ -239,7 +203,7 @@ function ComparisonUnit({
     );
   };
 
-  // Add/remove/change handlers for right contract sections
+  // Right contract handlers
   const addRightSection = () => {
     const newId = rightContractSections.length
       ? Math.max(...rightContractSections.map((s) => s.id)) + 1
@@ -265,10 +229,9 @@ function ComparisonUnit({
     );
   };
 
-  // Border style helpers
+  // Border style
   const getBoxBorder = (boxSide) => {
     if (!compareEnabled) return "2px solid lightgray";
-
     if (direction === "right") {
       return boxSide === "left" ? "2px solid darkgrey" : "2px solid lightgrey";
     } else {
@@ -276,10 +239,22 @@ function ComparisonUnit({
     }
   };
 
+  // Arrow colors
   const getArrowColor = (arrowDirection) => {
     if (!compareEnabled) return "lightgray";
     if (direction === arrowDirection) return "black";
     return "lightgray";
+  };
+
+  // Render PSCRF selections as comma-separated with metadata
+  const renderSelectedPscerfText = () => {
+    if (selectedOptions.length === 0) return "None selected";
+    return selectedOptions
+      .map(
+        (o) =>
+          `${o.id} (Client: ${o.clientName}, SAM: ${o.samVersion}, Pricing: ${o.pricingVersion})`
+      )
+      .join(", ");
   };
 
   return (
@@ -304,59 +279,39 @@ function ComparisonUnit({
 
       {!collapsed && (
         <>
-          {/* Top controls: Compare enabled checkbox + direction */}
-          <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 3 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={compareEnabled}
-                  onChange={(e) => setCompareEnabled(e.target.checked)}
-                />
-              }
-              label="Compare enabled"
-            />
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <ArrowBackIcon
-                sx={{
-                  cursor: "pointer",
-                  color: getArrowColor("left"),
-                }}
-                onClick={() => compareEnabled && setDirection("left")}
-                aria-label="Direction left"
+          <Grid container spacing={2} alignItems="center">
+            {/* Compare checkbox on left */}
+            <Grid item xs={12} sm={2} md={1}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={compareEnabled}
+                    onChange={(e) => setCompareEnabled(e.target.checked)}
+                    size="small"
+                  />
+                }
+                label="Compare"
               />
-              <ArrowForwardIcon
-                sx={{
-                  cursor: "pointer",
-                  color: getArrowColor("right"),
-                }}
-                onClick={() => compareEnabled && setDirection("right")}
-                aria-label="Direction right"
-              />
-            </Box>
-          </Box>
+            </Grid>
 
-          <Grid container spacing={2}>
             {/* Left Box */}
             <Grid
               item
-              xs={6}
+              xs={12}
+              sm={4}
+              md={5}
               sx={{
                 border: getBoxBorder("left"),
                 borderRadius: 1,
                 p: 2,
-                minHeight: 300,
+                minHeight: 160,
               }}
             >
-              <Typography
-                variant="subtitle1"
-                fontWeight="bold"
-                mb={2}
-                sx={{ userSelect: "none" }}
-              >
+              <Typography variant="subtitle1" fontWeight="bold" mb={2}>
                 {leftBoxType === "pscerf" ? "Pscerf Data" : "Approved Contract"}
               </Typography>
 
-              {/* Left box content */}
+              {/* If pscerf type show dropdown and comma-separated text */}
               {leftBoxType === "pscerf" ? (
                 <>
                   <Autocomplete
@@ -366,21 +321,23 @@ function ComparisonUnit({
                     value={selectedOptions}
                     onChange={handleSelect}
                     renderInput={(params) => (
-                      <TextField {...params} label="Select PSCRF IDs" placeholder="Select" />
+                      <TextField {...params} label="Select PSCRF IDs" size="small" />
                     )}
-                    disableCloseOnSelect
-                    sx={{ mb: 2 }}
                   />
-                  {selectedOptions.map((item) => (
-                    <LeftBoxCard key={item.id} item={item} onRemove={removeOption} />
-                  ))}
+                  <Typography
+                    variant="body2"
+                    mt={1}
+                    sx={{ whiteSpace: "pre-wrap", userSelect: "text" }}
+                  >
+                    {renderSelectedPscerfText()}
+                  </Typography>
                 </>
               ) : (
-                // Approved Contract Sections on left (unit 2)
-                leftContractSections.map((section, idx) => (
+                // Show approved contract sections on left box if applicable
+                leftContractSections.map((section, i) => (
                   <ContractSection
                     key={section.id}
-                    index={idx}
+                    index={i}
                     section={section}
                     handleTypeChange={handleLeftTypeChange}
                     handleFileChange={handleLeftFileChange}
@@ -393,31 +350,61 @@ function ComparisonUnit({
               )}
             </Grid>
 
+            {/* Arrows in middle */}
+            <Grid
+              item
+              xs={12}
+              sm={1}
+              md={1}
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 1,
+                minHeight: 160,
+              }}
+            >
+              <ArrowBackIcon
+                sx={{
+                  cursor: "pointer",
+                  color: getArrowColor("left"),
+                  fontSize: 32,
+                  userSelect: "none",
+                }}
+                onClick={() => compareEnabled && setDirection("left")}
+              />
+              <ArrowForwardIcon
+                sx={{
+                  cursor: "pointer",
+                  color: getArrowColor("right"),
+                  fontSize: 32,
+                  userSelect: "none",
+                }}
+                onClick={() => compareEnabled && setDirection("right")}
+              />
+            </Grid>
+
             {/* Right Box */}
             <Grid
               item
-              xs={6}
+              xs={12}
+              sm={4}
+              md={5}
               sx={{
                 border: getBoxBorder("right"),
                 borderRadius: 1,
                 p: 2,
-                minHeight: 300,
+                minHeight: 160,
               }}
             >
-              <Typography
-                variant="subtitle1"
-                fontWeight="bold"
-                mb={2}
-                sx={{ userSelect: "none" }}
-              >
-                {rightBoxTitle}
+              <Typography variant="subtitle1" fontWeight="bold" mb={2}>
+                {rightBoxTitle || "Signed Contract"}
               </Typography>
 
-              {/* Right box contract sections */}
-              {rightContractSections.map((section, idx) => (
+              {rightContractSections.map((section, i) => (
                 <ContractSection
                   key={section.id}
-                  index={idx}
+                  index={i}
                   section={section}
                   handleTypeChange={handleRightTypeChange}
                   handleFileChange={handleRightFileChange}
@@ -435,13 +422,14 @@ function ComparisonUnit({
   );
 }
 
-export default function ComparisonUnitsPanel() {
+// Example usage for unit 2 as you mentioned
+export default function App() {
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
-      {/* Unit 1: Left = Pscerf Data, Right = Approved Contract */}
+    <Box sx={{ p: 4 }}>
+      {/* Unit 1 - left box pscerf, right box approved contract */}
       <ComparisonUnit unitNumber={1} leftBoxType="pscerf" rightBoxTitle="Approved Contract" />
 
-      {/* Unit 2: Left = Approved Contract, Right = Signed Contract */}
+      {/* Unit 2 - left box approved contract, right box signed contract */}
       <ComparisonUnit unitNumber={2} leftBoxType="approved" rightBoxTitle="Signed Contract" />
     </Box>
   );
