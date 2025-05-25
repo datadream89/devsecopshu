@@ -5,43 +5,72 @@ import {
   IconButton,
   Collapse,
   Checkbox,
-  FormControlLabel,
   Stack,
+  TextField,
+  Autocomplete,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
-// Dummy PSCRF data (you can replace with your real data or props)
-const pscrfData = [
+// Sample PSCRF JSON data - replace with import or fetch as needed
+const pscrfOptions = [
   { id: "PSCRF001", samVersion: "v1.2", pricingVersion: "p3.4", clientName: "Client A" },
   { id: "PSCRF002", samVersion: "v2.1", pricingVersion: "p2.8", clientName: "Client B" },
+  { id: "PSCRF003", samVersion: "v3.0", pricingVersion: "p1.5", clientName: "Client C" },
 ];
 
-// PSCRFSection component - sample implementation
+// PSCRFSection component with Autocomplete and selected cards
 function PSCRFSection() {
+  const [selectedPSCRF, setSelectedPSCRF] = useState([]);
+
   return (
     <Box>
-      {pscrfData.map((pscrf) => (
-        <Box
-          key={pscrf.id}
-          sx={{
-            border: "1px solid #ccc",
-            borderRadius: 1,
-            p: 1,
-            mb: 1,
-            backgroundColor: "#e3f2fd",
-          }}
-        >
-          <Typography variant="subtitle2" fontWeight="bold">
-            {pscrf.id}
-          </Typography>
-          <Typography variant="body2">Sam Version: {pscrf.samVersion}</Typography>
-          <Typography variant="body2">Pricing Version: {pscrf.pricingVersion}</Typography>
-          <Typography variant="body2">Client: {pscrf.clientName}</Typography>
-        </Box>
-      ))}
+      <Autocomplete
+        multiple
+        options={pscrfOptions}
+        getOptionLabel={(option) =>
+          `${option.id}, ${option.samVersion}, ${option.clientName}`
+        }
+        filterSelectedOptions
+        value={selectedPSCRF}
+        onChange={(event, newValue) => {
+          setSelectedPSCRF(newValue);
+        }}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label="Select PSCRF"
+            placeholder="Start typing..."
+            size="small"
+            sx={{ mb: 2 }}
+          />
+        )}
+        sx={{ width: "100%" }}
+      />
+
+      <Box sx={{ maxHeight: 250, overflowY: "auto" }}>
+        {selectedPSCRF.map((pscrf) => (
+          <Box
+            key={pscrf.id}
+            sx={{
+              border: "1px solid #90caf9",
+              borderRadius: 1,
+              p: 1,
+              mb: 1,
+              backgroundColor: "#e3f2fd",
+            }}
+          >
+            <Typography variant="subtitle2" fontWeight="bold">
+              {pscrf.id}
+            </Typography>
+            <Typography variant="body2">Sam Version: {pscrf.samVersion}</Typography>
+            <Typography variant="body2">Pricing Version: {pscrf.pricingVersion}</Typography>
+            <Typography variant="body2">Client: {pscrf.clientName}</Typography>
+          </Box>
+        ))}
+      </Box>
     </Box>
   );
 }
@@ -107,16 +136,12 @@ export default function BoxPairs() {
           </Box>
 
           {/* Compare checkbox */}
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={compareChecked[idx]}
-                onChange={() => handleCheckboxChange(idx)}
-              />
-            }
-            label="Compare"
+          <Checkbox
+            checked={compareChecked[idx]}
+            onChange={() => handleCheckboxChange(idx)}
             sx={{ mb: 1 }}
-          />
+          />{" "}
+          Compare
 
           {/* Collapsible content */}
           <Collapse in={!collapsed[idx]}>
@@ -148,7 +173,7 @@ export default function BoxPairs() {
                   transition: "all 0.3s ease",
                 }}
               >
-                {/* Render PSCRFSection conditionally */}
+                {/* PSCRFSection in Row 1 Left & Row 4 Left */}
                 {(idx === 0 || idx === 3) ? (
                   <PSCRFSection />
                 ) : (
@@ -201,7 +226,7 @@ export default function BoxPairs() {
                   transition: "all 0.3s ease",
                 }}
               >
-                {/* Render PSCRFSection conditionally */}
+                {/* PSCRFSection in Row 3 Right & Row 4 Right */}
                 {(idx === 2 || idx === 3) ? (
                   <PSCRFSection />
                 ) : (
