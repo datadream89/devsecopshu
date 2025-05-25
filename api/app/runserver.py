@@ -25,6 +25,7 @@ const pscrfData = [
   { id: "PSCRF003", samVersion: "v1.5", pricingVersion: "p4.0", clientName: "Client C" },
 ];
 
+// PSCRFSection component
 function PSCRFSection() {
   const [selectedOptions, setSelectedOptions] = useState([]);
 
@@ -60,12 +61,12 @@ function PSCRFSection() {
         {selectedOptions.map((option) => (
           <Card key={option.id} variant="outlined" sx={{ position: "relative" }}>
             <CardContent sx={{ pr: 5 }}>
-              <Typography variant="subtitle1" fontWeight="bold">
+              <Typography variant="subtitle1" fontWeight="bold" color="#212121">
                 {option.id}
               </Typography>
-              <Typography>Sam Version: {option.samVersion}</Typography>
-              <Typography>Pricing Version: {option.pricingVersion}</Typography>
-              <Typography>Client: {option.clientName}</Typography>
+              <Typography color="#424242">Sam Version: {option.samVersion}</Typography>
+              <Typography color="#424242">Pricing Version: {option.pricingVersion}</Typography>
+              <Typography color="#424242">Client: {option.clientName}</Typography>
             </CardContent>
 
             <IconButton
@@ -83,12 +84,11 @@ function PSCRFSection() {
   );
 }
 
+// Main component
 export default function BoxPairs() {
   const [collapsed, setCollapsed] = useState(Array(4).fill(false));
-  // Change highlight to object with left/right booleans
-  const [highlight, setHighlight] = useState(
-    Array(4).fill(null).map(() => ({ left: false, right: false }))
-  );
+  const [highlight, setHighlight] = useState(Array(4).fill(null)); // 'left' | 'right' | null
+  const [compareChecked, setCompareChecked] = useState(Array(4).fill(true)); // whether compare checkbox checked for each pair
 
   const toggleCollapse = (index) => {
     const updated = [...collapsed];
@@ -98,22 +98,26 @@ export default function BoxPairs() {
 
   const handleArrowClick = (index, direction) => {
     const updated = [...highlight];
-    // toggle the clicked arrow
-    updated[index] = {
-      ...updated[index],
-      [direction]: !updated[index][direction],
-    };
+    updated[index] = direction;
     setHighlight(updated);
+  };
+
+  const handleCompareChange = (index) => {
+    const updated = [...compareChecked];
+    updated[index] = !updated[index];
+    setCompareChecked(updated);
   };
 
   return (
     <Box sx={{ maxWidth: "1000px", mx: "auto", mt: 4 }}>
       {titles.map((title, idx) => {
+        // To keep code cleaner, save highlight for this idx
         const hl = highlight[idx];
+        const isCompare = compareChecked[idx];
 
         return (
           <Box key={idx} sx={{ mb: 4, border: "1px solid #ccc", borderRadius: 1 }}>
-            {/* Title Bar */}
+            {/* Title Bar - Full width */}
             <Box
               sx={{
                 width: "100%",
@@ -149,7 +153,13 @@ export default function BoxPairs() {
                 <Stack direction="row" spacing={2} alignItems="center" sx={{ minHeight: 320 }}>
                   {/* Compare checkbox */}
                   <FormControlLabel
-                    control={<Checkbox />}
+                    control={
+                      <Checkbox
+                        checked={isCompare}
+                        onChange={() => handleCompareChange(idx)}
+                        sx={{ color: "#424242" }}
+                      />
+                    }
                     label="Compare"
                     sx={{ whiteSpace: "nowrap" }}
                   />
@@ -160,34 +170,39 @@ export default function BoxPairs() {
                       width: 300,
                       height: 300,
                       border: "2px solid",
-                      borderColor: hl.left ? "gray" : hl.right ? "lightgray" : "#ccc",
+                      borderColor:
+                        hl === "left" ? "gray" : hl === "right" ? "lightgray" : "#ccc",
                       borderRadius: 2,
                       p: 2,
                       overflowY: "auto",
-                      backgroundColor: "#fff",
-                      opacity: hl.left || hl.right ? 1 : 0.5,
+                      backgroundColor: "#fafafa",
+                      boxShadow: "0 0 8px rgba(0,0,0,0.1)",
+                      opacity: isCompare ? 1 : 0.4,
                       transition: "opacity 0.3s",
+                      pointerEvents: isCompare ? "auto" : "none",
                     }}
                   >
                     {(idx === 0 || idx === 2) && <PSCRFSection />}
                   </Box>
 
                   {/* Arrows */}
-                  <Stack spacing={2} alignItems="center">
+                  <Stack spacing={2} alignItems="center" sx={{ mx: 1 }}>
                     <ArrowBackIcon
                       onClick={() => handleArrowClick(idx, "left")}
                       sx={{
-                        cursor: "pointer",
+                        cursor: isCompare ? "pointer" : "default",
                         fontSize: 32,
-                        color: hl.left ? "#424242" : "#bdbdbd",
+                        color: hl === "left" ? "#424242" : "#bdbdbd",
+                        pointerEvents: isCompare ? "auto" : "none",
                       }}
                     />
                     <ArrowForwardIcon
                       onClick={() => handleArrowClick(idx, "right")}
                       sx={{
-                        cursor: "pointer",
+                        cursor: isCompare ? "pointer" : "default",
                         fontSize: 32,
-                        color: hl.right ? "#424242" : "#bdbdbd",
+                        color: hl === "right" ? "#424242" : "#bdbdbd",
+                        pointerEvents: isCompare ? "auto" : "none",
                       }}
                     />
                   </Stack>
@@ -198,13 +213,16 @@ export default function BoxPairs() {
                       width: 300,
                       height: 300,
                       border: "2px solid",
-                      borderColor: hl.right ? "gray" : hl.left ? "lightgray" : "#ccc",
+                      borderColor:
+                        hl === "right" ? "gray" : hl === "left" ? "lightgray" : "#ccc",
                       borderRadius: 2,
                       p: 2,
                       overflowY: "auto",
-                      backgroundColor: "#fff",
-                      opacity: hl.left || hl.right ? 1 : 0.5,
+                      backgroundColor: "#fafafa",
+                      boxShadow: "0 0 8px rgba(0,0,0,0.1)",
+                      opacity: isCompare ? 1 : 0.4,
                       transition: "opacity 0.3s",
+                      pointerEvents: isCompare ? "auto" : "none",
                     }}
                   >
                     {idx === 3 && <PSCRFSection />}
