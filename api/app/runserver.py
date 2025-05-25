@@ -3,6 +3,7 @@ import {
   Box,
   Typography,
   IconButton,
+  Collapse,
   Checkbox,
   FormControlLabel,
   Stack,
@@ -10,13 +11,17 @@ import {
   CardContent,
   Autocomplete,
   TextField,
+  RadioGroup,
+  Radio,
+  FormControl,
+  FormLabel,
+  Button,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-
-const titles = ["Section 1", "Section 2", "Section 3", "Section 4"];
 
 const pscrfData = [
   { id: "PSCRF001", samVersion: "v1.2", pricingVersion: "p3.4", clientName: "Client A" },
@@ -33,17 +38,7 @@ function PSCRFSection() {
   };
 
   return (
-    <Box
-      sx={{
-        height: "100%",
-        bgcolor: "#e9f0ff",
-        borderRadius: 2,
-        p: 1,
-        overflowY: "auto",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Autocomplete
         multiple
         options={pscrfData}
@@ -55,31 +50,43 @@ function PSCRFSection() {
         renderInput={(params) => (
           <TextField {...params} label="Search PSCRF" variant="outlined" size="small" />
         )}
-        sx={{ mb: 1 }}
+        sx={{
+          mb: 2,
+          "& .MuiAutocomplete-inputRoot": {
+            flexWrap: "wrap",
+            minHeight: 56,
+            maxHeight: 150,
+            overflowY: "auto",
+          },
+          "& .MuiAutocomplete-tag": {
+            maxWidth: "100%",
+            whiteSpace: "normal",
+            wordBreak: "break-word",
+          },
+        }}
       />
 
       <Box
         sx={{
-          maxHeight: 230,
+          flexGrow: 1,
           overflowY: "auto",
           display: "flex",
           flexDirection: "column",
           gap: 1,
+          bgcolor: "white",
+          borderRadius: 1,
+          p: 1,
         }}
       >
         {selectedOptions.map((option) => (
-          <Card
-            key={option.id}
-            variant="outlined"
-            sx={{ position: "relative", bgcolor: "#dbe9ff" }}
-          >
+          <Card key={option.id} variant="outlined" sx={{ position: "relative" }}>
             <CardContent sx={{ pr: 5 }}>
               <Typography variant="subtitle1" fontWeight="bold">
                 {option.id}
               </Typography>
-              <Typography variant="body2">Sam Version: {option.samVersion}</Typography>
-              <Typography variant="body2">Pricing Version: {option.pricingVersion}</Typography>
-              <Typography variant="body2">Client: {option.clientName}</Typography>
+              <Typography>Sam Version: {option.samVersion}</Typography>
+              <Typography>Pricing Version: {option.pricingVersion}</Typography>
+              <Typography>Client: {option.clientName}</Typography>
             </CardContent>
 
             <IconButton
@@ -97,250 +104,258 @@ function PSCRFSection() {
   );
 }
 
-// Approved Contract Section
-function ApprovedContractSection() {
-  return (
-    <Box
-      sx={{
-        height: "100%",
-        bgcolor: "#fff7e6",
-        borderRadius: 2,
-        p: 2,
-        overflowY: "auto",
-      }}
-    >
-      <Typography variant="h6" fontWeight="bold" gutterBottom>
-        Approved Contract
-      </Typography>
-      <Typography variant="body2">Content for Approved Contract goes here.</Typography>
-    </Box>
-  );
-}
+// Approved Contract / Signed Contract Section Component
+function ContractSection({ title }) {
+  const [contracts, setContracts] = useState([
+    { id: 1, type: "Agreement", fileName: null },
+  ]);
 
-// Signed Contract Section
-function SignedContractSection() {
-  return (
-    <Box
-      sx={{
-        height: "100%",
-        bgcolor: "#e6fff7",
-        borderRadius: 2,
-        p: 2,
-        overflowY: "auto",
-      }}
-    >
-      <Typography variant="h6" fontWeight="bold" gutterBottom>
-        Signed Contract
-      </Typography>
-      <Typography variant="body2">Content for Signed Contract goes here.</Typography>
-    </Box>
-  );
-}
-
-// Main component
-export default function BoxPairs() {
-  // Expanded/collapsed state per row
-  const [expanded, setExpanded] = useState([true, true, true, true]);
-
-  // Highlight state per row and side ('left' and 'right' booleans)
-  const [highlight, setHighlight] = useState(
-    Array(4)
-      .fill(0)
-      .map(() => ({ left: false, right: false }))
-  );
-
-  // Compare checkbox state per row
-  const [compareChecked, setCompareChecked] = useState(Array(4).fill(true));
-
-  // Toggle collapse/expand title bar
-  const toggleExpand = (index) => {
-    const newExpanded = [...expanded];
-    newExpanded[index] = !newExpanded[index];
-    setExpanded(newExpanded);
-  };
-
-  // Toggle highlight on arrows (independent for left/right)
-  const toggleHighlight = (index, side) => {
-    setHighlight((prev) =>
-      prev.map((item, idx) => {
-        if (idx === index) {
-          return { ...item, [side]: !item[side] };
-        }
-        return item;
-      })
+  const handleTypeChange = (id, newType) => {
+    setContracts((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, type: newType, fileName: null } : c
+      )
     );
   };
 
-  // Toggle compare checkbox
-  const toggleCompare = (index) => {
-    const updated = [...compareChecked];
-    updated[index] = !updated[index];
-    setCompareChecked(updated);
+  const handleFileChange = (id, event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setContracts((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, fileName: file.name } : c
+        )
+      );
+    }
   };
 
-  // Content map for each row and side
-  // Row 0: left=PSCRF, right=Approved Contract
-  // Row 1: left=Approved Contract, right=Signed Contract
-  // Row 2: left=PSCRF, right=Signed Contract
-  // Row 3: left=PSCRF, right=PSCRF
-  const boxContentMap = {
-    0: { left: <PSCRFSection />, right: <ApprovedContractSection /> },
-    1: { left: <ApprovedContractSection />, right: <SignedContractSection /> },
-    2: { left: <PSCRFSection />, right: <SignedContractSection /> },
-    3: { left: <PSCRFSection />, right: <PSCRFSection /> },
+  const addContract = () => {
+    setContracts((prev) => [
+      ...prev,
+      { id: Date.now(), type: "Agreement", fileName: null },
+    ]);
+  };
+
+  const removeContract = (id) => {
+    setContracts((prev) => prev.filter((c) => c.id !== id));
   };
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: "auto", mt: 4, userSelect: "none" }}>
-      {titles.map((title, rowIndex) => (
-        <Box key={rowIndex} sx={{ mb: 5 }}>
-          {/* Title bar */}
+    <Box>
+      {contracts.map((contract, index) => (
+        <Box
+          key={contract.id}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            mb: 1,
+            bgcolor: "white",
+            p: 1,
+            borderRadius: 1,
+            border: "1px solid #ccc",
+          }}
+        >
+          <Typography sx={{ minWidth: 140, fontWeight: "bold" }}>
+            {`${title} ${index + 1}`}
+          </Typography>
+
+          <FormControl component="fieldset" sx={{ flexGrow: 1 }}>
+            <RadioGroup
+              row
+              value={contract.type}
+              onChange={(e) => handleTypeChange(contract.id, e.target.value)}
+            >
+              <FormControlLabel
+                value="Agreement"
+                control={<Radio />}
+                label="Agreement"
+              />
+              <FormControlLabel
+                value="Supplement"
+                control={<Radio />}
+                label="Supplement"
+              />
+              <FormControlLabel
+                value="Addendum"
+                control={<Radio />}
+                label="Addendum"
+              />
+            </RadioGroup>
+          </FormControl>
+
+          <Button
+            variant="contained"
+            component="label"
+            startIcon={<CloudUploadIcon />}
+            sx={{ bgcolor: "#555", "&:hover": { bgcolor: "#333" }, minWidth: 140 }}
+          >
+            Upload File
+            <input
+              hidden
+              type="file"
+              onChange={(e) => handleFileChange(contract.id, e)}
+              accept="*"
+            />
+          </Button>
+
+          <Typography sx={{ minWidth: 120, fontStyle: "italic" }}>
+            {contract.fileName || ""}
+          </Typography>
+
+          {index !== 0 && (
+            <IconButton
+              color="error"
+              onClick={() => removeContract(contract.id)}
+              aria-label="remove contract"
+            >
+              <CloseIcon />
+            </IconButton>
+          )}
+        </Box>
+      ))}
+
+      <Button
+        variant="outlined"
+        startIcon={<AddIcon />}
+        onClick={addContract}
+        sx={{ mt: 1 }}
+      >
+        Add
+      </Button>
+    </Box>
+  );
+}
+
+export default function BoxPairs() {
+  // Highlight states for arrow selection
+  const [highlight, setHighlight] = useState(Array(4).fill(null)); // 'left' | 'right' | null
+
+  // Checkbox state for each pair
+  const [compareChecked, setCompareChecked] = useState(Array(4).fill(true));
+
+  const handleArrowClick = (index, direction) => {
+    setHighlight((prev) => {
+      const copy = [...prev];
+      copy[index] = direction;
+      return copy;
+    });
+  };
+
+  const handleCompareChange = (index) => {
+    setCompareChecked((prev) => {
+      const copy = [...prev];
+      copy[index] = !copy[index];
+      return copy;
+    });
+  };
+
+  // Helper for styling boxes based on arrow and compare checkbox
+  const getBoxStyles = (index, side) => {
+    const arrow = highlight[index];
+    const checked = compareChecked[index];
+    const isActive = checked && (arrow === side || arrow === null);
+
+    return {
+      width: 300,
+      height: 320,
+      border: "2px solid",
+      borderColor:
+        arrow === side ? "gray" : arrow && arrow !== side ? "lightgray" : "#ccc",
+      borderRadius: 2,
+      p: 2,
+      overflowY: "auto",
+      bgcolor: checked ? "white" : "#f0f0f0",
+      color: checked ? "inherit" : "gray",
+      pointerEvents: checked ? "auto" : "none",
+      userSelect: checked ? "auto" : "none",
+      transition: "background-color 0.3s ease",
+    };
+  };
+
+  // Layout of content per box position (row index + left/right)
+  // PSCRF in: row 0 left, row 2 right, row 3 both
+  // Approved contract in: row 0 right, row 1 left
+  // Signed contract in: row 1 right, row 2 right
+  const renderContent = (row, side) => {
+    if (row === 0 && side === "left") return <PSCRFSection />;
+    if (row === 2 && side === "right") return <PSCRFSection />;
+    if (row === 3) return <PSCRFSection />;
+
+    if ((row === 0 && side === "right") || (row === 1 && side === "left"))
+      return <ContractSection title="Approved Contract" />;
+
+    if ((row === 1 && side === "right") || (row === 2 && side === "right"))
+      return <ContractSection title="Signed Contract" />;
+
+    return null;
+  };
+
+  return (
+    <Box sx={{ maxWidth: 1100, mx: "auto", mt: 4 }}>
+      {[0, 1, 2, 3].map((row) => (
+        <Box key={row} sx={{ mb: 5 }}>
+          {/* Title bar above each pair */}
           <Box
             sx={{
-              bgcolor: "#ccc",
-              px: 2,
-              py: 1.5,
-              fontWeight: "bold",
+              mb: 1,
+              bgcolor: "#f5f5f5",
+              p: 1,
               borderRadius: 1,
+              border: "1px solid #ccc",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              mb: 2,
               userSelect: "none",
-              cursor: "pointer",
-              boxShadow: 1,
             }}
-            onClick={() => toggleExpand(rowIndex)}
           >
-            <Typography>{title}</Typography>
-            <IconButton
-              size="small"
-              edge="end"
-              aria-label="toggle expand"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleExpand(rowIndex);
-              }}
-            >
-              {expanded[rowIndex] ? (
-                <CloseIcon fontSize="small" />
-              ) : (
-                <AddIcon fontSize="small" />
-              )}
-            </IconButton>
+            <Typography variant="subtitle1" fontWeight="bold">
+              {`Row ${row + 1} Pair`}
+            </Typography>
+            {/* Here you can add collapse/expand icons if needed */}
           </Box>
 
-          {/* Boxes & controls, shown only if expanded */}
-          {expanded[rowIndex] && (
-            <Box
-              sx={{
-                border: "1px solid #ccc",
-                borderRadius: 1,
-                bgcolor: "#f0f4ff",
-                boxShadow: 1,
-                p: 2,
-              }}
-            >
-              <Stack
-                direction="row"
-                spacing={2}
-                alignItems="center"
-                sx={{ position: "relative" }}
-              >
-                {/* Compare checkbox left of pair */}
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={compareChecked[rowIndex]}
-                      onChange={() => toggleCompare(rowIndex)}
-                    />
-                  }
-                  label="Compare"
-                  sx={{ userSelect: "none" }}
+          {/* Compare checkbox and boxes with arrows */}
+          <Stack direction="row" spacing={2} alignItems="center">
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={compareChecked[row]}
+                  onChange={() => handleCompareChange(row)}
                 />
+              }
+              label="Compare"
+              sx={{ whiteSpace: "nowrap" }}
+            />
 
-                {/* Left box */}
-                <Box
-                  sx={{
-                    width: 320,
-                    height: 320,
-                    border: 2,
-                    borderColor:
-                      highlight[rowIndex]?.left && compareChecked[rowIndex]
-                        ? "gray"
-                        : highlight[rowIndex]?.right && compareChecked[rowIndex]
-                        ? "lightgray"
-                        : "#ccc",
-                    borderRadius: 2,
-                    p: 1.5,
-                    overflowY: "auto",
-                    bgcolor: compareChecked[rowIndex] ? "#fff" : "#eee",
-                    color: compareChecked[rowIndex] ? "inherit" : "gray",
-                    filter: compareChecked[rowIndex] ? "none" : "grayscale(1)",
-                    transition: "all 0.3s ease",
-                    pointerEvents: compareChecked[rowIndex] ? "auto" : "none",
-                  }}
-                >
-                  {boxContentMap[rowIndex].left}
-                </Box>
-
-                {/* Arrows between */}
-                <Stack spacing={1} alignItems="center" sx={{ userSelect: "none" }}>
-                  <ArrowBackIcon
-                    onClick={() => toggleHighlight(rowIndex, "left")}
-                    sx={{
-                      cursor: "pointer",
-                      fontSize: 36,
-                      color:
-                        highlight[rowIndex]?.left && compareChecked[rowIndex]
-                          ? "#424242"
-                          : "lightgray",
-                      userSelect: "none",
-                    }}
-                    aria-label={`Highlight left arrow row ${rowIndex + 1}`}
-                  />
-                  <ArrowForwardIcon
-                    onClick={() => toggleHighlight(rowIndex, "right")}
-                    sx={{
-                      cursor: "pointer",
-                      fontSize: 36,
-                      color:
-                        highlight[rowIndex]?.right && compareChecked[rowIndex]
-                          ? "#424242"
-                          : "lightgray",
-                      userSelect: "none",
-                    }}
-                    aria-label={`Highlight right arrow row ${rowIndex + 1}`}
-                  />
-                </Stack>
-
-                {/* Right box */}
-                <Box
-                  sx={{
-                    width: 320,
-                    height: 320,
-                    border: 2,
-                    borderColor:
-                      highlight[rowIndex]?.right && compareChecked[rowIndex]
-                        ? "gray"
-                        : highlight[rowIndex]?.left && compareChecked[rowIndex]
-                        ? "lightgray"
-                        : "#ccc",
-                    borderRadius: 2,
-                    p: 1.5,
-                    overflowY: "auto",
-                    bgcolor: compareChecked[rowIndex] ? "#fff" : "#eee",
-                    color: compareChecked[rowIndex] ? "inherit" : "gray",
-                    filter: compareChecked[rowIndex] ? "none" : "grayscale(1)",
-                    transition: "all 0.3s ease",
-                    pointerEvents: compareChecked[rowIndex] ? "auto" : "none",
-                  }}
-                >
-                  {boxContentMap[rowIndex].right}
-                </Box>
-              </Stack>
+            <Box sx={getBoxStyles(row, "left")}>
+              {renderContent(row, "left")}
             </Box>
-          )}
+
+            {/* Arrows */}
+            <Stack spacing={2} alignItems="center">
+              <ArrowBackIcon
+                onClick={() => handleArrowClick(row, "left")}
+                sx={{
+                  cursor: "pointer",
+                  fontSize: 32,
+                  color: highlight[row] === "left" ? "#424242" : "#bdbdbd",
+                }}
+              />
+              <ArrowForwardIcon
+                onClick={() => handleArrowClick(row, "right")}
+                sx={{
+                  cursor: "pointer",
+                  fontSize: 32,
+                  color: highlight[row] === "right" ? "#424242" : "#bdbdbd",
+                }}
+              />
+            </Stack>
+
+            <Box sx={getBoxStyles(row, "right")}>
+              {renderContent(row, "right")}
+            </Box>
+          </Stack>
         </Box>
       ))}
     </Box>
