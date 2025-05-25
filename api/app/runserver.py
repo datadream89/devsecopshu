@@ -4,210 +4,261 @@ import {
   Typography,
   IconButton,
   Collapse,
-  Checkbox,
-  FormControlLabel,
-  Stack,
+  TextField,
+  Autocomplete,
   Card,
   CardContent,
-  Autocomplete,
-  TextField,
+  Button,
+  Radio,
+  RadioGroup,
+  FormControlLabel as MuiFormControlLabel,
+  Stack,
 } from "@mui/material";
+
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
-const titles = ["Section 1", "Section 2", "Section 3", "Section 4"];
-
+// Sample PSCRF data
 const pscrfData = [
-  { id: "PSCRF001", samVersion: "v1.2", pricingVersion: "p3.4", clientName: "Client A" },
-  { id: "PSCRF002", samVersion: "v2.1", pricingVersion: "p2.8", clientName: "Client B" },
-  { id: "PSCRF003", samVersion: "v1.5", pricingVersion: "p4.0", clientName: "Client C" },
+  { id: 101, samVersion: "v1.0", pricingVersion: "p1.0", clientName: "Client A" },
+  { id: 102, samVersion: "v1.1", pricingVersion: "p1.1", clientName: "Client B" },
+  { id: 103, samVersion: "v2.0", pricingVersion: "p2.0", clientName: "Client C" },
 ];
 
-// PSCRFSection component
+// PSCRF Section with autocomplete and closeable cards
 function PSCRFSection() {
-  const [selectedOptions, setSelectedOptions] = useState([]);
+  const [selected, setSelected] = useState([]);
+
+  const handleSelect = (event, value) => {
+    if (!value) return;
+    if (selected.find((item) => item.id === value.id)) return;
+    setSelected((prev) => [...prev, value]);
+  };
 
   const handleRemove = (id) => {
-    setSelectedOptions((prev) => prev.filter((option) => option.id !== id));
+    setSelected((prev) => prev.filter((item) => item.id !== id));
   };
 
   return (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box>
       <Autocomplete
-        multiple
         options={pscrfData}
         getOptionLabel={(option) =>
           `${option.id}, ${option.samVersion}, ${option.pricingVersion}, ${option.clientName}`
         }
-        value={selectedOptions}
-        onChange={(event, newValue) => setSelectedOptions(newValue)}
+        onChange={handleSelect}
         renderInput={(params) => (
-          <TextField {...params} label="Search PSCRF" variant="outlined" size="small" />
+          <TextField {...params} label="Select PSCRF" variant="outlined" size="small" />
         )}
+        clearOnBlur
+        clearOnEscape
+        disableClearable={false}
         sx={{ mb: 2 }}
       />
 
-      <Box
-        sx={{
-          flexGrow: 1,
-          overflowY: "auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: 1,
-        }}
-      >
-        {selectedOptions.map((option) => (
-          <Card key={option.id} variant="outlined" sx={{ position: "relative" }}>
-            <CardContent sx={{ pr: 5 }}>
-              <Typography variant="subtitle1" fontWeight="bold">
-                {option.id}
-              </Typography>
-              <Typography>Sam Version: {option.samVersion}</Typography>
-              <Typography>Pricing Version: {option.pricingVersion}</Typography>
-              <Typography>Client: {option.clientName}</Typography>
-            </CardContent>
-
-            <IconButton
-              size="small"
-              onClick={() => handleRemove(option.id)}
-              sx={{ position: "absolute", top: 4, right: 4 }}
-              aria-label="remove"
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </Card>
-        ))}
-      </Box>
+      {selected.map((item) => (
+        <Card key={item.id} sx={{ mb: 1, position: "relative" }}>
+          <IconButton
+            size="small"
+            sx={{ position: "absolute", top: 4, right: 4 }}
+            onClick={() => handleRemove(item.id)}
+            aria-label="Remove PSCRF"
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+          <CardContent>
+            <Typography>
+              ID: {item.id}, SAM: {item.samVersion}, Pricing: {item.pricingVersion}, Client:{" "}
+              {item.clientName}
+            </Typography>
+          </CardContent>
+        </Card>
+      ))}
     </Box>
   );
 }
 
-// Main component
-export default function BoxPairs() {
-  const [collapsed, setCollapsed] = useState(Array(4).fill(false));
-  const [highlight, setHighlight] = useState(Array(4).fill(null)); // 'left' | 'right' | null
-
-  const toggleCollapse = (index) => {
-    const updated = [...collapsed];
-    updated[index] = !updated[index];
-    setCollapsed(updated);
+// Approved Contract Box with radios and file upload
+function ContractBox({ id, data, onChange, onRemove, removable, title }) {
+  const handleRadioChange = (event) => {
+    onChange(id, { type: event.target.value, fileName: null });
   };
 
-  const handleArrowClick = (index, direction) => {
-    const updated = [...highlight];
-    updated[index] = direction;
-    setHighlight(updated);
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      onChange(id, { ...data, fileName: file.name });
+    }
   };
 
   return (
-    <Box sx={{ maxWidth: "1000px", mx: "auto", mt: 4 }}>
-      {titles.map((title, idx) => (
-        <Box key={idx} sx={{ mb: 4, border: "1px solid #ccc", borderRadius: 1 }}>
-          {/* Title Bar - Full width */}
-          <Box
-            sx={{
-              width: "100%",
-              bgcolor: "#e0e0e0",
-              px: 2,
-              py: 1.5,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              borderBottom: "1px solid #ccc",
-              borderRadius: 1,
-              cursor: "pointer",
-            }}
-            onClick={() => toggleCollapse(idx)}
-          >
-            <Typography variant="subtitle1" fontWeight="bold">
-              {title}
-            </Typography>
-            <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleCollapse(idx); }}>
-              {collapsed[idx] ? <AddIcon /> : <CloseIcon />}
-            </IconButton>
-          </Box>
+    <Box
+      sx={{
+        border: "1px solid #ccc",
+        borderRadius: 1,
+        p: 2,
+        mb: 2,
+        position: "relative",
+      }}
+    >
+      {removable && (
+        <IconButton
+          size="small"
+          sx={{ position: "absolute", top: 4, right: 4 }}
+          onClick={() => onRemove(id)}
+          aria-label="Remove contract"
+        >
+          <CloseIcon />
+        </IconButton>
+      )}
 
-          {/* Collapsible content */}
-          <Collapse in={!collapsed[idx]}>
-            <Box sx={{ p: 3, bgcolor: "#fff" }}>
-              <Stack direction="row" spacing={2} alignItems="center" sx={{ minHeight: 320 }}>
-                {/* Compare checkbox */}
-                <FormControlLabel
-                  control={<Checkbox />}
-                  label="Compare"
-                  sx={{ whiteSpace: "nowrap" }}
-                />
+      <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+        {title}
+      </Typography>
 
-                {/* Left box */}
-                <Box
-                  sx={{
-                    width: 300,
-                    height: 300,
-                    border: "2px solid",
-                    borderColor:
-                      highlight[idx] === "left"
-                        ? "gray"
-                        : highlight[idx] === "right"
-                        ? "lightgray"
-                        : "#ccc",
-                    borderRadius: 2,
-                    p: 2,
-                    overflowY: "auto",
-                    backgroundColor: "#fff",
-                  }}
-                >
-                  {(idx === 0 || idx === 2) && <PSCRFSection />}
-                </Box>
+      <RadioGroup
+        row
+        value={data.type}
+        onChange={handleRadioChange}
+        aria-label="contract type"
+        name={`contract-type-${id}`}
+      >
+        <MuiFormControlLabel value="Agreement" control={<Radio />} label="Agreement" />
+        <MuiFormControlLabel value="Supplement" control={<Radio />} label="Supplement" />
+        <MuiFormControlLabel value="Addendum" control={<Radio />} label="Addendum" />
+      </RadioGroup>
 
-                {/* Arrows */}
-                <Stack spacing={2} alignItems="center">
-                  <ArrowBackIcon
-                    onClick={() => handleArrowClick(idx, "left")}
-                    sx={{
-                      cursor: "pointer",
-                      fontSize: 32,
-                      color:
-                        highlight[idx] === "left" ? "#424242" : "#bdbdbd",
-                    }}
-                  />
-                  <ArrowForwardIcon
-                    onClick={() => handleArrowClick(idx, "right")}
-                    sx={{
-                      cursor: "pointer",
-                      fontSize: 32,
-                      color:
-                        highlight[idx] === "right" ? "#424242" : "#bdbdbd",
-                    }}
-                  />
-                </Stack>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1 }}>
+        <Button
+          variant="contained"
+          component="label"
+          startIcon={<CloudUploadIcon />}
+          sx={{ bgcolor: "#424242", "&:hover": { bgcolor: "#333" } }}
+        >
+          Upload File
+          <input
+            type="file"
+            hidden
+            onChange={handleFileUpload}
+            aria-label="upload contract file"
+          />
+        </Button>
 
-                {/* Right box */}
-                <Box
-                  sx={{
-                    width: 300,
-                    height: 300,
-                    border: "2px solid",
-                    borderColor:
-                      highlight[idx] === "right"
-                        ? "gray"
-                        : highlight[idx] === "left"
-                        ? "lightgray"
-                        : "#ccc",
-                    borderRadius: 2,
-                    p: 2,
-                    overflowY: "auto",
-                    backgroundColor: "#fff",
-                  }}
-                >
-                  {idx === 3 && <PSCRFSection />}
-                </Box>
-              </Stack>
-            </Box>
-          </Collapse>
-        </Box>
+        {data.fileName && (
+          <Typography variant="body2" sx={{ ml: 1 }}>
+            {data.fileName}
+          </Typography>
+        )}
+      </Stack>
+    </Box>
+  );
+}
+
+// Approved Contract Section managing multiple ContractBoxes
+function ApprovedContractSection() {
+  const [contracts, setContracts] = useState([{ id: 1, type: "Agreement", fileName: null }]);
+
+  const addContract = () => {
+    const newId = contracts.length ? contracts[contracts.length - 1].id + 1 : 1;
+    setContracts([...contracts, { id: newId, type: "Agreement", fileName: null }]);
+  };
+
+  const updateContract = (id, newData) => {
+    setContracts((prev) =>
+      prev.map((contract) => (contract.id === id ? { ...contract, ...newData } : contract))
+    );
+  };
+
+  const removeContract = (id) => {
+    setContracts((prev) => prev.filter((contract) => contract.id !== id));
+  };
+
+  return (
+    <Box>
+      {contracts.map((contract, index) => (
+        <ContractBox
+          key={contract.id}
+          id={contract.id}
+          data={contract}
+          onChange={updateContract}
+          onRemove={removeContract}
+          removable={index !== 0}
+          title={`Approved contract ${index + 1}`}
+        />
       ))}
+
+      <Button variant="outlined" startIcon={<AddIcon />} onClick={addContract} sx={{ mt: 1 }}>
+        Add Contract
+      </Button>
+    </Box>
+  );
+}
+
+// Main component with layout and all 4 sections
+export default function MainComponent() {
+  /*
+    Layout:
+    Row 1: Section 1 top left box | Section 2 right box
+    Row 2: Section 3 left box
+    Row 3: Section 4 left and right boxes
+  */
+
+  return (
+    <Box sx={{ maxWidth: 1200, mx: "auto", mt: 4, px: 2 }}>
+      {/* Row 1 */}
+      <Box sx={{ display: "flex", gap: 4, mb: 4 }}>
+        {/* Section 1 top left box */}
+        <Box sx={{ flex: 1, border: "1px solid #ccc", p: 2, borderRadius: 1 }}>
+          <Typography variant="h6" mb={2}>
+            PSCRF Section (Section 1 - Top Left Box)
+          </Typography>
+          <PSCRFSection />
+        </Box>
+
+        {/* Section 2 right box */}
+        <Box sx={{ flex: 1, border: "1px solid #ccc", p: 2, borderRadius: 1 }}>
+          <Typography variant="h6" mb={2}>
+            Approved Contract Section (Section 2 - Right Box)
+          </Typography>
+          <ApprovedContractSection />
+        </Box>
+      </Box>
+
+      {/* Row 2 */}
+      <Box sx={{ display: "flex", gap: 4, mb: 4 }}>
+        {/* Section 3 left box */}
+        <Box sx={{ flex: 1, border: "1px solid #ccc", p: 2, borderRadius: 1 }}>
+          <Typography variant="h6" mb={2}>
+            Approved Contract Section (Section 3 - Left Box)
+          </Typography>
+          <ApprovedContractSection />
+        </Box>
+
+        {/* empty space */}
+        <Box sx={{ flex: 1 }} />
+      </Box>
+
+      {/* Row 3 */}
+      <Box sx={{ display: "flex", gap: 4, mb: 4 }}>
+        {/* Section 4 left box */}
+        <Box sx={{ flex: 1, border: "1px solid #ccc", p: 2, borderRadius: 1 }}>
+          <Typography variant="h6" mb={2}>
+            PSCRF Section (Section 4 - Left Box)
+          </Typography>
+          <PSCRFSection />
+        </Box>
+
+        {/* Section 4 right box */}
+        <Box sx={{ flex: 1, border: "1px solid #ccc", p: 2, borderRadius: 1 }}>
+          <Typography variant="h6" mb={2}>
+            PSCRF Section (Section 4 - Right Box)
+          </Typography>
+          <PSCRFSection />
+        </Box>
+      </Box>
     </Box>
   );
 }
