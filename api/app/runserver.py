@@ -14,6 +14,7 @@ import {
   Button,
   IconButton,
 } from "@mui/material";
+
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddIcon from "@mui/icons-material/Add";
@@ -22,7 +23,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 import options from "./options.json";
 
-function LeftBoxCard({ item }) {
+function LeftBoxCard({ item, onRemove }) {
   return (
     <Paper
       sx={{
@@ -31,6 +32,7 @@ function LeftBoxCard({ item }) {
         borderRadius: 1,
         border: "1px solid #ccc",
         backgroundColor: "#f9f9f9",
+        position: "relative",
       }}
       elevation={1}
     >
@@ -40,6 +42,14 @@ function LeftBoxCard({ item }) {
       <Typography variant="body2">Client: {item.clientName}</Typography>
       <Typography variant="body2">SAM Version: {item.samVersion}</Typography>
       <Typography variant="body2">Pricing Version: {item.pricingVersion}</Typography>
+      <IconButton
+        size="small"
+        onClick={() => onRemove(item)}
+        sx={{ position: "absolute", top: 4, right: 4 }}
+        aria-label="Remove"
+      >
+        <CloseIcon fontSize="small" />
+      </IconButton>
     </Paper>
   );
 }
@@ -74,7 +84,15 @@ function ApprovedContractSection({
       <RadioGroup
         row
         value={section.contractType}
-        onChange={(e) => handleTypeChange(section.id, e.target.value)}
+        onChange={(e) => {
+          handleTypeChange(section.id, e.target.value);
+          handleFileChange(section.id, null);
+        }}
+        sx={{
+          "& .Mui-checked": {
+            color: "darkgrey",
+          },
+        }}
       >
         <RadioFormControlLabel
           value="Agreement"
@@ -106,17 +124,25 @@ function ApprovedContractSection({
           variant="outlined"
           startIcon={<CloudUploadIcon />}
           component="span"
-          sx={{ mt: 1 }}
+          sx={{
+            mt: 1,
+            color: "darkgrey",
+            borderColor: "darkgrey",
+            "&:hover": {
+              borderColor: "black",
+              color: "black",
+            },
+          }}
           disabled={disabled}
         >
           Upload File
         </Button>
-        {section.file && (
-          <Typography variant="body2" mt={1}>
-            Selected: {section.file.name}
-          </Typography>
-        )}
       </label>
+      {section.file && (
+        <Typography variant="body2" mt={1}>
+          Selected: {section.file.name}
+        </Typography>
+      )}
 
       <Box
         sx={{
@@ -172,7 +198,7 @@ export default function Request() {
 
   const handleTypeChange = (id, newType) => {
     setContractSections(
-      contractSections.map((s) => (s.id === id ? { ...s, contractType: newType } : s))
+      contractSections.map((s) => (s.id === id ? { ...s, contractType: newType, file: null } : s))
     );
   };
 
@@ -182,16 +208,14 @@ export default function Request() {
     );
   };
 
-  // Border colors for boxes (darkgrey/lightgrey)
+  // Outline colors for boxes (flipped compared to direction)
   const getBoxBorder = (boxSide) => {
     if (!compareEnabled) return "2px solid lightgray";
 
     if (direction === "right") {
-      // Flip outline direction: left box lightgrey, right box darkgrey
-      return boxSide === "left" ? "2px solid lightgrey" : "2px solid darkgrey";
-    } else {
-      // Flip outline direction: left box darkgrey, right box lightgrey
       return boxSide === "left" ? "2px solid darkgrey" : "2px solid lightgrey";
+    } else {
+      return boxSide === "left" ? "2px solid lightgrey" : "2px solid darkgrey";
     }
   };
 
@@ -202,6 +226,11 @@ export default function Request() {
     return "lightgray";
   };
 
+  // Remove selected option from dropdown
+  const removeOption = (item) => {
+    setSelectedOptions(selectedOptions.filter((o) => o.id !== item.id || o.samVersion !== item.samVersion || o.pricingVersion !== item.pricingVersion));
+  };
+
   return (
     <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
       {/* Collapsible container header */}
@@ -210,13 +239,13 @@ export default function Request() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          mb: collapsed ? 0 : 2,
-          cursor: "pointer",
+          mb: 1,
           userSelect: "none",
           border: "1px solid #ccc",
           borderRadius: 1,
           p: 1,
           backgroundColor: "#f5f5f5",
+          cursor: "pointer",
         }}
         onClick={() => setCollapsed(!collapsed)}
       >
@@ -235,135 +264,159 @@ export default function Request() {
         </IconButton>
       </Box>
 
-      {/* The collapsible content */}
       {!collapsed && (
-        <Box sx={{ mt: 2 }}>
-          {/* Compare Checkbox on left */}
-          <Box sx={{ mb: 2, display: "flex", alignItems: "center" }}>
+        <>
+          {/* Compare checkbox */}
+          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
             <FormControlLabel
               control={
                 <Checkbox
                   checked={compareEnabled}
                   onChange={(e) => setCompareEnabled(e.target.checked)}
+                  sx={{
+                    color: "darkgrey",
+                    "&.Mui-checked": {
+                      color: "darkgrey",
+                    },
+                  }}
                 />
               }
               label="Compare"
+              sx={{ mr: 4 }}
             />
-          </Box>
 
-          {/* Main Grid */}
-          <Grid container spacing={2} alignItems="flex-start" sx={{ minHeight: 400 }}>
-            {/* Left Box */}
-            <Grid item xs={5}>
-              <Paper
-                sx={{
-                  p: 2,
-                  border: getBoxBorder("left"),
-                  minHeight: 360,
-                  boxSizing: "border-box",
-                  overflowY: "auto",
-                  backgroundColor: compareEnabled ? "inherit" : "#f0f0f0",
-                }}
-                elevation={2}
-              >
-                <Typography variant="h6" mb={2}>
-                  Pscerf Data
-                </Typography>
-                <Autocomplete
-                  multiple
-                  options={options}
-                  filterSelectedOptions
-                  value={selectedOptions}
-                  onChange={(e, newValue) => setSelectedOptions(newValue)}
-                  getOptionLabel={(option) =>
-                    `${option.id} (Client: ${option.clientName}, SAM: ${option.samVersion}, Pricing: ${option.pricingVersion})`
-                  }
-                  renderInput={(params) => (
-                    <TextField {...params} label="Select PSCRF IDs" />
-                  )}
-                  disabled={!compareEnabled}
-                  sx={{ width: "100%" }}
-                />
+            {/* Boxes and arrows container */}
+            <Grid container spacing={2} alignItems="center" sx={{ minHeight: 420 }}>
+              {/* Left Box */}
+              <Grid item xs={5}>
+                <Paper
+                  sx={{
+                    p: 2,
+                    border: getBoxBorder("left"),
+                    minHeight: 400,
+                    boxSizing: "border-box",
+                    overflowY: "auto",
+                    backgroundColor: compareEnabled ? "inherit" : "#f0f0f0",
+                  }}
+                  elevation={2}
+                >
+                  <Typography variant="h6" mb={2}>
+                    Pscerf Data
+                  </Typography>
 
-                {/* Render selected items as cards */}
-                {selectedOptions.length > 0 && (
-                  <Box mt={2} sx={{ maxHeight: 200, overflowY: "auto" }}>
-                    {selectedOptions.map((item) => (
-                      <LeftBoxCard
-                        key={item.id + item.samVersion + item.pricingVersion}
-                        item={item}
+                  <Autocomplete
+                    multiple
+                    options={options}
+                    filterSelectedOptions
+                    value={selectedOptions}
+                    onChange={(e, newValue) => setSelectedOptions(newValue)}
+                    getOptionLabel={(option) =>
+                      `${option.id} (Client: ${option.clientName}, SAM: ${option.samVersion}, Pricing: ${option.pricingVersion})`
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Select PSCRF IDs"
+                        placeholder="Start typing..."
+                        size="small"
                       />
-                    ))}
-                  </Box>
-                )}
-              </Paper>
-            </Grid>
+                    )}
+                    disabled={!compareEnabled}
+                    sx={{ mb: 2 }}
+                  />
 
-            {/* Arrow Section */}
-            <Grid
-              item
-              xs={2}
-              textAlign="center"
-              sx={{ position: "relative", userSelect: "none" }}
-            >
-              <Box
+                  {selectedOptions.length === 0 && (
+                    <Typography variant="body2" color="text.secondary">
+                      No selections yet.
+                    </Typography>
+                  )}
+
+                  {selectedOptions.map((item) => (
+                    <LeftBoxCard key={`${item.id}-${item.samVersion}-${item.pricingVersion}`} item={item} onRemove={removeOption} />
+                  ))}
+                </Paper>
+              </Grid>
+
+              {/* Center arrows and expand/collapse buttons */}
+              <Grid
+                item
+                xs={2}
                 sx={{
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  mt: 8,
-                  gap: 2,
-                  cursor: compareEnabled ? "pointer" : "default",
+                  justifyContent: "center",
+                  height: 400,
+                  position: "relative",
                 }}
               >
-                <ArrowForwardIcon
-                  fontSize="large"
-                  sx={{ color: getArrowColor("right") }}
-                  onClick={() => compareEnabled && setDirection("right")}
-                  title="Compare Right"
-                />
-                <ArrowBackIcon
-                  fontSize="large"
+                <IconButton
+                  onClick={() => setDirection("left")}
                   sx={{ color: getArrowColor("left") }}
-                  onClick={() => compareEnabled && setDirection("left")}
-                  title="Compare Left"
-                />
-              </Box>
-            </Grid>
+                  disabled={!compareEnabled}
+                  aria-label="Left direction"
+                >
+                  <ArrowBackIcon fontSize="large" />
+                </IconButton>
+                <IconButton
+                  onClick={() => setDirection("right")}
+                  sx={{ color: getArrowColor("right") }}
+                  disabled={!compareEnabled}
+                  aria-label="Right direction"
+                >
+                  <ArrowForwardIcon fontSize="large" />
+                </IconButton>
 
-            {/* Right Box */}
-            <Grid item xs={5}>
-              <Paper
-                sx={{
-                  p: 2,
-                  border: getBoxBorder("right"),
-                  minHeight: 360,
-                  boxSizing: "border-box",
-                  overflowY: "auto",
-                  backgroundColor: compareEnabled ? "inherit" : "#f0f0f0",
-                }}
-                elevation={2}
-              >
-                <Typography variant="h6" mb={2}>
-                  Approved Contract
-                </Typography>
+                {/* Expand/Collapse toggle button below arrows */}
+                <IconButton
+                  onClick={() => setCollapsed(!collapsed)}
+                  aria-label={collapsed ? "Expand" : "Collapse"}
+                  sx={{ mt: 3 }}
+                >
+                  {collapsed ? <AddIcon /> : <CloseIcon />}
+                </IconButton>
+              </Grid>
 
-                {contractSections.map((section, index) => (
-                  <ApprovedContractSection
-                    key={section.id}
-                    index={index}
-                    section={section}
-                    handleTypeChange={handleTypeChange}
-                    handleFileChange={handleFileChange}
-                    addSection={addSection}
-                    removeSection={removeSection}
-                    disabled={!compareEnabled}
-                  />
-                ))}
-              </Paper>
+              {/* Right Box */}
+              <Grid item xs={5}>
+                <Paper
+                  sx={{
+                    p: 2,
+                    border: getBoxBorder("right"),
+                    minHeight: 400,
+                    boxSizing: "border-box",
+                    overflowY: "auto",
+                    backgroundColor: compareEnabled ? "inherit" : "#f0f0f0",
+                  }}
+                  elevation={2}
+                >
+                  <Typography variant="h6" mb={2}>
+                    Approved Contract
+                  </Typography>
+
+                  {contractSections.map((section, index) => (
+                    <ApprovedContractSection
+                      key={section.id}
+                      index={index}
+                      section={section}
+                      handleTypeChange={handleTypeChange}
+                      handleFileChange={handleFileChange}
+                      addSection={addSection}
+                      removeSection={removeSection}
+                      disabled={!compareEnabled}
+                    />
+                  ))}
+
+                  {contractSections.length === 0 && (
+                    <Typography variant="body2" color="text.secondary">
+                      No contract sections.
+                    </Typography>
+                  )}
+                </Paper>
+              </Grid>
             </Grid>
-          </Grid>
-        </Box>
+          </Box>
+        </>
       )}
     </Box>
   );
