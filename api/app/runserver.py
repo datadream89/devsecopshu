@@ -101,7 +101,7 @@ const Request = () => {
                 color="primary"
               />
             }
-            label="Enable Direction"
+            label="Enable Compare"
           />
         </Grid>
 
