@@ -22,88 +22,6 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 import options from "./options.json";
 
-function ApprovedContractSection({
-  index,
-  section,
-  handleTypeChange,
-  handleFileChange,
-  addSection,
-  removeSection,
-}) {
-  return (
-    <Paper
-      sx={{
-        p: 2,
-        mb: 2,
-        position: "relative",
-        borderRadius: 2,
-        border: "1px solid #ccc",
-      }}
-      elevation={1}
-    >
-      <Typography variant="subtitle1" fontWeight="bold" mb={1}>
-        Approved Contract {index + 1}
-      </Typography>
-
-      <RadioGroup
-        row
-        value={section.contractType}
-        onChange={(e) => handleTypeChange(section.id, e.target.value)}
-      >
-        <RadioFormControlLabel value="Agreement" control={<Radio />} label="Agreement" />
-        <RadioFormControlLabel value="Supplement" control={<Radio />} label="Supplement" />
-        <RadioFormControlLabel value="Addendum" control={<Radio />} label="Addendum" />
-      </RadioGroup>
-
-      <input
-        id={`file-upload-${section.id}`}
-        type="file"
-        accept=".pdf,.docx"
-        style={{ display: "none" }}
-        onChange={(e) => handleFileChange(section.id, e.target.files[0])}
-      />
-      <label htmlFor={`file-upload-${section.id}`}>
-        <Button
-          variant="outlined"
-          startIcon={<CloudUploadIcon />}
-          component="span"
-          sx={{ mt: 1 }}
-        >
-          Upload File
-        </Button>
-        {section.file && (
-          <Typography variant="body2" mt={1}>
-            Selected: {section.file.name}
-          </Typography>
-        )}
-      </label>
-
-      <Box
-        sx={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          display: "flex",
-          gap: 1,
-        }}
-      >
-        <IconButton size="small" onClick={addSection} title="Add section">
-          <AddIcon fontSize="small" />
-        </IconButton>
-        {index > 0 && (
-          <IconButton
-            size="small"
-            onClick={() => removeSection(section.id)}
-            title="Remove section"
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        )}
-      </Box>
-    </Paper>
-  );
-}
-
 function LeftBoxCard({ item }) {
   return (
     <Paper
@@ -122,6 +40,109 @@ function LeftBoxCard({ item }) {
       <Typography variant="body2">Client: {item.clientName}</Typography>
       <Typography variant="body2">SAM Version: {item.samVersion}</Typography>
       <Typography variant="body2">Pricing Version: {item.pricingVersion}</Typography>
+    </Paper>
+  );
+}
+
+function ApprovedContractSection({
+  index,
+  section,
+  handleTypeChange,
+  handleFileChange,
+  addSection,
+  removeSection,
+  disabled,
+}) {
+  return (
+    <Paper
+      sx={{
+        p: 2,
+        mb: 2,
+        position: "relative",
+        borderRadius: 2,
+        border: "1px solid #ccc",
+        backgroundColor: disabled ? "#f0f0f0" : "inherit",
+        pointerEvents: disabled ? "none" : "auto",
+        opacity: disabled ? 0.6 : 1,
+      }}
+      elevation={1}
+    >
+      <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+        Approved Contract {index + 1}
+      </Typography>
+
+      <RadioGroup
+        row
+        value={section.contractType}
+        onChange={(e) => handleTypeChange(section.id, e.target.value)}
+      >
+        <RadioFormControlLabel
+          value="Agreement"
+          control={<Radio disabled={disabled} />}
+          label="Agreement"
+        />
+        <RadioFormControlLabel
+          value="Supplement"
+          control={<Radio disabled={disabled} />}
+          label="Supplement"
+        />
+        <RadioFormControlLabel
+          value="Addendum"
+          control={<Radio disabled={disabled} />}
+          label="Addendum"
+        />
+      </RadioGroup>
+
+      <input
+        id={`file-upload-${section.id}`}
+        type="file"
+        accept=".pdf,.docx"
+        style={{ display: "none" }}
+        onChange={(e) => handleFileChange(section.id, e.target.files[0])}
+        disabled={disabled}
+      />
+      <label htmlFor={`file-upload-${section.id}`}>
+        <Button
+          variant="outlined"
+          startIcon={<CloudUploadIcon />}
+          component="span"
+          sx={{ mt: 1 }}
+          disabled={disabled}
+        >
+          Upload File
+        </Button>
+        {section.file && (
+          <Typography variant="body2" mt={1}>
+            Selected: {section.file.name}
+          </Typography>
+        )}
+      </label>
+
+      <Box
+        sx={{
+          position: "absolute",
+          top: 8,
+          right: 8,
+          display: "flex",
+          gap: 1,
+          pointerEvents: disabled ? "none" : "auto",
+          opacity: disabled ? 0.6 : 1,
+        }}
+      >
+        <IconButton size="small" onClick={addSection} title="Add section" disabled={disabled}>
+          <AddIcon fontSize="small" />
+        </IconButton>
+        {index > 0 && (
+          <IconButton
+            size="small"
+            onClick={() => removeSection(section.id)}
+            title="Remove section"
+            disabled={disabled}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        )}
+      </Box>
     </Paper>
   );
 }
@@ -167,10 +188,10 @@ export default function Request() {
 
     if (direction === "right") {
       // Flip outline direction: left box lightgrey, right box darkgrey
-      return boxSide === "left" ? "2px solid darkgrey" : "2px solid lightgrey";
-    } else {
-      // left box darkgrey, right box lightgrey
       return boxSide === "left" ? "2px solid lightgrey" : "2px solid darkgrey";
+    } else {
+      // Flip outline direction: left box darkgrey, right box lightgrey
+      return boxSide === "left" ? "2px solid darkgrey" : "2px solid lightgrey";
     }
   };
 
@@ -231,7 +252,7 @@ export default function Request() {
           </Box>
 
           {/* Main Grid */}
-          <Grid container spacing={2} alignItems="flex-start">
+          <Grid container spacing={2} alignItems="flex-start" sx={{ minHeight: 400 }}>
             {/* Left Box */}
             <Grid item xs={5}>
               <Paper
@@ -241,6 +262,7 @@ export default function Request() {
                   minHeight: 360,
                   boxSizing: "border-box",
                   overflowY: "auto",
+                  backgroundColor: compareEnabled ? "inherit" : "#f0f0f0",
                 }}
                 elevation={2}
               >
@@ -278,32 +300,34 @@ export default function Request() {
             </Grid>
 
             {/* Arrow Section */}
-            <Grid item xs={2} textAlign="center" sx={{ position: "relative" }}>
+            <Grid
+              item
+              xs={2}
+              textAlign="center"
+              sx={{ position: "relative", userSelect: "none" }}
+            >
               <Box
                 sx={{
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
                   mt: 8,
-                  gap: 1,
+                  gap: 2,
+                  cursor: compareEnabled ? "pointer" : "default",
                 }}
               >
-                <IconButton
-                  onClick={() => compareEnabled && setDirection("right")}
-                  disabled={!compareEnabled}
+                <ArrowForwardIcon
+                  fontSize="large"
                   sx={{ color: getArrowColor("right") }}
-                  aria-label="Arrow right"
-                >
-                  <ArrowForwardIcon fontSize="large" />
-                </IconButton>
-                <IconButton
-                  onClick={() => compareEnabled && setDirection("left")}
-                  disabled={!compareEnabled}
+                  onClick={() => compareEnabled && setDirection("right")}
+                  title="Compare Right"
+                />
+                <ArrowBackIcon
+                  fontSize="large"
                   sx={{ color: getArrowColor("left") }}
-                  aria-label="Arrow left"
-                >
-                  <ArrowBackIcon fontSize="large" />
-                </IconButton>
+                  onClick={() => compareEnabled && setDirection("left")}
+                  title="Compare Left"
+                />
               </Box>
             </Grid>
 
@@ -316,18 +340,24 @@ export default function Request() {
                   minHeight: 360,
                   boxSizing: "border-box",
                   overflowY: "auto",
+                  backgroundColor: compareEnabled ? "inherit" : "#f0f0f0",
                 }}
                 elevation={2}
               >
-                {contractSections.map((section, idx) => (
+                <Typography variant="h6" mb={2}>
+                  Approved Contract
+                </Typography>
+
+                {contractSections.map((section, index) => (
                   <ApprovedContractSection
                     key={section.id}
-                    index={idx}
+                    index={index}
                     section={section}
                     handleTypeChange={handleTypeChange}
                     handleFileChange={handleFileChange}
                     addSection={addSection}
                     removeSection={removeSection}
+                    disabled={!compareEnabled}
                   />
                 ))}
               </Paper>
