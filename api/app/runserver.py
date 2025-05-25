@@ -1,108 +1,62 @@
 import React, { useState } from "react";
 import {
   Box,
-  Grid,
   Typography,
   Checkbox,
   IconButton,
   TextField,
   Chip,
   MenuItem,
-  Radio,
+  Button,
   RadioGroup,
   FormControlLabel,
-  Button,
-  Stack,
+  Radio,
 } from "@mui/material";
-import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import CloseIcon from "@mui/icons-material/Close";
-
-const pscrfOptions = ["PSCRF 101", "PSCRF 102", "PSCRF 103"];
-
-const SectionTitleBar = ({ title }) => (
-  <Box
-    sx={{
-      width: "100%",
-      backgroundColor: "#f0f0f0",
-      padding: "10px 20px",
-      borderRadius: "8px",
-      marginBottom: "10px",
-    }}
-  >
-    <Typography variant="h6">{title}</Typography>
-  </Box>
-);
+import { ArrowForwardIos, ArrowBackIos, CloudUpload, Close } from "@mui/icons-material";
+import Autocomplete from "@mui/material/Autocomplete";
+import options from "./data/options.json";
 
 const PSCRFSection = () => {
   const [selectedOptions, setSelectedOptions] = useState([]);
-  const [inputValue, setInputValue] = useState("");
-
-  const handleChange = (event) => {
-    const value = event.target.value;
-    if (!selectedOptions.includes(value)) {
-      setSelectedOptions([...selectedOptions, value]);
-    }
-    setInputValue("");
-  };
-
-  const handleDelete = (option) => {
-    setSelectedOptions(selectedOptions.filter((item) => item !== option));
-  };
 
   return (
     <Box>
-      <Typography variant="subtitle1" gutterBottom>
-        Select PSCRF
-      </Typography>
-      <TextField
-        select
-        fullWidth
-        label="PSCRF"
-        value={inputValue}
-        onChange={handleChange}
-      >
-        {pscrfOptions.map((option) => (
-          <MenuItem key={option} value={option}>
-            {option}
-          </MenuItem>
+      <Typography variant="subtitle1" fontWeight="bold" mb={1}>Select PSCRF</Typography>
+      <Autocomplete
+        multiple
+        options={options}
+        getOptionLabel={(option) => option}
+        value={selectedOptions}
+        onChange={(_, newValue) => setSelectedOptions(newValue)}
+        renderInput={(params) => (
+          <TextField {...params} variant="outlined" placeholder="Select PSCRF" />
+        )}
+      />
+      <Box display="flex" flexWrap="wrap" gap={2} mt={2}>
+        {selectedOptions.map((item, index) => (
+          <Chip key={index} label={item} sx={{ backgroundColor: "#f0f0f0" }} />
         ))}
-      </TextField>
-      <Grid container spacing={2} mt={2}>
-        {selectedOptions.map((option) => (
-          <Grid item xs={6} key={option}>
-            <Box
-              sx={{
-                backgroundColor: "#f9f9f9",
-                padding: 2,
-                borderRadius: 2,
-                border: "1px solid #ccc",
-              }}
-            >
-              <Chip label={option} onDelete={() => handleDelete(option)} />
-            </Box>
-          </Grid>
-        ))}
-      </Grid>
+      </Box>
     </Box>
   );
 };
 
 const ApprovedContractSection = () => {
   const [sections, setSections] = useState([
-    { type: "Agreement", file: null },
+    { type: "Agreement", file: null }
   ]);
 
-  const handleTypeChange = (index, value) => {
-    const updated = [...sections];
-    updated[index] = { ...updated[index], type: value, file: null };
-    setSections(updated);
+  const handleRadioChange = (index, value) => {
+    const newSections = [...sections];
+    newSections[index].type = value;
+    newSections[index].file = null;
+    setSections(newSections);
   };
 
-  const handleFileChange = (index, event) => {
-    const updated = [...sections];
-    updated[index] = { ...updated[index], file: event.target.files[0] };
-    setSections(updated);
+  const handleFileChange = (index, file) => {
+    const newSections = [...sections];
+    newSections[index].file = file;
+    setSections(newSections);
   };
 
   const addSection = () => {
@@ -110,52 +64,41 @@ const ApprovedContractSection = () => {
   };
 
   const removeSection = (index) => {
-    const updated = sections.filter((_, i) => i !== index);
-    setSections(updated);
+    const newSections = [...sections];
+    newSections.splice(index, 1);
+    setSections(newSections);
   };
 
   return (
     <Box>
-      <Typography variant="subtitle1" gutterBottom>
-        Approved Contract
-      </Typography>
+      <Typography variant="subtitle1" fontWeight="bold" mb={1}>Approved Contract</Typography>
       {sections.map((section, index) => (
-        <Box key={index} sx={{ mb: 2, borderBottom: "1px solid #eee", pb: 2, position: 'relative' }}>
-          {sections.length > 1 && (
-            <IconButton
-              size="small"
-              sx={{ position: 'absolute', top: 0, right: 0 }}
-              onClick={() => removeSection(index)}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          )}
+        <Box key={index} mb={2} display="flex" alignItems="center" gap={2}>
           <RadioGroup
             row
             value={section.type}
-            onChange={(e) => handleTypeChange(index, e.target.value)}
+            onChange={(e) => handleRadioChange(index, e.target.value)}
           >
-            <FormControlLabel value="Agreement" control={<Radio />} label="Agreement" />
-            <FormControlLabel value="Supplement" control={<Radio />} label="Supplement" />
-            <FormControlLabel value="Addendum" control={<Radio />} label="Addendum" />
+            {["Agreement", "Supplement", "Addendum"].map((type) => (
+              <FormControlLabel key={type} value={type} control={<Radio />} label={type} />
+            ))}
           </RadioGroup>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Button
-              variant="outlined"
-              component="label"
-              startIcon={<CloudUploadIcon />}
-            >
-              Upload File
-              <input
-                type="file"
-                hidden
-                onChange={(e) => handleFileChange(index, e)}
-              />
-            </Button>
-            <Typography variant="body2">
-              {section.file ? section.file.name : "No file selected"}
-            </Typography>
-          </Stack>
+          <input
+            accept="*"
+            type="file"
+            style={{ display: "none" }}
+            id={`upload-${index}`}
+            onChange={(e) => handleFileChange(index, e.target.files[0])}
+          />
+          <label htmlFor={`upload-${index}`}>
+            <IconButton component="span">
+              <CloudUpload />
+            </IconButton>
+          </label>
+          {section.file && <Typography>{section.file.name}</Typography>}
+          {sections.length > 1 && (
+            <IconButton onClick={() => removeSection(index)}><Close /></IconButton>
+          )}
         </Box>
       ))}
       <Button onClick={addSection}>+ Add Section</Button>
@@ -163,101 +106,103 @@ const ApprovedContractSection = () => {
   );
 };
 
-const BoxPair = ({ leftContent, rightContent, rowIndex }) => {
+const BoxPair = ({ title, leftComponent, rightComponent }) => {
+  const [compareChecked, setCompareChecked] = useState(true);
   const [leftToRight, setLeftToRight] = useState(false);
   const [rightToLeft, setRightToLeft] = useState(false);
-  const [checked, setChecked] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
 
-  const getBorderStyle = (direction) =>
-    direction ? "2px solid gray" : "1px solid lightgray";
-
-  const getOpacity = () => (checked ? 1 : 0.4);
+  const handleArrowClick = (dir) => {
+    if (dir === "ltr") {
+      setLeftToRight(!leftToRight);
+      setRightToLeft(false);
+    } else {
+      setRightToLeft(!rightToLeft);
+      setLeftToRight(false);
+    }
+  };
 
   return (
-    <Box mb={6}>
-      <SectionTitleBar title={`Section ${rowIndex + 1}`} />
-      <Box display="flex" alignItems="flex-start">
-        <Box mt={4} mr={1}>
-          <Checkbox checked={checked} onChange={(e) => setChecked(e.target.checked)} />
-        </Box>
-        <Grid container spacing={2} alignItems="flex-start" sx={{ opacity: getOpacity() }}>
-          <Grid
-            item
-            xs={5.5}
-            sx={{
-              border: getBorderStyle(rightToLeft),
-              borderRadius: "8px",
-              backgroundColor: "white",
-              padding: 2,
-              minHeight: 200,
-            }}
-          >
-            {leftContent}
-          </Grid>
-          <Grid item xs={1} textAlign="center">
-            <Box>
-              <IconButton onClick={() => setLeftToRight(!leftToRight)}>
-                <CompareArrowsIcon
-                  sx={{
-                    transform: "rotate(0deg)",
-                    color: leftToRight ? "gray" : "lightgray",
-                  }}
-                />
-              </IconButton>
-              <IconButton onClick={() => setRightToLeft(!rightToLeft)}>
-                <CompareArrowsIcon
-                  sx={{
-                    transform: "rotate(180deg)",
-                    color: rightToLeft ? "gray" : "lightgray",
-                  }}
-                />
-              </IconButton>
-            </Box>
-          </Grid>
-          <Grid
-            item
-            xs={5.5}
-            sx={{
-              border: getBorderStyle(leftToRight),
-              borderRadius: "8px",
-              backgroundColor: "white",
-              padding: 2,
-              minHeight: 200,
-            }}
-          >
-            {rightContent}
-          </Grid>
-        </Grid>
+    <Box mb={4}>
+      <Box display="flex" alignItems="center" gap={1} mb={1}>
+        <Checkbox
+          checked={compareChecked}
+          onChange={(e) => setCompareChecked(e.target.checked)}
+        />
+        <Typography fontWeight="bold">{title}</Typography>
+        <Box flexGrow={1} />
+        <IconButton onClick={() => setCollapsed(!collapsed)}>
+          {collapsed ? "+" : "×"}
+        </IconButton>
       </Box>
+
+      {!collapsed && (
+        <Box display="flex" alignItems="center" gap={2}>
+          <Box
+            flex={1}
+            p={2}
+            bgcolor="white"
+            border={`2px solid ${rightToLeft ? "#888" : "#ccc"}`}
+            opacity={compareChecked ? 1 : 0.4}
+          >
+            {leftComponent}
+          </Box>
+
+          <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+            <IconButton
+              onClick={() => handleArrowClick("ltr")}
+              sx={{ color: leftToRight ? "#666" : "#ccc" }}
+            >
+              <ArrowForwardIos />
+            </IconButton>
+            <IconButton
+              onClick={() => handleArrowClick("rtl")}
+              sx={{ color: rightToLeft ? "#666" : "#ccc" }}
+            >
+              <ArrowBackIos />
+            </IconButton>
+          </Box>
+
+          <Box
+            flex={1}
+            p={2}
+            bgcolor="white"
+            border={`2px solid ${leftToRight ? "#888" : "#ccc"}`}
+            opacity={compareChecked ? 1 : 0.4}
+          >
+            {rightComponent}
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };
 
-const MainComponent = () => {
+const App = () => {
   return (
-    <Box p={4}>
+    <Box p={4} bgcolor="#f9f9f9">
       <BoxPair
-        rowIndex={0}
-        leftContent={<PSCRFSection />}
-        rightContent={<ApprovedContractSection />}
+        title="Row 1"
+        leftComponent={<PSCRFSection />}
+        rightComponent={<ApprovedContractSection />}
       />
       <BoxPair
-        rowIndex={1}
-        leftContent={<ApprovedContractSection />}
-        rightContent={<ApprovedContractSection />}
+        title="Row 2"
+        leftComponent={<ApprovedContractSection />}
+        rightComponent={<PSCRFSection />}
       />
       <BoxPair
-        rowIndex={2}
-        leftContent={<ApprovedContractSection />}
-        rightContent={<PSCRFSection />}
+        title="Row 3"
+        leftComponent={<ApprovedContractSection />}
+        rightComponent={<PSCRFSection />}
       />
       <BoxPair
-        rowIndex={3}
-        leftContent={<PSCRFSection />}
-        rightContent={<PSCRFSection />}
+        title="Row 4"
+        leftComponent={<PSCRFSection />}
+        rightComponent={<PSCRFSection />}
       />
     </Box>
   );
 };
 
-export default MainComponent;
+export default App;
