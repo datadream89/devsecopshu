@@ -25,7 +25,6 @@ const pscrfData = [
   { id: "PSCRF003", samVersion: "v1.5", pricingVersion: "p4.0", clientName: "Client C" },
 ];
 
-// PSCRFSection component
 function PSCRFSection() {
   const [selectedOptions, setSelectedOptions] = useState([]);
 
@@ -84,10 +83,12 @@ function PSCRFSection() {
   );
 }
 
-// Main component
 export default function BoxPairs() {
   const [collapsed, setCollapsed] = useState(Array(4).fill(false));
-  const [highlight, setHighlight] = useState(Array(4).fill(null)); // 'left' | 'right' | null
+  // Change highlight to object with left/right booleans
+  const [highlight, setHighlight] = useState(
+    Array(4).fill(null).map(() => ({ left: false, right: false }))
+  );
 
   const toggleCollapse = (index) => {
     const updated = [...collapsed];
@@ -97,117 +98,123 @@ export default function BoxPairs() {
 
   const handleArrowClick = (index, direction) => {
     const updated = [...highlight];
-    updated[index] = direction;
+    // toggle the clicked arrow
+    updated[index] = {
+      ...updated[index],
+      [direction]: !updated[index][direction],
+    };
     setHighlight(updated);
   };
 
   return (
     <Box sx={{ maxWidth: "1000px", mx: "auto", mt: 4 }}>
-      {titles.map((title, idx) => (
-        <Box key={idx} sx={{ mb: 4, border: "1px solid #ccc", borderRadius: 1 }}>
-          {/* Title Bar - Full width */}
-          <Box
-            sx={{
-              width: "100%",
-              bgcolor: "#e0e0e0",
-              px: 2,
-              py: 1.5,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              borderBottom: "1px solid #ccc",
-              borderRadius: 1,
-              cursor: "pointer",
-            }}
-            onClick={() => toggleCollapse(idx)}
-          >
-            <Typography variant="subtitle1" fontWeight="bold">
-              {title}
-            </Typography>
-            <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleCollapse(idx); }}>
-              {collapsed[idx] ? <AddIcon /> : <CloseIcon />}
-            </IconButton>
-          </Box>
+      {titles.map((title, idx) => {
+        const hl = highlight[idx];
 
-          {/* Collapsible content */}
-          <Collapse in={!collapsed[idx]}>
-            <Box sx={{ p: 3, bgcolor: "#fff" }}>
-              <Stack direction="row" spacing={2} alignItems="center" sx={{ minHeight: 320 }}>
-                {/* Compare checkbox */}
-                <FormControlLabel
-                  control={<Checkbox />}
-                  label="Compare"
-                  sx={{ whiteSpace: "nowrap" }}
-                />
-
-                {/* Left box */}
-                <Box
-                  sx={{
-                    width: 300,
-                    height: 300,
-                    border: "2px solid",
-                    borderColor:
-                      highlight[idx] === "left"
-                        ? "gray"
-                        : highlight[idx] === "right"
-                        ? "lightgray"
-                        : "#ccc",
-                    borderRadius: 2,
-                    p: 2,
-                    overflowY: "auto",
-                    backgroundColor: "#fff",
-                  }}
-                >
-                  {(idx === 0 || idx === 2) && <PSCRFSection />}
-                </Box>
-
-                {/* Arrows */}
-                <Stack spacing={2} alignItems="center">
-                  <ArrowBackIcon
-                    onClick={() => handleArrowClick(idx, "left")}
-                    sx={{
-                      cursor: "pointer",
-                      fontSize: 32,
-                      color:
-                        highlight[idx] === "left" ? "#424242" : "#bdbdbd",
-                    }}
-                  />
-                  <ArrowForwardIcon
-                    onClick={() => handleArrowClick(idx, "right")}
-                    sx={{
-                      cursor: "pointer",
-                      fontSize: 32,
-                      color:
-                        highlight[idx] === "right" ? "#424242" : "#bdbdbd",
-                    }}
-                  />
-                </Stack>
-
-                {/* Right box */}
-                <Box
-                  sx={{
-                    width: 300,
-                    height: 300,
-                    border: "2px solid",
-                    borderColor:
-                      highlight[idx] === "right"
-                        ? "gray"
-                        : highlight[idx] === "left"
-                        ? "lightgray"
-                        : "#ccc",
-                    borderRadius: 2,
-                    p: 2,
-                    overflowY: "auto",
-                    backgroundColor: "#fff",
-                  }}
-                >
-                  {idx === 3 && <PSCRFSection />}
-                </Box>
-              </Stack>
+        return (
+          <Box key={idx} sx={{ mb: 4, border: "1px solid #ccc", borderRadius: 1 }}>
+            {/* Title Bar */}
+            <Box
+              sx={{
+                width: "100%",
+                bgcolor: "#e0e0e0",
+                px: 2,
+                py: 1.5,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderBottom: "1px solid #ccc",
+                borderRadius: 1,
+                cursor: "pointer",
+              }}
+              onClick={() => toggleCollapse(idx)}
+            >
+              <Typography variant="subtitle1" fontWeight="bold">
+                {title}
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleCollapse(idx);
+                }}
+              >
+                {collapsed[idx] ? <AddIcon /> : <CloseIcon />}
+              </IconButton>
             </Box>
-          </Collapse>
-        </Box>
-      ))}
+
+            {/* Collapsible content */}
+            <Collapse in={!collapsed[idx]}>
+              <Box sx={{ p: 3, bgcolor: "#fff" }}>
+                <Stack direction="row" spacing={2} alignItems="center" sx={{ minHeight: 320 }}>
+                  {/* Compare checkbox */}
+                  <FormControlLabel
+                    control={<Checkbox />}
+                    label="Compare"
+                    sx={{ whiteSpace: "nowrap" }}
+                  />
+
+                  {/* Left box */}
+                  <Box
+                    sx={{
+                      width: 300,
+                      height: 300,
+                      border: "2px solid",
+                      borderColor: hl.left ? "gray" : hl.right ? "lightgray" : "#ccc",
+                      borderRadius: 2,
+                      p: 2,
+                      overflowY: "auto",
+                      backgroundColor: "#fff",
+                      opacity: hl.left || hl.right ? 1 : 0.5,
+                      transition: "opacity 0.3s",
+                    }}
+                  >
+                    {(idx === 0 || idx === 2) && <PSCRFSection />}
+                  </Box>
+
+                  {/* Arrows */}
+                  <Stack spacing={2} alignItems="center">
+                    <ArrowBackIcon
+                      onClick={() => handleArrowClick(idx, "left")}
+                      sx={{
+                        cursor: "pointer",
+                        fontSize: 32,
+                        color: hl.left ? "#424242" : "#bdbdbd",
+                      }}
+                    />
+                    <ArrowForwardIcon
+                      onClick={() => handleArrowClick(idx, "right")}
+                      sx={{
+                        cursor: "pointer",
+                        fontSize: 32,
+                        color: hl.right ? "#424242" : "#bdbdbd",
+                      }}
+                    />
+                  </Stack>
+
+                  {/* Right box */}
+                  <Box
+                    sx={{
+                      width: 300,
+                      height: 300,
+                      border: "2px solid",
+                      borderColor: hl.right ? "gray" : hl.left ? "lightgray" : "#ccc",
+                      borderRadius: 2,
+                      p: 2,
+                      overflowY: "auto",
+                      backgroundColor: "#fff",
+                      opacity: hl.left || hl.right ? 1 : 0.5,
+                      transition: "opacity 0.3s",
+                    }}
+                  >
+                    {idx === 3 && <PSCRFSection />}
+                  </Box>
+                </Stack>
+              </Box>
+            </Collapse>
+          </Box>
+        );
+      })}
     </Box>
   );
 }
