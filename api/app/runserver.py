@@ -28,21 +28,13 @@ const Request = () => {
   };
 
   const getBoxStyles = (box) => {
-    if (direction === 'right') {
-      return {
-        border: `2px solid ${box === 1 ? 'red' : 'blue'}`,
-        borderRadius: 2,
-        p: 2,
-        minHeight: 300
-      };
-    } else {
-      return {
-        border: `2px solid ${box === 1 ? 'blue' : 'red'}`,
-        borderRadius: 2,
-        p: 2,
-        minHeight: 300
-      };
-    }
+    const isSourceBox = (direction === 'right' && box === 1) || (direction === 'left' && box === 2);
+    return {
+      border: `2px solid ${isSourceBox ? '#424242' : '#BDBDBD'}`,
+      borderRadius: 2,
+      p: 2,
+      minHeight: 300
+    };
   };
 
   const arrowStyle = (dir) => ({
