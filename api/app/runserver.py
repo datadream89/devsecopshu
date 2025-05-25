@@ -19,7 +19,8 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
 // Sample PSCRF data
 const pscrfData = [
@@ -60,7 +61,16 @@ function PSCRFSection() {
       />
 
       {selected.map((item) => (
-        <Card key={item.id} sx={{ mb: 1, position: "relative" }}>
+        <Card
+          key={item.id}
+          sx={{
+            mb: 1,
+            position: "relative",
+            borderColor: "#1976d2",
+            borderWidth: 1,
+            borderStyle: "solid",
+          }}
+        >
           <IconButton
             size="small"
             sx={{ position: "absolute", top: 4, right: 4 }}
@@ -82,7 +92,7 @@ function PSCRFSection() {
 }
 
 // ContractBox component
-function ContractBox({ id, data, onChange, onRemove, removable, title }) {
+function ContractBox({ id, data, onChange, onRemove, removable, title, borderColor, opacity }) {
   const handleRadioChange = (event) => {
     onChange(id, { type: event.target.value, fileName: null }); // Reset fileName on radio change
   };
@@ -97,11 +107,14 @@ function ContractBox({ id, data, onChange, onRemove, removable, title }) {
   return (
     <Box
       sx={{
-        border: "1px solid #ccc",
+        border: `2px solid ${borderColor}`,
         borderRadius: 1,
         p: 2,
         mb: 2,
         position: "relative",
+        opacity: opacity,
+        transition: "opacity 0.3s",
+        minHeight: 350,
       }}
     >
       {removable && (
@@ -158,7 +171,7 @@ function ContractBox({ id, data, onChange, onRemove, removable, title }) {
 }
 
 // Approved Contract Section component
-function ApprovedContractSection() {
+function ApprovedContractSection({ borderColor, opacity }) {
   const [contracts, setContracts] = useState([{ id: 1, type: "Agreement", fileName: null }]);
 
   const addContract = () => {
@@ -187,6 +200,8 @@ function ApprovedContractSection() {
           onRemove={removeContract}
           removable={index !== 0}
           title={`Approved contract ${index + 1}`}
+          borderColor={borderColor}
+          opacity={opacity}
         />
       ))}
 
@@ -198,98 +213,155 @@ function ApprovedContractSection() {
 }
 
 // Empty Box placeholder component
-function EmptyBox() {
+function EmptyBox({ borderColor, opacity }) {
   return (
     <Box
       sx={{
-        border: "1px solid #ccc",
+        border: `2px solid ${borderColor}`,
         borderRadius: 1,
         minHeight: 350,
         p: 2,
+        opacity: opacity,
+        transition: "opacity 0.3s",
       }}
-    >
-      {/* Empty box, can add content if needed */}
-    </Box>
+    />
   );
 }
 
-// Left panel with arrows and compare checkbox
-function LeftPanel({ compareChecked, onCompareChange }) {
+// Arrow and border colors
+const lightGray = "#b0b0b0";
+const darkGray = "#424242";
+
+// Compare arrows between boxes with highlight
+function CompareArrows({ direction, onChange }) {
   return (
     <Box
       sx={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        pr: 1,
-        minWidth: 80,
-        justifyContent: "center",
-        borderRight: "1px solid #ccc",
+        px: 1,
+        userSelect: "none",
       }}
     >
-      <CompareArrowsIcon fontSize="large" sx={{ mb: 1 }} />
-      <MuiFormControlLabel
-        control={<Checkbox checked={compareChecked} onChange={onCompareChange} />}
-        label="Compare"
-        sx={{ mt: 1 }}
+      <ArrowBackIosNewIcon
+        sx={{
+          cursor: "pointer",
+          color: direction === "left" ? darkGray : lightGray,
+          mb: 1,
+        }}
+        onClick={() => onChange("left")}
+        fontSize="small"
+        aria-label="Arrow left"
+      />
+      <ArrowForwardIosIcon
+        sx={{
+          cursor: "pointer",
+          color: direction === "right" ? darkGray : lightGray,
+        }}
+        onClick={() => onChange("right")}
+        fontSize="small"
+        aria-label="Arrow right"
       />
     </Box>
   );
 }
 
-// Row component with left panel and two boxes
-function Row({
-  leftContent,
-  rightContent,
-  compareChecked,
-  onCompareChange,
-  leftTitle,
-  rightTitle,
-  leftKey,
-  rightKey,
-}) {
+// Left Compare checkbox
+function CompareCheckbox({ checked, onChange }) {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        px: 1,
+        userSelect: "none",
+        mb: 1,
+        justifyContent: "flex-start",
+      }}
+    >
+      <Checkbox checked={checked} onChange={onChange} />
+      <Typography>Compare</Typography>
+    </Box>
+  );
+}
+
+// Row component with divider, compare checkbox, arrows, and two boxes
+function Row({ index, leftContent, rightContent, leftTitle, rightTitle }) {
+  // State for compare checkbox and arrow direction for this row
+  const [compareChecked, setCompareChecked] = useState(false);
+  const [arrowDirection, setArrowDirection] = useState("left"); // "left" or "right"
+
+  // Handle compare checkbox toggle
+  const handleCompareChange = (e) => {
+    setCompareChecked(e.target.checked);
+  };
+
+  // Handle arrow click
+  const handleArrowChange = (dir) => {
+    setArrowDirection(dir);
+  };
+
+  // Determine box border and opacity based on compare and arrowDirection
+  const leftBoxBorder = arrowDirection === "left" ? darkGray : lightGray;
+  const rightBoxBorder = arrowDirection === "right" ? darkGray : lightGray;
+  const opacity = compareChecked ? 1 : 0.4;
+
   return (
     <Box sx={{ width: "100%" }}>
       <Divider sx={{ mb: 2, borderBottomWidth: 2 }} />
 
-      <Box sx={{ display: "flex", alignItems: "stretch", gap: 2 }}>
-        <LeftPanel compareChecked={compareChecked} onCompareChange={onCompareChange} />
+      {/* Compare checkbox above arrow */}
+      <CompareCheckbox checked={compareChecked} onChange={handleCompareChange} />
 
+      <Box sx={{ display: "flex", alignItems: "stretch", gap: 1 }}>
         {/* Left box */}
-        <Box sx={{ flex: 1 }}>
+        <Box
+          sx={{
+            flex: 1,
+            border: 2,
+            borderColor: leftBoxBorder,
+            borderRadius: 1,
+            p: 2,
+            minHeight: 350,
+            opacity: opacity,
+            transition: "opacity 0.3s",
+          }}
+        >
           <Typography variant="h6" mb={2} fontWeight="bold">
             {leftTitle}
           </Typography>
-          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
-            {leftContent}
-          </Box>
+          {leftContent}
         </Box>
 
+        {/* Arrows between boxes */}
+        <CompareArrows direction={arrowDirection} onChange={handleArrowChange} />
+
         {/* Right box */}
-        <Box sx={{ flex: 1 }}>
+        <Box
+          sx={{
+            flex: 1,
+            border: 2,
+            borderColor: rightBoxBorder,
+            borderRadius: 1,
+            p: 2,
+            minHeight: 350,
+            opacity: opacity,
+            transition: "opacity 0.3s",
+          }}
+        >
           <Typography variant="h6" mb={2} fontWeight="bold">
             {rightTitle}
           </Typography>
-          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
-            {rightContent}
-          </Box>
+          {rightContent}
         </Box>
       </Box>
     </Box>
   );
 }
 
-// Main component with 4 rows × 2 boxes layout with left panels and dividers
+// Main component with 4 rows and correct content
 export default function MainComponent() {
-  // Track compare checkbox states for each row (4 rows)
-  const [compareStates, setCompareStates] = useState([false, false, false, false]);
-
-  const handleCompareChange = (index) => (event) => {
-    const newStates = [...compareStates];
-    newStates[index] = event.target.checked;
-    setCompareStates(newStates);
-  };
-
   return (
     <Box
       sx={{
@@ -304,8 +376,7 @@ export default function MainComponent() {
     >
       {/* Row 1 */}
       <Row
-        compareChecked={compareStates[0]}
-        onCompareChange={handleCompareChange(0)}
+        index={1}
         leftTitle="PSCRF Section (Row 1 Left)"
         rightTitle="Approved Contract Section (Row 1 Right)"
         leftContent={<PSCRFSection />}
@@ -314,32 +385,29 @@ export default function MainComponent() {
 
       {/* Row 2 */}
       <Row
-        compareChecked={compareStates[1]}
-        onCompareChange={handleCompareChange(1)}
-        leftTitle="Approved Contract Section (Row 2 Left)"
+        index={2}
+        leftTitle="Empty Box (Row 2 Left)"
         rightTitle="Empty Box (Row 2 Right)"
-        leftContent={<ApprovedContractSection />}
+        leftContent={<EmptyBox />}
         rightContent={<EmptyBox />}
       />
 
       {/* Row 3 */}
       <Row
-        compareChecked={compareStates[2]}
-        onCompareChange={handleCompareChange(2)}
+        index={3}
         leftTitle="Empty Box (Row 3 Left)"
-        rightTitle="PSCRF Section (Row 3 Right)"
+        rightTitle="Empty Box (Row 3 Right)"
         leftContent={<EmptyBox />}
-        rightContent={<PSCRFSection />}
+        rightContent={<EmptyBox />}
       />
 
       {/* Row 4 */}
       <Row
-        compareChecked={compareStates[3]}
-        onCompareChange={handleCompareChange(3)}
-        leftTitle="PSCRF Section (Row 4 Left)"
-        rightTitle="PSCRF Section (Row 4 Right)"
-        leftContent={<PSCRFSection />}
-        rightContent={<PSCRFSection />}
+        index={4}
+        leftTitle="Empty Box (Row 4 Left)"
+        rightTitle="Empty Box (Row 4 Right)"
+        leftContent={<EmptyBox />}
+        rightContent={<EmptyBox />}
       />
     </Box>
   );
