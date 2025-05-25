@@ -28,13 +28,24 @@ const Request = () => {
   };
 
   const getBoxStyles = (box) => {
-    const isSourceBox = (direction === 'right' && box === 1) || (direction === 'left' && box === 2);
-    return {
-      border: `2px solid ${isSourceBox ? '#424242' : '#BDBDBD'}`,
-      borderRadius: 2,
-      p: 2,
-      minHeight: 300
-    };
+    // Flipped logic for outline colors:
+    // direction 'right' => first box light grey, second box dark grey
+    // direction 'left' => first box dark grey, second box light grey
+    if (direction === 'right') {
+      return {
+        border: `2px solid ${box === 1 ? '#BDBDBD' : '#424242'}`,
+        borderRadius: 2,
+        p: 2,
+        minHeight: 300
+      };
+    } else {
+      return {
+        border: `2px solid ${box === 1 ? '#424242' : '#BDBDBD'}`,
+        borderRadius: 2,
+        p: 2,
+        minHeight: 300
+      };
+    }
   };
 
   const arrowStyle = (dir) => ({
@@ -138,7 +149,6 @@ const Request = () => {
             <Typography variant="h6" gutterBottom>
               Destination (Empty for now)
             </Typography>
-            {/* Placeholder for future content */}
           </Box>
         </Grid>
       </Grid>
