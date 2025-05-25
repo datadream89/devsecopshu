@@ -1,5 +1,17 @@
-{section.error && (
-  <Typography sx={{ color: "red", fontSize: "0.8rem" }}>
-    Please upload a file.
-  </Typography>
-)}
+<Autocomplete
+  multiple
+  options={pscrfOptions}
+  value={selectedPSCRFs}
+  onChange={(event, newValue) => {
+    setSelectedPSCRFs(newValue);
+    setPscrfError(false); // clear error on change
+  }}
+  renderInput={(params) => (
+    <TextField
+      {...params}
+      label="Select PSCRFs"
+      error={pscrfError}
+      helperText={pscrfError ? "Please select at least one PSCRF ID" : ""}
+    />
+  )}
+/>
