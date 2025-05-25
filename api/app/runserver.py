@@ -90,37 +90,21 @@ const Request = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-      <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
-        {expanded && (
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={enabled}
-                onChange={(e) => setEnabled(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Enable Compare"
-          />
-        )}
-
-        <Box display="flex" alignItems="center">
-          <IconButton onClick={() => setExpanded(false)} disabled={!expanded}>
-            <RemoveIcon />
-          </IconButton>
-          <IconButton onClick={() => setExpanded(true)} disabled={expanded}>
-            <AddIcon />
-          </IconButton>
-          {!expanded && (
-            <Typography variant="body2" sx={{ ml: 1, color: 'gray' }}>
-              Compare PSCRF and Approved Contract
-            </Typography>
-          )}
-        </Box>
-      </Box>
-
       <Collapse in={expanded}>
         <Grid container spacing={4} alignItems="center" justifyContent="center">
+          <Grid item xs={1}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={enabled}
+                  onChange={(e) => setEnabled(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Enable Compare"
+            />
+          </Grid>
+
           <Grid item xs={5}>
             <Box sx={getBoxStyles(1)}>
               <Typography variant="h6" gutterBottom>
@@ -200,7 +184,7 @@ const Request = () => {
             </Box>
           </Grid>
 
-          <Grid item xs={2} sx={{ textAlign: 'center' }}>
+          <Grid item xs={1} sx={{ textAlign: 'center' }}>
             <ButtonGroup orientation="vertical">
               <Button
                 onClick={() => enabled && setDirection('right')}
@@ -230,6 +214,20 @@ const Request = () => {
           </Grid>
         </Grid>
       </Collapse>
+
+      <Box display="flex" justifyContent="center" alignItems="center" mt={2}>
+        <IconButton onClick={() => setExpanded(false)} disabled={!expanded}>
+          <RemoveIcon />
+        </IconButton>
+        <IconButton onClick={() => setExpanded(true)} disabled={expanded}>
+          <AddIcon />
+        </IconButton>
+        {!expanded && (
+          <Typography variant="body2" sx={{ ml: 1, color: 'gray' }}>
+            Compare PSCRF and Approved Contract
+          </Typography>
+        )}
+      </Box>
     </Box>
   );
 };
