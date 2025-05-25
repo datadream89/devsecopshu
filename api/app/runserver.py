@@ -90,7 +90,6 @@ const Request = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-      {/* Always show toggle and (when expanded) enable compare */}
       <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
         {expanded && (
           <FormControlLabel
@@ -104,20 +103,24 @@ const Request = () => {
             label="Enable Compare"
           />
         )}
-        <Box>
+
+        <Box display="flex" alignItems="center">
           <IconButton onClick={() => setExpanded(false)} disabled={!expanded}>
             <RemoveIcon />
           </IconButton>
           <IconButton onClick={() => setExpanded(true)} disabled={expanded}>
             <AddIcon />
           </IconButton>
+          {!expanded && (
+            <Typography variant="body2" sx={{ ml: 1, color: 'gray' }}>
+              Compare PSCRF and Approved Contract
+            </Typography>
+          )}
         </Box>
       </Box>
 
-      {/* Collapse entire comparison section */}
       <Collapse in={expanded}>
         <Grid container spacing={4} alignItems="center" justifyContent="center">
-          {/* First Box */}
           <Grid item xs={5}>
             <Box sx={getBoxStyles(1)}>
               <Typography variant="h6" gutterBottom>
@@ -197,7 +200,6 @@ const Request = () => {
             </Box>
           </Grid>
 
-          {/* Arrows */}
           <Grid item xs={2} sx={{ textAlign: 'center' }}>
             <ButtonGroup orientation="vertical">
               <Button
@@ -219,7 +221,6 @@ const Request = () => {
             </ButtonGroup>
           </Grid>
 
-          {/* Second Box */}
           <Grid item xs={5}>
             <Box sx={getBoxStyles(2)}>
               <Typography variant="h6" gutterBottom>
