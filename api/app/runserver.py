@@ -16,8 +16,8 @@ import {
 } from "@mui/material";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CloseIcon from "@mui/icons-material/Close";
 
-// Dummy options
 const pscrfOptions = ["PSCRF 101", "PSCRF 102", "PSCRF 103"];
 
 const SectionTitleBar = ({ title }) => (
@@ -34,7 +34,6 @@ const SectionTitleBar = ({ title }) => (
   </Box>
 );
 
-// === PSCRF SECTION ===
 const PSCRFSection = () => {
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [inputValue, setInputValue] = useState("");
@@ -89,7 +88,6 @@ const PSCRFSection = () => {
   );
 };
 
-// === APPROVED CONTRACT SECTION ===
 const ApprovedContractSection = () => {
   const [sections, setSections] = useState([
     { type: "Agreement", file: null },
@@ -111,33 +109,35 @@ const ApprovedContractSection = () => {
     setSections([...sections, { type: "Agreement", file: null }]);
   };
 
+  const removeSection = (index) => {
+    const updated = sections.filter((_, i) => i !== index);
+    setSections(updated);
+  };
+
   return (
     <Box>
       <Typography variant="subtitle1" gutterBottom>
         Approved Contract
       </Typography>
       {sections.map((section, index) => (
-        <Box key={index} sx={{ mb: 2, borderBottom: "1px solid #eee", pb: 2 }}>
+        <Box key={index} sx={{ mb: 2, borderBottom: "1px solid #eee", pb: 2, position: 'relative' }}>
+          {sections.length > 1 && (
+            <IconButton
+              size="small"
+              sx={{ position: 'absolute', top: 0, right: 0 }}
+              onClick={() => removeSection(index)}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          )}
           <RadioGroup
             row
             value={section.type}
             onChange={(e) => handleTypeChange(index, e.target.value)}
           >
-            <FormControlLabel
-              value="Agreement"
-              control={<Radio />}
-              label="Agreement"
-            />
-            <FormControlLabel
-              value="Supplement"
-              control={<Radio />}
-              label="Supplement"
-            />
-            <FormControlLabel
-              value="Addendum"
-              control={<Radio />}
-              label="Addendum"
-            />
+            <FormControlLabel value="Agreement" control={<Radio />} label="Agreement" />
+            <FormControlLabel value="Supplement" control={<Radio />} label="Supplement" />
+            <FormControlLabel value="Addendum" control={<Radio />} label="Addendum" />
           </RadioGroup>
           <Stack direction="row" alignItems="center" spacing={2}>
             <Button
@@ -163,20 +163,24 @@ const ApprovedContractSection = () => {
   );
 };
 
-// === BOX PAIR ===
 const BoxPair = ({ leftContent, rightContent, rowIndex }) => {
   const [leftToRight, setLeftToRight] = useState(false);
   const [rightToLeft, setRightToLeft] = useState(false);
+  const [checked, setChecked] = useState(true);
 
   const getBorderStyle = (direction) =>
     direction ? "2px solid gray" : "1px solid lightgray";
 
+  const getOpacity = () => (checked ? 1 : 0.4);
+
   return (
-    <Box mb={4}>
+    <Box mb={6}>
       <SectionTitleBar title={`Section ${rowIndex + 1}`} />
-      <Box display="flex" alignItems="center">
-        <Checkbox />
-        <Grid container spacing={2} alignItems="center">
+      <Box display="flex" alignItems="flex-start">
+        <Box mt={4} mr={1}>
+          <Checkbox checked={checked} onChange={(e) => setChecked(e.target.checked)} />
+        </Box>
+        <Grid container spacing={2} alignItems="flex-start" sx={{ opacity: getOpacity() }}>
           <Grid
             item
             xs={5.5}
@@ -185,6 +189,7 @@ const BoxPair = ({ leftContent, rightContent, rowIndex }) => {
               borderRadius: "8px",
               backgroundColor: "white",
               padding: 2,
+              minHeight: 200,
             }}
           >
             {leftContent}
@@ -217,6 +222,7 @@ const BoxPair = ({ leftContent, rightContent, rowIndex }) => {
               borderRadius: "8px",
               backgroundColor: "white",
               padding: 2,
+              minHeight: 200,
             }}
           >
             {rightContent}
@@ -227,7 +233,6 @@ const BoxPair = ({ leftContent, rightContent, rowIndex }) => {
   );
 };
 
-// === MAIN COMPONENT ===
 const MainComponent = () => {
   return (
     <Box p={4}>
