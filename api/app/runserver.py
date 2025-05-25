@@ -12,11 +12,14 @@ import {
   RadioGroup,
   FormControlLabel as MuiFormControlLabel,
   Stack,
+  Checkbox,
+  Divider,
 } from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 
 // Sample PSCRF data
 const pscrfData = [
@@ -81,7 +84,7 @@ function PSCRFSection() {
 // ContractBox component
 function ContractBox({ id, data, onChange, onRemove, removable, title }) {
   const handleRadioChange = (event) => {
-    onChange(id, { type: event.target.value, fileName: data.fileName });
+    onChange(id, { type: event.target.value, fileName: null }); // Reset fileName on radio change
   };
 
   const handleFileUpload = (event) => {
@@ -210,8 +213,83 @@ function EmptyBox() {
   );
 }
 
-// Main component with 4 rows × 2 boxes layout
+// Left panel with arrows and compare checkbox
+function LeftPanel({ compareChecked, onCompareChange }) {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        pr: 1,
+        minWidth: 80,
+        justifyContent: "center",
+        borderRight: "1px solid #ccc",
+      }}
+    >
+      <CompareArrowsIcon fontSize="large" sx={{ mb: 1 }} />
+      <MuiFormControlLabel
+        control={<Checkbox checked={compareChecked} onChange={onCompareChange} />}
+        label="Compare"
+        sx={{ mt: 1 }}
+      />
+    </Box>
+  );
+}
+
+// Row component with left panel and two boxes
+function Row({
+  leftContent,
+  rightContent,
+  compareChecked,
+  onCompareChange,
+  leftTitle,
+  rightTitle,
+  leftKey,
+  rightKey,
+}) {
+  return (
+    <Box sx={{ width: "100%" }}>
+      <Divider sx={{ mb: 2, borderBottomWidth: 2 }} />
+
+      <Box sx={{ display: "flex", alignItems: "stretch", gap: 2 }}>
+        <LeftPanel compareChecked={compareChecked} onCompareChange={onCompareChange} />
+
+        {/* Left box */}
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h6" mb={2} fontWeight="bold">
+            {leftTitle}
+          </Typography>
+          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
+            {leftContent}
+          </Box>
+        </Box>
+
+        {/* Right box */}
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h6" mb={2} fontWeight="bold">
+            {rightTitle}
+          </Typography>
+          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
+            {rightContent}
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+// Main component with 4 rows × 2 boxes layout with left panels and dividers
 export default function MainComponent() {
+  // Track compare checkbox states for each row (4 rows)
+  const [compareStates, setCompareStates] = useState([false, false, false, false]);
+
+  const handleCompareChange = (index) => (event) => {
+    const newStates = [...compareStates];
+    newStates[index] = event.target.checked;
+    setCompareStates(newStates);
+  };
+
   return (
     <Box
       sx={{
@@ -225,92 +303,44 @@ export default function MainComponent() {
       }}
     >
       {/* Row 1 */}
-      <Box sx={{ display: "flex", gap: 4 }}>
-        {/* Row 1 left box - PSCRF */}
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h6" mb={2} fontWeight="bold">
-            PSCRF Section (Row 1 Left)
-          </Typography>
-          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
-            <PSCRFSection />
-          </Box>
-        </Box>
-
-        {/* Row 1 right box - Approved Contract */}
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h6" mb={2} fontWeight="bold">
-            Approved Contract Section (Row 1 Right)
-          </Typography>
-          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
-            <ApprovedContractSection />
-          </Box>
-        </Box>
-      </Box>
+      <Row
+        compareChecked={compareStates[0]}
+        onCompareChange={handleCompareChange(0)}
+        leftTitle="PSCRF Section (Row 1 Left)"
+        rightTitle="Approved Contract Section (Row 1 Right)"
+        leftContent={<PSCRFSection />}
+        rightContent={<ApprovedContractSection />}
+      />
 
       {/* Row 2 */}
-      <Box sx={{ display: "flex", gap: 4 }}>
-        {/* Row 2 left box - Approved Contract */}
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h6" mb={2} fontWeight="bold">
-            Approved Contract Section (Row 2 Left)
-          </Typography>
-          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
-            <ApprovedContractSection />
-          </Box>
-        </Box>
-
-        {/* Row 2 right box - Empty */}
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h6" mb={2} fontWeight="bold" color="text.secondary">
-            Empty Box (Row 2 Right)
-          </Typography>
-          <EmptyBox />
-        </Box>
-      </Box>
+      <Row
+        compareChecked={compareStates[1]}
+        onCompareChange={handleCompareChange(1)}
+        leftTitle="Approved Contract Section (Row 2 Left)"
+        rightTitle="Empty Box (Row 2 Right)"
+        leftContent={<ApprovedContractSection />}
+        rightContent={<EmptyBox />}
+      />
 
       {/* Row 3 */}
-      <Box sx={{ display: "flex", gap: 4 }}>
-        {/* Row 3 left box - Empty */}
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h6" mb={2} fontWeight="bold" color="text.secondary">
-            Empty Box (Row 3 Left)
-          </Typography>
-          <EmptyBox />
-        </Box>
-
-        {/* Row 3 right box - PSCRF */}
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h6" mb={2} fontWeight="bold">
-            PSCRF Section (Row 3 Right)
-          </Typography>
-          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
-            <PSCRFSection />
-          </Box>
-        </Box>
-      </Box>
+      <Row
+        compareChecked={compareStates[2]}
+        onCompareChange={handleCompareChange(2)}
+        leftTitle="Empty Box (Row 3 Left)"
+        rightTitle="PSCRF Section (Row 3 Right)"
+        leftContent={<EmptyBox />}
+        rightContent={<PSCRFSection />}
+      />
 
       {/* Row 4 */}
-      <Box sx={{ display: "flex", gap: 4 }}>
-        {/* Row 4 left box - PSCRF */}
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h6" mb={2} fontWeight="bold">
-            PSCRF Section (Row 4 Left)
-          </Typography>
-          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
-            <PSCRFSection />
-          </Box>
-        </Box>
-
-        {/* Row 4 right box - PSCRF */}
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h6" mb={2} fontWeight="bold">
-            PSCRF Section (Row 4 Right)
-          </Typography>
-          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
-            <PSCRFSection />
-          </Box>
-        </Box>
-      </Box>
+      <Row
+        compareChecked={compareStates[3]}
+        onCompareChange={handleCompareChange(3)}
+        leftTitle="PSCRF Section (Row 4 Left)"
+        rightTitle="PSCRF Section (Row 4 Right)"
+        leftContent={<PSCRFSection />}
+        rightContent={<PSCRFSection />}
+      />
     </Box>
   );
 }
