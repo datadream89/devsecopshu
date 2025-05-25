@@ -52,15 +52,17 @@ const Request = () => {
 
         <Autocomplete
           options={options}
-          getOptionLabel={(option) => option.label}
+          getOptionLabel={(option) => option.id || ''}
           onChange={handleOptionChange}
-          renderInput={(params) => <TextField {...params} label="Select Option" />}
+          renderInput={(params) => <TextField {...params} label="Select PSCRF ID" />}
         />
 
         <Dialog open={openModal} onClose={handleClose}>
-          <DialogTitle>{selectedOption?.label}</DialogTitle>
+          <DialogTitle>{selectedOption?.id}</DialogTitle>
           <DialogContent>
-            <Typography>{selectedOption?.description}</Typography>
+            <Typography><strong>Client:</strong> {selectedOption?.clientName}</Typography>
+            <Typography><strong>SAM Version:</strong> {selectedOption?.samVersion}</Typography>
+            <Typography><strong>Pricing Version:</strong> {selectedOption?.pricingVersion}</Typography>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose} color="primary">
