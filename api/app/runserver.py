@@ -45,6 +45,14 @@ const Request = () => {
     }
   };
 
+  const arrowStyle = (dir) => ({
+    backgroundColor: direction === dir ? '#424242' : '#BDBDBD',
+    color: 'white',
+    '&:hover': {
+      backgroundColor: direction === dir ? '#424242' : '#9E9E9E'
+    }
+  });
+
   return (
     <Box sx={{ p: 4 }}>
       <Grid container spacing={4} alignItems="center" justifyContent="center">
@@ -116,15 +124,15 @@ const Request = () => {
         <Grid item xs={2} sx={{ display: 'flex', justifyContent: 'center' }}>
           <ButtonGroup orientation="vertical">
             <Button
-              variant={direction === 'right' ? 'contained' : 'outlined'}
               onClick={() => setDirection('right')}
+              sx={arrowStyle('right')}
               startIcon={<ArrowForwardIcon />}
             >
               →
             </Button>
             <Button
-              variant={direction === 'left' ? 'contained' : 'outlined'}
               onClick={() => setDirection('left')}
+              sx={arrowStyle('left')}
               startIcon={<ArrowBackIcon />}
             >
               ←
@@ -138,7 +146,7 @@ const Request = () => {
             <Typography variant="h6" gutterBottom>
               Destination (Empty for now)
             </Typography>
-            {/* Future content goes here */}
+            {/* Placeholder for future content */}
           </Box>
         </Grid>
       </Grid>
