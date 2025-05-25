@@ -7,14 +7,13 @@ import {
   Checkbox,
   FormControlLabel,
   Stack,
-  Button,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
-const titles = ["Title 1", "Title 2", "Title 3", "Title 4"];
+const titles = ["Section 1", "Section 2", "Section 3", "Section 4"];
 
 export default function BoxPairs() {
   const [collapsed, setCollapsed] = useState(Array(4).fill(false));
@@ -33,33 +32,36 @@ export default function BoxPairs() {
   };
 
   return (
-    <Box sx={{ maxWidth: "1000px", mx: "auto", mt: 4, bgcolor: "#fff", p: 2 }}>
+    <Box sx={{ maxWidth: "1000px", mx: "auto", mt: 4 }}>
       {titles.map((title, idx) => (
         <Box key={idx} sx={{ mb: 4, border: "1px solid #ccc", borderRadius: 1 }}>
-          {/* Title bar */}
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            onClick={() => toggleCollapse(idx)}
+          {/* Title Bar - 70% width and centered */}
+          <Box
             sx={{
-              bgcolor: "#424242",
-              color: "#fff",
+              width: "70%",
+              mx: "auto",
+              bgcolor: "#e0e0e0",
               px: 2,
-              py: 1,
-              cursor: "pointer",
+              py: 1.5,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderBottom: "1px solid #ccc",
+              borderRadius: 1,
             }}
+            onClick={() => toggleCollapse(idx)}
           >
             <Typography variant="subtitle1" fontWeight="bold">
               {title}
             </Typography>
-            <IconButton sx={{ color: "#fff" }} size="small">
+            <IconButton size="small">
               {collapsed[idx] ? <AddIcon /> : <CloseIcon />}
             </IconButton>
-          </Stack>
+          </Box>
 
+          {/* Collapsible content */}
           <Collapse in={!collapsed[idx]}>
-            <Box sx={{ p: 2 }}>
+            <Box sx={{ p: 3, bgcolor: "#fff" }}>
               <Stack direction="row" spacing={2} alignItems="center">
                 {/* Compare checkbox */}
                 <FormControlLabel
@@ -71,8 +73,8 @@ export default function BoxPairs() {
                 {/* Left box */}
                 <Box
                   sx={{
-                    flex: 1,
-                    height: 200,
+                    width: 300,
+                    height: 300,
                     border: "2px solid",
                     borderColor:
                       highlight[idx] === "left"
@@ -112,8 +114,8 @@ export default function BoxPairs() {
                 {/* Right box */}
                 <Box
                   sx={{
-                    flex: 1,
-                    height: 200,
+                    width: 300,
+                    height: 300,
                     border: "2px solid",
                     borderColor:
                       highlight[idx] === "right"
