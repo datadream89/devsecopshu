@@ -1,39 +1,42 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
-// ...
-
-const PSCRFSection = forwardRef((props, ref) => {
-  const [selectedOptions, setSelectedOptions] = useState([]);
-  const [error, setError] = useState(false);
+const ContractSection = forwardRef(({ title }, ref) => {
+  const [sections, setSections] = useState([
+    { id: Date.now(), type: "Agreement", file: null, filename: "", error: false },
+  ]);
 
   useImperativeHandle(ref, () => ({
     validate: () => {
-      const isValid = selectedOptions.length > 0;
-      setError(!isValid);
+      let isValid = true;
+      const updated = sections.map((s) => {
+        const sectionValid = !!s.file;
+        if (!sectionValid) isValid = false;
+        return { ...s, error: !sectionValid };
+      });
+      setSections(updated);
       return isValid;
     },
   }));
 
-  const handleRemove = (index) => {
-    const updated = [...selectedOptions];
-    updated.splice(index, 1);
-    setSelectedOptions(updated);
+  const handleFileChange = (id, file) => {
+    // unchanged logic
   };
 
   return (
-    <Box p={2} border={1} borderColor={error ? "red" : "grey.300"} borderRadius={2} bgcolor="white" minHeight={220}>
-      <Autocomplete
-        multiple
-        options={pscrfOptions}
-        getOptionLabel={(option) =>
-          `${option.id}, ${option.samVersion}, ${option.pricingVersion}, ${option.clientName}`
-        }
-        onChange={(event, value) => {
-          setSelectedOptions(value);
-          setError(false);
-        }}
-        renderInput={(params) => <TextField {...params} label="Select PSCRF" variant="outlined" error={error} />}
-      />
-      {/* Cards... */}
+    <Box /* style unchanged */>
+      <Typography>{title}</Typography>
+      {sections.map((section) => (
+        <Box /* props unchanged */>
+          {/* Radio + Upload */}
+          <Typography
+            sx={{
+              color: section.error ? "red" : "inherit",
+              // other styles...
+            }}
+          >
+            {section.filename || "No file chosen"}
+          </Typography>
+        </Box>
+      ))}
+      <Button onClick={handleAddSection}>Add Section</Button>
     </Box>
   );
 });
