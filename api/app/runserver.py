@@ -22,7 +22,7 @@ const Request = () => {
   };
 
   return (
-    <Box sx={{ p: 4, maxWidth: 600 }}>
+    <Box sx={{ p: 4, width: '100%', maxWidth: 800 }}>
       <Typography variant="h6" gutterBottom>
         PSCRF Data
       </Typography>
@@ -30,12 +30,29 @@ const Request = () => {
       <Autocomplete
         multiple
         options={options}
-        getOptionLabel={(option) => option.id}
+        getOptionLabel={(option) =>
+          `${option.id} | ${option.samVersion} | ${option.pricingVersion} | ${option.clientName}`
+        }
         value={selectedOptions}
         onChange={handleSelectionChange}
         filterSelectedOptions
+        isOptionEqualToValue={(option, value) => option.id === value.id}
+        filterOptions={(options, { inputValue }) =>
+          options.filter(
+            (opt) =>
+              opt.id.toLowerCase().includes(inputValue.toLowerCase()) ||
+              opt.samVersion.toLowerCase().includes(inputValue.toLowerCase()) ||
+              opt.pricingVersion.toLowerCase().includes(inputValue.toLowerCase()) ||
+              opt.clientName.toLowerCase().includes(inputValue.toLowerCase())
+          )
+        }
         renderInput={(params) => (
           <TextField {...params} label="Select PSCRF IDs" variant="outlined" />
+        )}
+        renderOption={(props, option) => (
+          <li {...props} key={option.id}>
+            <strong>{option.id}</strong> — {option.samVersion}, {option.pricingVersion}, {option.clientName}
+          </li>
         )}
       />
 
