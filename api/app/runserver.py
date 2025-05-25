@@ -259,178 +259,183 @@ function ComparisonUnit({
 
   return (
     <Box sx={{ mb: 4, border: "1px solid #ccc", borderRadius: 2, p: 2 }}>
+      {/* Top controls: Compare checkbox on left, Collapse button on right */}
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           mb: 2,
-          cursor: "pointer",
+          flexWrap: "wrap",
+          gap: 1,
         }}
-        onClick={() => setCollapsed(!collapsed)}
       >
-        <Typography variant="h6" fontWeight="bold">
-          {`Comparison Unit ${unitNumber}`}
-        </Typography>
-        <Button variant="outlined" size="small">
-          {collapsed ? "Expand" : "Collapse"}
-        </Button>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={compareEnabled}
+              onChange={(e) => setCompareEnabled(e.target.checked)}
+              size="small"
+            />
+          }
+          label="Compare"
+        />
+
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold" sx={{ userSelect: "none" }}>
+            {`Comparison Unit ${unitNumber}`}
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setCollapsed(!collapsed)}
+          >
+            {collapsed ? "Expand" : "Collapse"}
+          </Button>
+        </Box>
       </Box>
 
       {!collapsed && (
-        <>
-          <Grid container spacing={2} alignItems="center">
-            {/* Compare checkbox on left */}
-            <Grid item xs={12} sm={2} md={1}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={compareEnabled}
-                    onChange={(e) => setCompareEnabled(e.target.checked)}
-                    size="small"
-                  />
-                }
-                label="Compare"
-              />
-            </Grid>
+        <Grid container spacing={2} alignItems="stretch">
+          {/* Left Box */}
+          <Grid
+            item
+            xs={12}
+            sm={5}
+            sx={{
+              border: getBoxBorder("left"),
+              borderRadius: 1,
+              p: 2,
+              minHeight: 160,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography variant="subtitle1" fontWeight="bold" mb={2}>
+              {leftBoxType === "pscerf" ? "Pscerf Data" : "Approved Contract"}
+            </Typography>
 
-            {/* Left Box */}
-            <Grid
-              item
-              xs={12}
-              sm={4}
-              md={5}
-              sx={{
-                border: getBoxBorder("left"),
-                borderRadius: 1,
-                p: 2,
-                minHeight: 160,
-              }}
-            >
-              <Typography variant="subtitle1" fontWeight="bold" mb={2}>
-                {leftBoxType === "pscerf" ? "Pscerf Data" : "Approved Contract"}
-              </Typography>
-
-              {/* If pscerf type show dropdown and comma-separated text */}
-              {leftBoxType === "pscerf" ? (
-                <>
-                  <Autocomplete
-                    multiple
-                    options={options}
-                    getOptionLabel={(option) => option.id}
-                    value={selectedOptions}
-                    onChange={handleSelect}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Select PSCRF IDs" size="small" />
-                    )}
-                  />
-                  <Typography
-                    variant="body2"
-                    mt={1}
-                    sx={{ whiteSpace: "pre-wrap", userSelect: "text" }}
-                  >
-                    {renderSelectedPscerfText()}
-                  </Typography>
-                </>
-              ) : (
-                // Show approved contract sections on left box if applicable
-                leftContractSections.map((section, i) => (
-                  <ContractSection
-                    key={section.id}
-                    index={i}
-                    section={section}
-                    handleTypeChange={handleLeftTypeChange}
-                    handleFileChange={handleLeftFileChange}
-                    addSection={addLeftSection}
-                    removeSection={removeLeftSection}
-                    disabled={!compareEnabled}
-                    boxSide="left"
-                  />
-                ))
-              )}
-            </Grid>
-
-            {/* Arrows in middle */}
-            <Grid
-              item
-              xs={12}
-              sm={1}
-              md={1}
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 1,
-                minHeight: 160,
-              }}
-            >
-              <ArrowBackIcon
-                sx={{
-                  cursor: "pointer",
-                  color: getArrowColor("left"),
-                  fontSize: 32,
-                  userSelect: "none",
-                }}
-                onClick={() => compareEnabled && setDirection("left")}
-              />
-              <ArrowForwardIcon
-                sx={{
-                  cursor: "pointer",
-                  color: getArrowColor("right"),
-                  fontSize: 32,
-                  userSelect: "none",
-                }}
-                onClick={() => compareEnabled && setDirection("right")}
-              />
-            </Grid>
-
-            {/* Right Box */}
-            <Grid
-              item
-              xs={12}
-              sm={4}
-              md={5}
-              sx={{
-                border: getBoxBorder("right"),
-                borderRadius: 1,
-                p: 2,
-                minHeight: 160,
-              }}
-            >
-              <Typography variant="subtitle1" fontWeight="bold" mb={2}>
-                {rightBoxTitle || "Signed Contract"}
-              </Typography>
-
-              {rightContractSections.map((section, i) => (
+            {/* If pscerf type show dropdown and comma-separated text */}
+            {leftBoxType === "pscerf" ? (
+              <>
+                <Autocomplete
+                  multiple
+                  options={options}
+                  getOptionLabel={(option) => option.id}
+                  value={selectedOptions}
+                  onChange={handleSelect}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Select PSCRF IDs" size="small" />
+                  )}
+                />
+                <Typography
+                  variant="body2"
+                  mt={1}
+                  sx={{ whiteSpace: "pre-wrap", userSelect: "text" }}
+                >
+                  {renderSelectedPscerfText()}
+                </Typography>
+              </>
+            ) : (
+              // Show approved contract sections on left box if applicable
+              leftContractSections.map((section, i) => (
                 <ContractSection
                   key={section.id}
                   index={i}
                   section={section}
-                  handleTypeChange={handleRightTypeChange}
-                  handleFileChange={handleRightFileChange}
-                  addSection={addRightSection}
-                  removeSection={removeRightSection}
+                  handleTypeChange={handleLeftTypeChange}
+                  handleFileChange={handleLeftFileChange}
+                  addSection={addLeftSection}
+                  removeSection={removeLeftSection}
                   disabled={!compareEnabled}
-                  boxSide="right"
+                  boxSide="left"
                 />
-              ))}
-            </Grid>
+              ))
+            )}
           </Grid>
-        </>
+
+          {/* Arrows Box (vertically stacked arrows) */}
+          <Grid
+            item
+            xs={12}
+            sm={2}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 2,
+              userSelect: "none",
+            }}
+          >
+            <ArrowBackIcon
+              sx={{ fontSize: 40, color: getArrowColor("left"), cursor: "pointer" }}
+              onClick={() => compareEnabled && setDirection("left")}
+              title="Compare Left"
+            />
+            <ArrowForwardIcon
+              sx={{ fontSize: 40, color: getArrowColor("right"), cursor: "pointer" }}
+              onClick={() => compareEnabled && setDirection("right")}
+              title="Compare Right"
+            />
+          </Grid>
+
+          {/* Right Box */}
+          <Grid
+            item
+            xs={12}
+            sm={5}
+            sx={{
+              border: getBoxBorder("right"),
+              borderRadius: 1,
+              p: 2,
+              minHeight: 160,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography variant="subtitle1" fontWeight="bold" mb={2}>
+              {rightBoxTitle}
+            </Typography>
+
+            {rightContractSections.map((section, i) => (
+              <ContractSection
+                key={section.id}
+                index={i}
+                section={section}
+                handleTypeChange={handleRightTypeChange}
+                handleFileChange={handleRightFileChange}
+                addSection={addRightSection}
+                removeSection={removeRightSection}
+                disabled={!compareEnabled}
+                boxSide="right"
+              />
+            ))}
+          </Grid>
+        </Grid>
       )}
     </Box>
   );
 }
 
-// Example usage for unit 2 as you mentioned
 export default function App() {
   return (
-    <Box sx={{ p: 4 }}>
-      {/* Unit 1 - left box pscerf, right box approved contract */}
+    <Box sx={{ p: 3 }}>
+      {/* First comparison unit: Left = PSCRF, Right = Approved Contract */}
       <ComparisonUnit unitNumber={1} leftBoxType="pscerf" rightBoxTitle="Approved Contract" />
 
-      {/* Unit 2 - left box approved contract, right box signed contract */}
-      <ComparisonUnit unitNumber={2} leftBoxType="approved" rightBoxTitle="Signed Contract" />
+      {/* Second comparison unit: Left = Approved Contract, Right = Signed Contract */}
+      <ComparisonUnit
+        unitNumber={2}
+        leftBoxType="approved"
+        rightBoxTitle="Signed Contract"
+      />
     </Box>
   );
 }
