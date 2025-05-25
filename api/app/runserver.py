@@ -90,17 +90,31 @@ const Request = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={enabled}
-            onChange={(e) => setEnabled(e.target.checked)}
-            color="primary"
+      {/* Always show toggle and (when expanded) enable compare */}
+      <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
+        {expanded && (
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={enabled}
+                onChange={(e) => setEnabled(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Enable Compare"
           />
-        }
-        label="Enable Compare"
-      />
+        )}
+        <Box>
+          <IconButton onClick={() => setExpanded(false)} disabled={!expanded}>
+            <RemoveIcon />
+          </IconButton>
+          <IconButton onClick={() => setExpanded(true)} disabled={expanded}>
+            <AddIcon />
+          </IconButton>
+        </Box>
+      </Box>
 
+      {/* Collapse entire comparison section */}
       <Collapse in={expanded}>
         <Grid container spacing={4} alignItems="center" justifyContent="center">
           {/* First Box */}
@@ -183,7 +197,7 @@ const Request = () => {
             </Box>
           </Grid>
 
-          {/* Arrows + Toggle */}
+          {/* Arrows */}
           <Grid item xs={2} sx={{ textAlign: 'center' }}>
             <ButtonGroup orientation="vertical">
               <Button
@@ -203,16 +217,6 @@ const Request = () => {
                 ←
               </Button>
             </ButtonGroup>
-
-            {/* Collapse/Expand Toggle */}
-            <Box mt={2}>
-              <IconButton onClick={() => setExpanded(false)} disabled={!expanded}>
-                <RemoveIcon />
-              </IconButton>
-              <IconButton onClick={() => setExpanded(true)} disabled={expanded}>
-                <AddIcon />
-              </IconButton>
-            </Box>
           </Grid>
 
           {/* Second Box */}
