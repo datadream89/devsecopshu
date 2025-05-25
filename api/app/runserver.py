@@ -21,29 +21,23 @@ const pairTitles = [
 ];
 
 export default function BoxPairs() {
-  // Manage collapse state of each pair
   const [collapsed, setCollapsed] = useState(Array(pairTitles.length).fill(false));
-  
-  // Manage checkbox checked state for each pair
   const [checked, setChecked] = useState(Array(pairTitles.length).fill(true));
-  
-  // Manage arrow selection: 'left' | 'right' | null for each pair (independent)
   const [leftArrowSelected, setLeftArrowSelected] = useState(Array(pairTitles.length).fill(false));
   const [rightArrowSelected, setRightArrowSelected] = useState(Array(pairTitles.length).fill(false));
-  
+
   const toggleCollapse = (idx) => {
     const updated = [...collapsed];
     updated[idx] = !updated[idx];
     setCollapsed(updated);
   };
-  
+
   const toggleCheckbox = (idx) => {
     const updated = [...checked];
     updated[idx] = !updated[idx];
     setChecked(updated);
   };
-  
-  // Arrow toggles independently
+
   const toggleLeftArrow = (idx) => {
     const updated = [...leftArrowSelected];
     updated[idx] = !updated[idx];
@@ -54,34 +48,34 @@ export default function BoxPairs() {
     updated[idx] = !updated[idx];
     setRightArrowSelected(updated);
   };
-  
+
   return (
-    <Box sx={{ maxWidth: 700, mx: "auto", mt: 4, mb: 4 }}>
+    <Box sx={{ maxWidth: 1200, mx: "auto", mt: 4, mb: 4 }}>
       {pairTitles.map((title, idx) => {
-        // Determine border colors for boxes based on arrow selection
         const leftBoxBorderColor = leftArrowSelected[idx]
-          ? "#424242" // dark gray
+          ? "#424242"
           : rightArrowSelected[idx]
-          ? "#bdbdbd" // light gray
-          : "#ccc"; // default gray
-        
+          ? "#bdbdbd"
+          : "#ccc";
+
         const rightBoxBorderColor = rightArrowSelected[idx]
           ? "#424242"
           : leftArrowSelected[idx]
           ? "#bdbdbd"
           : "#ccc";
-        
-        // Determine grayscale for boxes when unchecked
+
         const disabledOpacity = checked[idx] ? 1 : 0.4;
-        
+
         return (
           <Box key={idx} sx={{ mb: 5 }}>
-            {/* Title bar with collapse toggle */}
+            {/* Title bar */}
             <Box
               sx={{
+                width: "100%",
+                maxWidth: 1200,
                 bgcolor: "#f5f5f5",
-                px: 2,
-                py: 1,
+                px: 3,
+                py: 1.5,
                 mb: 1,
                 display: "flex",
                 justifyContent: "space-between",
@@ -89,10 +83,13 @@ export default function BoxPairs() {
                 borderRadius: 1,
                 cursor: "pointer",
                 userSelect: "none",
+                border: "1px solid #ccc",
               }}
               onClick={() => toggleCollapse(idx)}
             >
-              <Typography variant="h6" fontWeight="bold">{title}</Typography>
+              <Typography variant="h6" fontWeight="bold">
+                {title}
+              </Typography>
               <IconButton
                 size="small"
                 onClick={(e) => {
@@ -109,11 +106,11 @@ export default function BoxPairs() {
             <Collapse in={!collapsed[idx]}>
               <Stack
                 direction="row"
-                spacing={2}
+                spacing={3}
                 alignItems="center"
-                sx={{ width: "100%" }}
+                sx={{ width: "100%", maxWidth: 1200 }}
               >
-                {/* Checkbox left */}
+                {/* Checkbox */}
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -122,14 +119,14 @@ export default function BoxPairs() {
                     />
                   }
                   label="Compare"
-                  sx={{ mr: 0 }}
+                  sx={{ mr: 0, minWidth: 110 }}
                 />
 
                 {/* Left box */}
                 <Box
                   sx={{
                     flex: 1,
-                    height: 150,
+                    height: 180,
                     border: "2px solid",
                     borderColor: leftBoxBorderColor,
                     borderRadius: 2,
@@ -139,18 +136,19 @@ export default function BoxPairs() {
                     alignItems: "center",
                     justifyContent: "center",
                     userSelect: "none",
+                    minWidth: 450,
                   }}
                 >
                   <Typography>Left Box</Typography>
                 </Box>
 
-                {/* Arrows in center */}
-                <Stack spacing={2} alignItems="center" justifyContent="center">
+                {/* Arrows */}
+                <Stack spacing={3} alignItems="center" justifyContent="center">
                   <ArrowBackIcon
                     onClick={() => toggleLeftArrow(idx)}
                     sx={{
                       cursor: "pointer",
-                      fontSize: 30,
+                      fontSize: 36,
                       color: leftArrowSelected[idx] ? "#424242" : "#bdbdbd",
                       userSelect: "none",
                     }}
@@ -159,7 +157,7 @@ export default function BoxPairs() {
                     onClick={() => toggleRightArrow(idx)}
                     sx={{
                       cursor: "pointer",
-                      fontSize: 30,
+                      fontSize: 36,
                       color: rightArrowSelected[idx] ? "#424242" : "#bdbdbd",
                       userSelect: "none",
                     }}
@@ -170,7 +168,7 @@ export default function BoxPairs() {
                 <Box
                   sx={{
                     flex: 1,
-                    height: 150,
+                    height: 180,
                     border: "2px solid",
                     borderColor: rightBoxBorderColor,
                     borderRadius: 2,
@@ -180,6 +178,7 @@ export default function BoxPairs() {
                     alignItems: "center",
                     justifyContent: "center",
                     userSelect: "none",
+                    minWidth: 450,
                   }}
                 >
                   <Typography>Right Box</Typography>
