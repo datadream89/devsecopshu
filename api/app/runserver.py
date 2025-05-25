@@ -10,10 +10,9 @@ import {
   Button,
   Radio,
   RadioGroup,
-  FormControlLabel as MuiFormControlLabel,
+  FormControlLabel,
   Stack,
   Checkbox,
-  Divider,
 } from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
@@ -29,13 +28,13 @@ const pscrfData = [
   { id: 103, samVersion: "v2.0", pricingVersion: "p2.0", clientName: "Client C" },
 ];
 
-// PSCRF Section component
+// PSCRF Section with Autocomplete + removable cards
 function PSCRFSection() {
   const [selected, setSelected] = useState([]);
 
   const handleSelect = (event, value) => {
     if (!value) return;
-    if (selected.find((item) => item.id === value.id)) return; // prevent duplicates
+    if (selected.find((item) => item.id === value.id)) return; // no duplicates
     setSelected((prev) => [...prev, value]);
   };
 
@@ -91,10 +90,10 @@ function PSCRFSection() {
   );
 }
 
-// ContractBox component
-function ContractBox({ id, data, onChange, onRemove, removable, title, borderColor, opacity }) {
+// Approved Contract Box
+function ContractBox({ id, data, onChange, onRemove, removable, borderColor, opacity }) {
   const handleRadioChange = (event) => {
-    onChange(id, { type: event.target.value, fileName: null }); // Reset fileName on radio change
+    onChange(id, { type: event.target.value, fileName: null });
   };
 
   const handleFileUpload = (event) => {
@@ -114,7 +113,7 @@ function ContractBox({ id, data, onChange, onRemove, removable, title, borderCol
         position: "relative",
         opacity: opacity,
         transition: "opacity 0.3s",
-        minHeight: 350,
+        minHeight: 160,
       }}
     >
       {removable && (
@@ -129,7 +128,7 @@ function ContractBox({ id, data, onChange, onRemove, removable, title, borderCol
       )}
 
       <Typography variant="subtitle1" fontWeight="bold" mb={1}>
-        {title}
+        Approved contract {id}
       </Typography>
 
       <RadioGroup
@@ -139,9 +138,9 @@ function ContractBox({ id, data, onChange, onRemove, removable, title, borderCol
         aria-label="contract type"
         name={`contract-type-${id}`}
       >
-        <MuiFormControlLabel value="Agreement" control={<Radio />} label="Agreement" />
-        <MuiFormControlLabel value="Supplement" control={<Radio />} label="Supplement" />
-        <MuiFormControlLabel value="Addendum" control={<Radio />} label="Addendum" />
+        <FormControlLabel value="Agreement" control={<Radio />} label="Agreement" />
+        <FormControlLabel value="Supplement" control={<Radio />} label="Supplement" />
+        <FormControlLabel value="Addendum" control={<Radio />} label="Addendum" />
       </RadioGroup>
 
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1 }}>
@@ -150,27 +149,19 @@ function ContractBox({ id, data, onChange, onRemove, removable, title, borderCol
           component="label"
           startIcon={<CloudUploadIcon />}
           sx={{ bgcolor: "#424242", "&:hover": { bgcolor: "#333" } }}
+          disabled={opacity < 1}
         >
           Upload File
-          <input
-            type="file"
-            hidden
-            onChange={handleFileUpload}
-            aria-label="upload contract file"
-          />
+          <input type="file" hidden onChange={handleFileUpload} aria-label="upload contract file" />
         </Button>
 
-        {data.fileName && (
-          <Typography variant="body2" sx={{ ml: 1 }}>
-            {data.fileName}
-          </Typography>
-        )}
+        {data.fileName && <Typography variant="body2">{data.fileName}</Typography>}
       </Stack>
     </Box>
   );
 }
 
-// Approved Contract Section component
+// Approved Contract Section with add/remove
 function ApprovedContractSection({ borderColor, opacity }) {
   const [contracts, setContracts] = useState([{ id: 1, type: "Agreement", fileName: null }]);
 
@@ -191,15 +182,14 @@ function ApprovedContractSection({ borderColor, opacity }) {
 
   return (
     <Box>
-      {contracts.map((contract, index) => (
+      {contracts.map((contract, idx) => (
         <ContractBox
           key={contract.id}
           id={contract.id}
           data={contract}
           onChange={updateContract}
           onRemove={removeContract}
-          removable={index !== 0}
-          title={`Approved contract ${index + 1}`}
+          removable={idx !== 0}
           borderColor={borderColor}
           opacity={opacity}
         />
@@ -212,7 +202,7 @@ function ApprovedContractSection({ borderColor, opacity }) {
   );
 }
 
-// Empty Box placeholder component
+// Empty Box placeholder
 function EmptyBox({ borderColor, opacity }) {
   return (
     <Box
@@ -228,12 +218,10 @@ function EmptyBox({ borderColor, opacity }) {
   );
 }
 
-// Arrow and border colors
 const lightGray = "#b0b0b0";
 const darkGray = "#424242";
 
-// Compare arrows between boxes with highlight
-function CompareArrows({ direction, onChange }) {
+function CompareArrows({ direction, onChange, disabled }) {
   return (
     <Box
       sx={{
@@ -242,24 +230,27 @@ function CompareArrows({ direction, onChange }) {
         alignItems: "center",
         px: 1,
         userSelect: "none",
+        justifyContent: "center",
+        height: "100%",
+        opacity: disabled ? 0.5 : 1,
       }}
     >
       <ArrowBackIosNewIcon
         sx={{
-          cursor: "pointer",
+          cursor: disabled ? "default" : "pointer",
           color: direction === "left" ? darkGray : lightGray,
           mb: 1,
         }}
-        onClick={() => onChange("left")}
+        onClick={() => !disabled && onChange("left")}
         fontSize="small"
         aria-label="Arrow left"
       />
       <ArrowForwardIosIcon
         sx={{
-          cursor: "pointer",
+          cursor: disabled ? "default" : "pointer",
           color: direction === "right" ? darkGray : lightGray,
         }}
-        onClick={() => onChange("right")}
+        onClick={() => !disabled && onChange("right")}
         fontSize="small"
         aria-label="Arrow right"
       />
@@ -267,17 +258,15 @@ function CompareArrows({ direction, onChange }) {
   );
 }
 
-// Left Compare checkbox
 function CompareCheckbox({ checked, onChange }) {
   return (
     <Box
       sx={{
         display: "flex",
         alignItems: "center",
-        px: 1,
         userSelect: "none",
-        mb: 1,
-        justifyContent: "flex-start",
+        mr: 2,
+        minWidth: 120,
       }}
     >
       <Checkbox checked={checked} onChange={onChange} />
@@ -286,129 +275,139 @@ function CompareCheckbox({ checked, onChange }) {
   );
 }
 
-// Row component with divider, compare checkbox, arrows, and two boxes
-function Row({ index, leftContent, rightContent, leftTitle, rightTitle }) {
-  // State for compare checkbox and arrow direction for this row
-  const [compareChecked, setCompareChecked] = useState(false);
-  const [arrowDirection, setArrowDirection] = useState("left"); // "left" or "right"
-
-  // Handle compare checkbox toggle
-  const handleCompareChange = (e) => {
-    setCompareChecked(e.target.checked);
-  };
-
-  // Handle arrow click
-  const handleArrowChange = (dir) => {
-    setArrowDirection(dir);
-  };
-
-  // Determine box border and opacity based on compare and arrowDirection
-  const leftBoxBorder = arrowDirection === "left" ? darkGray : lightGray;
-  const rightBoxBorder = arrowDirection === "right" ? darkGray : lightGray;
-  const opacity = compareChecked ? 1 : 0.4;
-
+function PairTitle({ title }) {
   return (
-    <Box sx={{ width: "100%" }}>
-      <Divider sx={{ mb: 2, borderBottomWidth: 2 }} />
-
-      {/* Compare checkbox above arrow */}
-      <CompareCheckbox checked={compareChecked} onChange={handleCompareChange} />
-
-      <Box sx={{ display: "flex", alignItems: "stretch", gap: 1 }}>
-        {/* Left box */}
-        <Box
-          sx={{
-            flex: 1,
-            border: 2,
-            borderColor: leftBoxBorder,
-            borderRadius: 1,
-            p: 2,
-            minHeight: 350,
-            opacity: opacity,
-            transition: "opacity 0.3s",
-          }}
-        >
-          <Typography variant="h6" mb={2} fontWeight="bold">
-            {leftTitle}
-          </Typography>
-          {leftContent}
-        </Box>
-
-        {/* Arrows between boxes */}
-        <CompareArrows direction={arrowDirection} onChange={handleArrowChange} />
-
-        {/* Right box */}
-        <Box
-          sx={{
-            flex: 1,
-            border: 2,
-            borderColor: rightBoxBorder,
-            borderRadius: 1,
-            p: 2,
-            minHeight: 350,
-            opacity: opacity,
-            transition: "opacity 0.3s",
-          }}
-        >
-          <Typography variant="h6" mb={2} fontWeight="bold">
-            {rightTitle}
-          </Typography>
-          {rightContent}
-        </Box>
-      </Box>
+    <Box
+      sx={{
+        bgcolor: "#e0e0e0",
+        py: 1,
+        mb: 1,
+        borderRadius: 1,
+        textAlign: "center",
+        fontWeight: "bold",
+        fontSize: 16,
+        userSelect: "none",
+      }}
+    >
+      {title}
     </Box>
   );
 }
 
-// Main component with 4 rows and correct content
-export default function MainComponent() {
+// Main Component
+export default function App() {
+  // state for 4 pairs: each has compare checked, arrow direction: "left", "right" or null
+  const [pairs, setPairs] = useState([
+    { compare: true, arrow: null },
+    { compare: true, arrow: null },
+    { compare: true, arrow: null },
+    { compare: true, arrow: null },
+  ]);
+
+  const handleCompareChange = (index) => (e) => {
+    setPairs((prev) =>
+      prev.map((p, i) => (i === index ? { ...p, compare: e.target.checked, arrow: null } : p))
+    );
+  };
+
+  const handleArrowChange = (index, direction) => {
+    setPairs((prev) =>
+      prev.map((p, i) =>
+        i === index ? { ...p, arrow: p.arrow === direction ? null : direction } : p
+      )
+    );
+  };
+
+  // Helper to determine border color and opacity per box
+  const getBoxStyles = (pairIndex, side) => {
+    const pair = pairs[pairIndex];
+    if (!pair.compare) return { borderColor: lightGray, opacity: 0.6 };
+    // highlight border if arrow matches this side
+    if (pair.arrow === side) return { borderColor: darkGray, opacity: 1 };
+    return { borderColor: lightGray, opacity: 1 };
+  };
+
   return (
-    <Box
-      sx={{
-        maxWidth: 1200,
-        mx: "auto",
-        mt: 4,
-        px: 2,
-        display: "flex",
-        flexDirection: "column",
-        gap: 4,
-      }}
-    >
-      {/* Row 1 */}
-      <Row
-        index={1}
-        leftTitle="PSCRF Section (Row 1 Left)"
-        rightTitle="Approved Contract Section (Row 1 Right)"
-        leftContent={<PSCRFSection />}
-        rightContent={<ApprovedContractSection />}
-      />
+    <Box sx={{ maxWidth: 1300, mx: "auto", p: 3, fontFamily: "Arial, sans-serif" }}>
+      {/* Four pairs */}
 
-      {/* Row 2 */}
-      <Row
-        index={2}
-        leftTitle="Empty Box (Row 2 Left)"
-        rightTitle="Empty Box (Row 2 Right)"
-        leftContent={<EmptyBox />}
-        rightContent={<EmptyBox />}
-      />
+      {[0, 1, 2, 3].map((pairIndex) => (
+        <Box key={pairIndex} sx={{ mb: 6 }}>
+          <PairTitle title={`Pair ${pairIndex + 1} Title`} />
 
-      {/* Row 3 */}
-      <Row
-        index={3}
-        leftTitle="Empty Box (Row 3 Left)"
-        rightTitle="Empty Box (Row 3 Right)"
-        leftContent={<EmptyBox />}
-        rightContent={<EmptyBox />}
-      />
+          <Box sx={{ display: "flex", alignItems: "stretch" }}>
+            {/* Compare checkbox left */}
+            <CompareCheckbox
+              checked={pairs[pairIndex].compare}
+              onChange={handleCompareChange(pairIndex)}
+            />
 
-      {/* Row 4 */}
-      <Row
-        index={4}
-        leftTitle="Empty Box (Row 4 Left)"
-        rightTitle="Empty Box (Row 4 Right)"
-        leftContent={<EmptyBox />}
-        rightContent={<EmptyBox />}
-      />
+            {/* Left box */}
+            <Box
+              sx={{
+                flex: 1,
+                borderRadius: 1,
+                border: `2px solid ${getBoxStyles(pairIndex, "left").borderColor}`,
+                opacity: getBoxStyles(pairIndex, "left").opacity,
+                p: 2,
+                mr: 1,
+                minHeight: 350,
+                transition: "opacity 0.3s, border-color 0.3s",
+                backgroundColor: "#fff",
+              }}
+            >
+              {pairIndex === 0 && <PSCRFSection />}
+              {pairIndex === 1 && (
+                <ApprovedContractSection
+                  borderColor={getBoxStyles(pairIndex, "left").borderColor}
+                  opacity={getBoxStyles(pairIndex, "left").opacity}
+                />
+              )}
+              {(pairIndex === 2 || pairIndex === 3) && (
+                <EmptyBox
+                  borderColor={getBoxStyles(pairIndex, "left").borderColor}
+                  opacity={getBoxStyles(pairIndex, "left").opacity}
+                />
+              )}
+            </Box>
+
+            {/* Arrows */}
+            <CompareArrows
+              direction={pairs[pairIndex].arrow}
+              onChange={(dir) => handleArrowChange(pairIndex, dir)}
+              disabled={!pairs[pairIndex].compare}
+            />
+
+            {/* Right box */}
+            <Box
+              sx={{
+                flex: 1,
+                borderRadius: 1,
+                border: `2px solid ${getBoxStyles(pairIndex, "right").borderColor}`,
+                opacity: getBoxStyles(pairIndex, "right").opacity,
+                p: 2,
+                ml: 1,
+                minHeight: 350,
+                transition: "opacity 0.3s, border-color 0.3s",
+                backgroundColor: "#fff",
+              }}
+            >
+              {(pairIndex === 0 || pairIndex === 1) && (
+                <EmptyBox
+                  borderColor={getBoxStyles(pairIndex, "right").borderColor}
+                  opacity={getBoxStyles(pairIndex, "right").opacity}
+                />
+              )}
+              {(pairIndex === 2 || pairIndex === 3) && (
+                <EmptyBox
+                  borderColor={getBoxStyles(pairIndex, "right").borderColor}
+                  opacity={getBoxStyles(pairIndex, "right").opacity}
+                />
+              )}
+            </Box>
+          </Box>
+        </Box>
+      ))}
     </Box>
   );
 }
