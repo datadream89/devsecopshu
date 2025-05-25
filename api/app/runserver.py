@@ -10,61 +10,76 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
-const pairTitles = [
+// Dummy components
+const PSCRFSection = () => (
+  <Typography>PSCRF Section Content</Typography>
+);
+
+const ApprovedContractSection = () => (
+  <Typography>Approved Contract Section Content</Typography>
+);
+
+const SignedContractSection = () => (
+  <Typography>Signed Contract Section Content</Typography>
+);
+
+const titles = [
   "Pair 1",
   "Pair 2",
   "Pair 3",
   "Pair 4",
 ];
 
+// Main component
 export default function BoxPairs() {
-  const [collapsed, setCollapsed] = useState(Array(pairTitles.length).fill(false));
-  const [checked, setChecked] = useState(Array(pairTitles.length).fill(true));
-  const [leftArrowSelected, setLeftArrowSelected] = useState(Array(pairTitles.length).fill(false));
-  const [rightArrowSelected, setRightArrowSelected] = useState(Array(pairTitles.length).fill(false));
+  const [collapsed, setCollapsed] = useState(Array(4).fill(false));
+  // highlight: 'left', 'right', or null for each pair
+  const [highlight, setHighlight] = useState(Array(4).fill(null));
+  // compare checkbox states for each pair
+  const [compareChecked, setCompareChecked] = useState(Array(4).fill(true));
 
-  const toggleCollapse = (idx) => {
+  const toggleCollapse = (index) => {
     const updated = [...collapsed];
-    updated[idx] = !updated[idx];
+    updated[index] = !updated[index];
     setCollapsed(updated);
   };
 
-  const toggleCheckbox = (idx) => {
-    const updated = [...checked];
-    updated[idx] = !updated[idx];
-    setChecked(updated);
+  const handleArrowClick = (index, direction) => {
+    const updated = [...highlight];
+    // Toggle if same direction clicked
+    updated[index] = updated[index] === direction ? null : direction;
+    setHighlight(updated);
   };
 
-  const toggleLeftArrow = (idx) => {
-    const updated = [...leftArrowSelected];
-    updated[idx] = !updated[idx];
-    setLeftArrowSelected(updated);
+  const handleCompareChange = (index, checked) => {
+    const updated = [...compareChecked];
+    updated[index] = checked;
+    setCompareChecked(updated);
   };
-  const toggleRightArrow = (idx) => {
-    const updated = [...rightArrowSelected];
-    updated[idx] = !updated[idx];
-    setRightArrowSelected(updated);
+
+  // Helper to get border and arrow color based on highlight and compare
+  const getColors = (pairIndex, side) => {
+    if (!compareChecked[pairIndex]) {
+      return { border: "#ccc", bg: "#f5f5f5", arrow: "#f0f0f0", textOpacity: 0.4 };
+    }
+    if (highlight[pairIndex] === side) {
+      return { border: "#424242", bg: "#fff", arrow: "#424242", textOpacity: 1 };
+    }
+    if (highlight[pairIndex] === null) {
+      return { border: "#ccc", bg: "#fff", arrow: "#bdbdbd", textOpacity: 1 };
+    }
+    // other side highlighted
+    return { border: "#bdbdbd", bg: "#fff", arrow: "#bdbdbd", textOpacity: 1 };
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", mt: 4, mb: 4 }}>
-      {pairTitles.map((title, idx) => {
-        const leftBoxBorderColor = leftArrowSelected[idx]
-          ? "#424242"
-          : rightArrowSelected[idx]
-          ? "#bdbdbd"
-          : "#ccc";
-
-        const rightBoxBorderColor = rightArrowSelected[idx]
-          ? "#424242"
-          : leftArrowSelected[idx]
-          ? "#bdbdbd"
-          : "#ccc";
-
-        const disabledOpacity = checked[idx] ? 1 : 0.4;
+    <Box sx={{ maxWidth: "1100px", mx: "auto", mt: 4 }}>
+      {titles.map((title, idx) => {
+        const leftColors = getColors(idx, "left");
+        const rightColors = getColors(idx, "right");
 
         return (
           <Box key={idx} sx={{ mb: 5 }}>
@@ -72,116 +87,107 @@ export default function BoxPairs() {
             <Box
               sx={{
                 width: "100%",
-                maxWidth: 1200,
-                bgcolor: "#f5f5f5",
+                bgcolor: "#e0e0e0",
                 px: 3,
                 py: 1.5,
-                mb: 1,
+                borderRadius: 1,
+                border: "1px solid #ccc",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                borderRadius: 1,
                 cursor: "pointer",
                 userSelect: "none",
-                border: "1px solid #ccc",
+                mb: 1,
               }}
               onClick={() => toggleCollapse(idx)}
             >
               <Typography variant="h6" fontWeight="bold">
                 {title}
               </Typography>
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleCollapse(idx);
-                }}
-                aria-label={collapsed[idx] ? "Expand" : "Collapse"}
-              >
+              <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleCollapse(idx); }}>
                 {collapsed[idx] ? <AddIcon /> : <CloseIcon />}
               </IconButton>
             </Box>
 
             {/* Collapsible content */}
             <Collapse in={!collapsed[idx]}>
-              <Stack
-                direction="row"
-                spacing={3}
-                alignItems="center"
-                sx={{ width: "100%", maxWidth: 1200 }}
-              >
-                {/* Checkbox */}
+              <Stack direction="row" spacing={2} alignItems="center">
+                {/* Compare checkbox */}
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={checked[idx]}
-                      onChange={() => toggleCheckbox(idx)}
+                      checked={compareChecked[idx]}
+                      onChange={(e) => handleCompareChange(idx, e.target.checked)}
                     />
                   }
                   label="Compare"
-                  sx={{ mr: 0, minWidth: 110 }}
+                  sx={{ whiteSpace: "nowrap", userSelect: "none" }}
                 />
 
-                {/* Left box */}
+                {/* Left Box */}
                 <Box
                   sx={{
-                    flex: 1,
-                    height: 180,
-                    border: "2px solid",
-                    borderColor: leftBoxBorderColor,
+                    width: 470,
+                    height: 220,
+                    border: `2px solid ${leftColors.border}`,
                     borderRadius: 2,
-                    bgcolor: "#fff",
-                    opacity: disabledOpacity,
+                    p: 3,
+                    bgcolor: leftColors.bg,
+                    opacity: leftColors.textOpacity,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     userSelect: "none",
-                    minWidth: 450,
                   }}
                 >
-                  <Typography>Left Box</Typography>
+                  {/* Render components based on row and side */}
+                  {(idx === 0 || idx === 3) && <PSCRFSection />}
+                  {idx === 1 && <ApprovedContractSection />}
+                  {idx === 2 && <SignedContractSection />}
                 </Box>
 
                 {/* Arrows */}
-                <Stack spacing={3} alignItems="center" justifyContent="center">
+                <Stack spacing={1} alignItems="center" sx={{ userSelect: "none" }}>
                   <ArrowBackIcon
-                    onClick={() => toggleLeftArrow(idx)}
+                    onClick={() => handleArrowClick(idx, "left")}
                     sx={{
                       cursor: "pointer",
-                      fontSize: 36,
-                      color: leftArrowSelected[idx] ? "#424242" : "#bdbdbd",
+                      fontSize: 40,
+                      color: leftColors.arrow,
                       userSelect: "none",
                     }}
                   />
                   <ArrowForwardIcon
-                    onClick={() => toggleRightArrow(idx)}
+                    onClick={() => handleArrowClick(idx, "right")}
                     sx={{
                       cursor: "pointer",
-                      fontSize: 36,
-                      color: rightArrowSelected[idx] ? "#424242" : "#bdbdbd",
+                      fontSize: 40,
+                      color: rightColors.arrow,
                       userSelect: "none",
                     }}
                   />
                 </Stack>
 
-                {/* Right box */}
+                {/* Right Box */}
                 <Box
                   sx={{
-                    flex: 1,
-                    height: 180,
-                    border: "2px solid",
-                    borderColor: rightBoxBorderColor,
+                    width: 470,
+                    height: 220,
+                    border: `2px solid ${rightColors.border}`,
                     borderRadius: 2,
-                    bgcolor: "#fff",
-                    opacity: disabledOpacity,
+                    p: 3,
+                    bgcolor: rightColors.bg,
+                    opacity: rightColors.textOpacity,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     userSelect: "none",
-                    minWidth: 450,
                   }}
                 >
-                  <Typography>Right Box</Typography>
+                  {/* Render components based on row and side */}
+                  {idx === 0 && <ApprovedContractSection />}
+                  {idx === 1 && <SignedContractSection />}
+                  {(idx === 2 || idx === 3) && <PSCRFSection />}
                 </Box>
               </Stack>
             </Collapse>
