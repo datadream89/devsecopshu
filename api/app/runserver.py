@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   IconButton,
-  Collapse,
   TextField,
   Autocomplete,
   Card,
@@ -17,8 +16,6 @@ import {
 
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 // Sample PSCRF data
@@ -28,13 +25,13 @@ const pscrfData = [
   { id: 103, samVersion: "v2.0", pricingVersion: "p2.0", clientName: "Client C" },
 ];
 
-// PSCRF Section with autocomplete and closeable cards
+// PSCRF Section component
 function PSCRFSection() {
   const [selected, setSelected] = useState([]);
 
   const handleSelect = (event, value) => {
     if (!value) return;
-    if (selected.find((item) => item.id === value.id)) return;
+    if (selected.find((item) => item.id === value.id)) return; // prevent duplicates
     setSelected((prev) => [...prev, value]);
   };
 
@@ -81,10 +78,10 @@ function PSCRFSection() {
   );
 }
 
-// Approved Contract Box with radios and file upload
+// ContractBox component
 function ContractBox({ id, data, onChange, onRemove, removable, title }) {
   const handleRadioChange = (event) => {
-    onChange(id, { type: event.target.value, fileName: null });
+    onChange(id, { type: event.target.value, fileName: data.fileName });
   };
 
   const handleFileUpload = (event) => {
@@ -157,7 +154,7 @@ function ContractBox({ id, data, onChange, onRemove, removable, title }) {
   );
 }
 
-// Approved Contract Section managing multiple ContractBoxes
+// Approved Contract Section component
 function ApprovedContractSection() {
   const [contracts, setContracts] = useState([{ id: 1, type: "Agreement", fileName: null }]);
 
@@ -197,66 +194,121 @@ function ApprovedContractSection() {
   );
 }
 
-// Main component with layout and all 4 sections
-export default function MainComponent() {
-  /*
-    Layout:
-    Row 1: Section 1 top left box | Section 2 right box
-    Row 2: Section 3 left box
-    Row 3: Section 4 left and right boxes
-  */
-
+// Empty Box placeholder component
+function EmptyBox() {
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", mt: 4, px: 2 }}>
+    <Box
+      sx={{
+        border: "1px solid #ccc",
+        borderRadius: 1,
+        minHeight: 350,
+        p: 2,
+      }}
+    >
+      {/* Empty box, can add content if needed */}
+    </Box>
+  );
+}
+
+// Main component with 4 rows × 2 boxes layout
+export default function MainComponent() {
+  return (
+    <Box
+      sx={{
+        maxWidth: 1200,
+        mx: "auto",
+        mt: 4,
+        px: 2,
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+      }}
+    >
       {/* Row 1 */}
-      <Box sx={{ display: "flex", gap: 4, mb: 4 }}>
-        {/* Section 1 top left box */}
-        <Box sx={{ flex: 1, border: "1px solid #ccc", p: 2, borderRadius: 1 }}>
-          <Typography variant="h6" mb={2}>
-            PSCRF Section (Section 1 - Top Left Box)
+      <Box sx={{ display: "flex", gap: 4 }}>
+        {/* Row 1 left box - PSCRF */}
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h6" mb={2} fontWeight="bold">
+            PSCRF Section (Row 1 Left)
           </Typography>
-          <PSCRFSection />
+          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
+            <PSCRFSection />
+          </Box>
         </Box>
 
-        {/* Section 2 right box */}
-        <Box sx={{ flex: 1, border: "1px solid #ccc", p: 2, borderRadius: 1 }}>
-          <Typography variant="h6" mb={2}>
-            Approved Contract Section (Section 2 - Right Box)
+        {/* Row 1 right box - Approved Contract */}
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h6" mb={2} fontWeight="bold">
+            Approved Contract Section (Row 1 Right)
           </Typography>
-          <ApprovedContractSection />
+          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
+            <ApprovedContractSection />
+          </Box>
         </Box>
       </Box>
 
       {/* Row 2 */}
-      <Box sx={{ display: "flex", gap: 4, mb: 4 }}>
-        {/* Section 3 left box */}
-        <Box sx={{ flex: 1, border: "1px solid #ccc", p: 2, borderRadius: 1 }}>
-          <Typography variant="h6" mb={2}>
-            Approved Contract Section (Section 3 - Left Box)
+      <Box sx={{ display: "flex", gap: 4 }}>
+        {/* Row 2 left box - Approved Contract */}
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h6" mb={2} fontWeight="bold">
+            Approved Contract Section (Row 2 Left)
           </Typography>
-          <ApprovedContractSection />
+          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
+            <ApprovedContractSection />
+          </Box>
         </Box>
 
-        {/* empty space */}
-        <Box sx={{ flex: 1 }} />
+        {/* Row 2 right box - Empty */}
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h6" mb={2} fontWeight="bold" color="text.secondary">
+            Empty Box (Row 2 Right)
+          </Typography>
+          <EmptyBox />
+        </Box>
       </Box>
 
       {/* Row 3 */}
-      <Box sx={{ display: "flex", gap: 4, mb: 4 }}>
-        {/* Section 4 left box */}
-        <Box sx={{ flex: 1, border: "1px solid #ccc", p: 2, borderRadius: 1 }}>
-          <Typography variant="h6" mb={2}>
-            PSCRF Section (Section 4 - Left Box)
+      <Box sx={{ display: "flex", gap: 4 }}>
+        {/* Row 3 left box - Empty */}
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h6" mb={2} fontWeight="bold" color="text.secondary">
+            Empty Box (Row 3 Left)
           </Typography>
-          <PSCRFSection />
+          <EmptyBox />
         </Box>
 
-        {/* Section 4 right box */}
-        <Box sx={{ flex: 1, border: "1px solid #ccc", p: 2, borderRadius: 1 }}>
-          <Typography variant="h6" mb={2}>
-            PSCRF Section (Section 4 - Right Box)
+        {/* Row 3 right box - PSCRF */}
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h6" mb={2} fontWeight="bold">
+            PSCRF Section (Row 3 Right)
           </Typography>
-          <PSCRFSection />
+          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
+            <PSCRFSection />
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Row 4 */}
+      <Box sx={{ display: "flex", gap: 4 }}>
+        {/* Row 4 left box - PSCRF */}
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h6" mb={2} fontWeight="bold">
+            PSCRF Section (Row 4 Left)
+          </Typography>
+          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
+            <PSCRFSection />
+          </Box>
+        </Box>
+
+        {/* Row 4 right box - PSCRF */}
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h6" mb={2} fontWeight="bold">
+            PSCRF Section (Row 4 Right)
+          </Typography>
+          <Box sx={{ border: "1px solid #ccc", borderRadius: 1, p: 2, minHeight: 350 }}>
+            <PSCRFSection />
+          </Box>
         </Box>
       </Box>
     </Box>
