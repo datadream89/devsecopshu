@@ -183,170 +183,156 @@ export default function Request() {
 
   return (
     <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
-      {/* Compare Checkbox on left */}
-      <Box sx={{ mb: 2, display: "flex", alignItems: "center" }}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={compareEnabled}
-              onChange={(e) => setCompareEnabled(e.target.checked)}
-            />
-          }
-          label="Compare"
-        />
+      {/* Collapsible container header */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: collapsed ? 0 : 2,
+          cursor: "pointer",
+          userSelect: "none",
+          border: "1px solid #ccc",
+          borderRadius: 1,
+          p: 1,
+          backgroundColor: "#f5f5f5",
+        }}
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        <Typography variant="subtitle1" fontWeight="bold" sx={{ ml: 1 }}>
+          Compare PSCRF and Approved Contract
+        </Typography>
+        <IconButton
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation();
+            setCollapsed(!collapsed);
+          }}
+          aria-label={collapsed ? "Expand" : "Collapse"}
+        >
+          {collapsed ? <AddIcon /> : <CloseIcon />}
+        </IconButton>
       </Box>
 
-      {/* Main Grid */}
+      {/* The collapsible content */}
       {!collapsed && (
-        <Grid container spacing={2} alignItems="flex-start">
-          {/* Left Box */}
-          <Grid item xs={5}>
-            <Paper
-              sx={{
-                p: 2,
-                border: getBoxBorder("left"),
-                minHeight: 360,
-                boxSizing: "border-box",
-                overflowY: "auto",
-              }}
-              elevation={2}
-            >
-              <Typography variant="h6" mb={2}>
-                Pscerf Data
-              </Typography>
-              <Autocomplete
-                multiple
-                options={options}
-                filterSelectedOptions
-                value={selectedOptions}
-                onChange={(e, newValue) => setSelectedOptions(newValue)}
-                getOptionLabel={(option) =>
-                  `${option.id} (Client: ${option.clientName}, SAM: ${option.samVersion}, Pricing: ${option.pricingVersion})`
-                }
-                renderInput={(params) => (
-                  <TextField {...params} label="Select PSCRF IDs" />
-                )}
-                disabled={!compareEnabled}
-                sx={{ width: "100%" }}
-              />
-
-              {/* Render selected items as cards */}
-              {selectedOptions.length > 0 && (
-                <Box mt={2} sx={{ maxHeight: 200, overflowY: "auto" }}>
-                  {selectedOptions.map((item) => (
-                    <LeftBoxCard key={item.id + item.samVersion + item.pricingVersion} item={item} />
-                  ))}
-                </Box>
-              )}
-            </Paper>
-          </Grid>
-
-          {/* Arrow Section */}
-          <Grid item xs={2} textAlign="center" sx={{ position: "relative" }}>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                mt: 8,
-                gap: 1,
-              }}
-            >
-              <IconButton
-                onClick={() => compareEnabled && setDirection("right")}
-                disabled={!compareEnabled}
-                sx={{ color: getArrowColor("right") }}
-                aria-label="Arrow right"
-              >
-                <ArrowForwardIcon fontSize="large" />
-              </IconButton>
-              <IconButton
-                onClick={() => compareEnabled && setDirection("left")}
-                disabled={!compareEnabled}
-                sx={{ color: getArrowColor("left") }}
-                aria-label="Arrow left"
-              >
-                <ArrowBackIcon fontSize="large" />
-              </IconButton>
-            </Box>
-
-            {/* Collapse / Expand + label under arrows */}
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: 0,
-                left: "50%",
-                transform: "translateX(-50%)",
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                mb: 1,
-                userSelect: "none",
-              }}
-            >
-              <Typography variant="body2" color="textSecondary">
-                Compare PSCRF and Approved Contract
-              </Typography>
-              <IconButton
-                size="small"
-                onClick={() => setCollapsed(!collapsed)}
-                aria-label={collapsed ? "Expand" : "Collapse"}
-              >
-                {collapsed ? <AddIcon /> : <CloseIcon />}
-              </IconButton>
-            </Box>
-          </Grid>
-
-          {/* Right Box */}
-          <Grid item xs={5}>
-            <Paper
-              sx={{
-                p: 2,
-                border: getBoxBorder("right"),
-                minHeight: 360,
-                boxSizing: "border-box",
-                overflowY: "auto",
-              }}
-              elevation={2}
-            >
-              {contractSections.map((section, idx) => (
-                <ApprovedContractSection
-                  key={section.id}
-                  index={idx}
-                  section={section}
-                  handleTypeChange={handleTypeChange}
-                  handleFileChange={handleFileChange}
-                  addSection={addSection}
-                  removeSection={removeSection}
+        <Box sx={{ mt: 2 }}>
+          {/* Compare Checkbox on left */}
+          <Box sx={{ mb: 2, display: "flex", alignItems: "center" }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={compareEnabled}
+                  onChange={(e) => setCompareEnabled(e.target.checked)}
                 />
-              ))}
-            </Paper>
-          </Grid>
-        </Grid>
-      )}
+              }
+              label="Compare"
+            />
+          </Box>
 
-      {/* When collapsed, show only expand with label */}
-      {collapsed && (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 1,
-            mt: 2,
-            userSelect: "none",
-          }}
-        >
-          <Typography variant="body2" color="textSecondary">
-            Compare PSCRF and Approved Contract
-          </Typography>
-          <IconButton
-            size="small"
-            onClick={() => setCollapsed(false)}
-            aria-label="Expand"
-          >
-            <AddIcon />
-          </IconButton>
+          {/* Main Grid */}
+          <Grid container spacing={2} alignItems="flex-start">
+            {/* Left Box */}
+            <Grid item xs={5}>
+              <Paper
+                sx={{
+                  p: 2,
+                  border: getBoxBorder("left"),
+                  minHeight: 360,
+                  boxSizing: "border-box",
+                  overflowY: "auto",
+                }}
+                elevation={2}
+              >
+                <Typography variant="h6" mb={2}>
+                  Pscerf Data
+                </Typography>
+                <Autocomplete
+                  multiple
+                  options={options}
+                  filterSelectedOptions
+                  value={selectedOptions}
+                  onChange={(e, newValue) => setSelectedOptions(newValue)}
+                  getOptionLabel={(option) =>
+                    `${option.id} (Client: ${option.clientName}, SAM: ${option.samVersion}, Pricing: ${option.pricingVersion})`
+                  }
+                  renderInput={(params) => (
+                    <TextField {...params} label="Select PSCRF IDs" />
+                  )}
+                  disabled={!compareEnabled}
+                  sx={{ width: "100%" }}
+                />
+
+                {/* Render selected items as cards */}
+                {selectedOptions.length > 0 && (
+                  <Box mt={2} sx={{ maxHeight: 200, overflowY: "auto" }}>
+                    {selectedOptions.map((item) => (
+                      <LeftBoxCard
+                        key={item.id + item.samVersion + item.pricingVersion}
+                        item={item}
+                      />
+                    ))}
+                  </Box>
+                )}
+              </Paper>
+            </Grid>
+
+            {/* Arrow Section */}
+            <Grid item xs={2} textAlign="center" sx={{ position: "relative" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  mt: 8,
+                  gap: 1,
+                }}
+              >
+                <IconButton
+                  onClick={() => compareEnabled && setDirection("right")}
+                  disabled={!compareEnabled}
+                  sx={{ color: getArrowColor("right") }}
+                  aria-label="Arrow right"
+                >
+                  <ArrowForwardIcon fontSize="large" />
+                </IconButton>
+                <IconButton
+                  onClick={() => compareEnabled && setDirection("left")}
+                  disabled={!compareEnabled}
+                  sx={{ color: getArrowColor("left") }}
+                  aria-label="Arrow left"
+                >
+                  <ArrowBackIcon fontSize="large" />
+                </IconButton>
+              </Box>
+            </Grid>
+
+            {/* Right Box */}
+            <Grid item xs={5}>
+              <Paper
+                sx={{
+                  p: 2,
+                  border: getBoxBorder("right"),
+                  minHeight: 360,
+                  boxSizing: "border-box",
+                  overflowY: "auto",
+                }}
+                elevation={2}
+              >
+                {contractSections.map((section, idx) => (
+                  <ApprovedContractSection
+                    key={section.id}
+                    index={idx}
+                    section={section}
+                    handleTypeChange={handleTypeChange}
+                    handleFileChange={handleFileChange}
+                    addSection={addSection}
+                    removeSection={removeSection}
+                  />
+                ))}
+              </Paper>
+            </Grid>
+          </Grid>
         </Box>
       )}
     </Box>
