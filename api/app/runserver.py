@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   IconButton,
-  Collapse,
   Checkbox,
   FormControlLabel,
   Stack,
@@ -14,7 +13,6 @@ import {
   RadioGroup,
   Radio,
   FormControl,
-  FormLabel,
   Button,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -50,25 +48,26 @@ function PSCRFSection() {
         renderInput={(params) => (
           <TextField {...params} label="Search PSCRF" variant="outlined" size="small" />
         )}
+        // Keep autocomplete input single line, no multi-line chips
         sx={{
           mb: 2,
           "& .MuiAutocomplete-inputRoot": {
-            flexWrap: "wrap",
-            minHeight: 56,
-            maxHeight: 150,
-            overflowY: "auto",
+            flexWrap: "nowrap",
           },
           "& .MuiAutocomplete-tag": {
-            maxWidth: "100%",
-            whiteSpace: "normal",
-            wordBreak: "break-word",
+            maxWidth: 150,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
           },
         }}
       />
 
+      {/* Container for cards grows vertically */}
       <Box
         sx={{
           flexGrow: 1,
+          maxHeight: 350,
           overflowY: "auto",
           display: "flex",
           flexDirection: "column",
@@ -76,17 +75,18 @@ function PSCRFSection() {
           bgcolor: "white",
           borderRadius: 1,
           p: 1,
+          border: "1px solid #ddd",
         }}
       >
         {selectedOptions.map((option) => (
           <Card key={option.id} variant="outlined" sx={{ position: "relative" }}>
             <CardContent sx={{ pr: 5 }}>
-              <Typography variant="subtitle1" fontWeight="bold">
+              <Typography variant="subtitle1" fontWeight="bold" noWrap>
                 {option.id}
               </Typography>
-              <Typography>Sam Version: {option.samVersion}</Typography>
-              <Typography>Pricing Version: {option.pricingVersion}</Typography>
-              <Typography>Client: {option.clientName}</Typography>
+              <Typography noWrap>Sam Version: {option.samVersion}</Typography>
+              <Typography noWrap>Pricing Version: {option.pricingVersion}</Typography>
+              <Typography noWrap>Client: {option.clientName}</Typography>
             </CardContent>
 
             <IconButton
@@ -141,7 +141,18 @@ function ContractSection({ title }) {
   };
 
   return (
-    <Box>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        bgcolor: "white",
+        borderRadius: 1,
+        border: "1px solid #ddd",
+        p: 1,
+        overflowY: "auto",
+      }}
+    >
       {contracts.map((contract, index) => (
         <Box
           key={contract.id}
@@ -150,10 +161,6 @@ function ContractSection({ title }) {
             alignItems: "center",
             gap: 2,
             mb: 1,
-            bgcolor: "white",
-            p: 1,
-            borderRadius: 1,
-            border: "1px solid #ccc",
           }}
         >
           <Typography sx={{ minWidth: 140, fontWeight: "bold" }}>
@@ -199,7 +206,7 @@ function ContractSection({ title }) {
             />
           </Button>
 
-          <Typography sx={{ minWidth: 120, fontStyle: "italic" }}>
+          <Typography sx={{ minWidth: 120, fontStyle: "italic", overflowWrap: "break-word" }}>
             {contract.fileName || ""}
           </Typography>
 
@@ -258,25 +265,24 @@ export default function BoxPairs() {
 
     return {
       width: 300,
-      height: 320,
+      height: 360,
       border: "2px solid",
       borderColor:
         arrow === side ? "gray" : arrow && arrow !== side ? "lightgray" : "#ccc",
       borderRadius: 2,
-      p: 2,
+      p: 1,
       overflowY: "auto",
-      bgcolor: checked ? "white" : "#f0f0f0",
+      bgcolor: "white",
       color: checked ? "inherit" : "gray",
       pointerEvents: checked ? "auto" : "none",
       userSelect: checked ? "auto" : "none",
       transition: "background-color 0.3s ease",
+      display: "flex",
+      flexDirection: "column",
     };
   };
 
   // Layout of content per box position (row index + left/right)
-  // PSCRF in: row 0 left, row 2 right, row 3 both
-  // Approved contract in: row 0 right, row 1 left
-  // Signed contract in: row 1 right, row 2 right
   const renderContent = (row, side) => {
     if (row === 0 && side === "left") return <PSCRFSection />;
     if (row === 2 && side === "right") return <PSCRFSection />;
@@ -312,7 +318,6 @@ export default function BoxPairs() {
             <Typography variant="subtitle1" fontWeight="bold">
               {`Row ${row + 1} Pair`}
             </Typography>
-            {/* Here you can add collapse/expand icons if needed */}
           </Box>
 
           {/* Compare checkbox and boxes with arrows */}
