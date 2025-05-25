@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import {
   Box,
-  Checkbox,
-  Collapse,
-  IconButton,
   Typography,
+  IconButton,
+  Collapse,
+  Checkbox,
+  FormControlLabel,
   Stack,
   Button,
 } from "@mui/material";
@@ -13,9 +14,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
-const titles = ["Project Alpha", "Design Sprint", "Marketing Plan", "User Research"];
+const titles = ["Title 1", "Title 2", "Title 3", "Title 4"];
 
-export default function FinalBoxPairs() {
+export default function BoxPairs() {
   const [collapsed, setCollapsed] = useState(Array(4).fill(false));
   const [highlight, setHighlight] = useState(Array(4).fill(null)); // 'left' | 'right' | null
 
@@ -25,118 +26,105 @@ export default function FinalBoxPairs() {
     setCollapsed(updated);
   };
 
-  const highlightSide = (index, direction) => {
-    const newHighlight = [...highlight];
-    newHighlight[index] = direction;
-    setHighlight(newHighlight);
+  const handleArrowClick = (index, direction) => {
+    const updated = [...highlight];
+    updated[index] = direction;
+    setHighlight(updated);
   };
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: "auto", mt: 4 }}>
+    <Box sx={{ maxWidth: "1000px", mx: "auto", mt: 4, bgcolor: "#fff", p: 2 }}>
       {titles.map((title, idx) => (
         <Box key={idx} sx={{ mb: 4, border: "1px solid #ccc", borderRadius: 1 }}>
-          {/* Title Bar */}
+          {/* Title bar */}
           <Stack
             direction="row"
             alignItems="center"
             justifyContent="space-between"
+            onClick={() => toggleCollapse(idx)}
             sx={{
-              backgroundColor: "#424242", // dark gray
-              color: "white",
+              bgcolor: "#424242",
+              color: "#fff",
               px: 2,
               py: 1,
+              cursor: "pointer",
             }}
-            onClick={() => toggleCollapse(idx)}
           >
             <Typography variant="subtitle1" fontWeight="bold">
               {title}
             </Typography>
-            <IconButton size="small" sx={{ color: "white" }}>
+            <IconButton sx={{ color: "#fff" }} size="small">
               {collapsed[idx] ? <AddIcon /> : <CloseIcon />}
             </IconButton>
           </Stack>
 
-          {/* Collapsible Content */}
           <Collapse in={!collapsed[idx]}>
-            <Box sx={{ backgroundColor: "#f0f0f0", px: 2, py: 3 }}>
-              <Stack direction="row" spacing={2} alignItems="flex-start">
-                {/* Overall checkbox */}
-                <Checkbox />
+            <Box sx={{ p: 2 }}>
+              <Stack direction="row" spacing={2} alignItems="center">
+                {/* Compare checkbox */}
+                <FormControlLabel
+                  control={<Checkbox />}
+                  label="Compare"
+                  sx={{ whiteSpace: "nowrap" }}
+                />
 
-                {/* Left Side */}
+                {/* Left box */}
                 <Box
                   sx={{
                     flex: 1,
-                    minHeight: 200,
-                    border: "1px solid #666",
-                    bgcolor:
+                    height: 200,
+                    border: "2px solid",
+                    borderColor:
                       highlight[idx] === "left"
                         ? "gray"
                         : highlight[idx] === "right"
                         ? "lightgray"
-                        : "white",
-                    transition: "background-color 0.3s",
+                        : "#ccc",
+                    borderRadius: 2,
                     p: 2,
-                    borderRadius: 1,
                   }}
-                >
-                  {/* Placeholder for dropdown / file upload */}
-                  <Typography variant="body1" mb={2}>
-                    Drop-down / Upload
-                  </Typography>
-                  <Button variant="outlined" fullWidth>
-                    Upload File
-                  </Button>
-                </Box>
+                ></Box>
 
                 {/* Arrows */}
-                <Stack spacing={2} alignItems="center" justifyContent="center">
+                <Stack spacing={2} alignItems="center">
                   <IconButton
-                    onClick={() => highlightSide(idx, "left")}
+                    onClick={() => handleArrowClick(idx, "left")}
                     sx={{
                       bgcolor:
                         highlight[idx] === "left" ? "#424242" : "#e0e0e0",
-                      color: highlight[idx] === "left" ? "white" : "black",
+                      color: highlight[idx] === "left" ? "#fff" : "#000",
                     }}
                   >
                     <ArrowBackIcon />
                   </IconButton>
                   <IconButton
-                    onClick={() => highlightSide(idx, "right")}
+                    onClick={() => handleArrowClick(idx, "right")}
                     sx={{
                       bgcolor:
                         highlight[idx] === "right" ? "#424242" : "#e0e0e0",
-                      color: highlight[idx] === "right" ? "white" : "black",
+                      color: highlight[idx] === "right" ? "#fff" : "#000",
                     }}
                   >
                     <ArrowForwardIcon />
                   </IconButton>
                 </Stack>
 
-                {/* Right Side */}
+                {/* Right box */}
                 <Box
                   sx={{
                     flex: 1,
-                    minHeight: 200,
-                    border: "1px solid #666",
-                    bgcolor:
+                    height: 200,
+                    border: "2px solid",
+                    borderColor:
                       highlight[idx] === "right"
                         ? "gray"
                         : highlight[idx] === "left"
                         ? "lightgray"
-                        : "white",
-                    transition: "background-color 0.3s",
+                        : "#ccc",
+                    borderRadius: 2,
                     p: 2,
-                    borderRadius: 1,
                   }}
-                >
-                  <Typography variant="body1" mb={2}>
-                    Drop-down / Upload
-                  </Typography>
-                  <Button variant="outlined" fullWidth>
-                    Upload File
-                  </Button>
-                </Box>
+                ></Box>
               </Stack>
             </Box>
           </Collapse>
