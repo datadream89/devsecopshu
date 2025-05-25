@@ -20,7 +20,6 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
-// import your options.json - adjust the path accordingly
 import options from "./options.json";
 
 function ApprovedContractSection({
@@ -105,21 +104,37 @@ function ApprovedContractSection({
   );
 }
 
+function LeftBoxCard({ item }) {
+  return (
+    <Paper
+      sx={{
+        p: 2,
+        mb: 1,
+        borderRadius: 1,
+        border: "1px solid #ccc",
+        backgroundColor: "#f9f9f9",
+      }}
+      elevation={1}
+    >
+      <Typography variant="subtitle2" fontWeight="bold">
+        {item.id}
+      </Typography>
+      <Typography variant="body2">Client: {item.clientName}</Typography>
+      <Typography variant="body2">SAM Version: {item.samVersion}</Typography>
+      <Typography variant="body2">Pricing Version: {item.pricingVersion}</Typography>
+    </Paper>
+  );
+}
+
 export default function Request() {
-  // Compare enabled checkbox
   const [compareEnabled, setCompareEnabled] = useState(true);
-  // Arrow direction: "right" or "left"
   const [direction, setDirection] = useState("right");
-  // Collapse state
   const [collapsed, setCollapsed] = useState(false);
-  // Selected PSCRF options (multiple)
   const [selectedOptions, setSelectedOptions] = useState([]);
-  // Approved Contract dynamic sections
   const [contractSections, setContractSections] = useState([
     { id: 0, contractType: "Agreement", file: null },
   ]);
 
-  // Add new approved contract section
   const addSection = () => {
     const newId = contractSections.length
       ? Math.max(...contractSections.map((s) => s.id)) + 1
@@ -130,39 +145,36 @@ export default function Request() {
     ]);
   };
 
-  // Remove a section by id
   const removeSection = (id) => {
     setContractSections(contractSections.filter((s) => s.id !== id));
   };
 
-  // Change contract type for a section
   const handleTypeChange = (id, newType) => {
     setContractSections(
       contractSections.map((s) => (s.id === id ? { ...s, contractType: newType } : s))
     );
   };
 
-  // Change file for a section
   const handleFileChange = (id, file) => {
     setContractSections(
       contractSections.map((s) => (s.id === id ? { ...s, file } : s))
     );
   };
 
-  // Helper for border colors on boxes
+  // Border colors for boxes (darkgrey/lightgrey)
   const getBoxBorder = (boxSide) => {
-    if (!compareEnabled) return "1px solid lightgray";
+    if (!compareEnabled) return "2px solid lightgray";
 
-    // Flip outline direction as you requested previously
-    // So if arrow points right, left box = blue, right box = red
     if (direction === "right") {
-      return boxSide === "left" ? "2px solid blue" : "2px solid red";
+      // Flip outline direction: left box lightgrey, right box darkgrey
+      return boxSide === "left" ? "2px solid darkgrey" : "2px solid lightgrey";
     } else {
-      return boxSide === "left" ? "2px solid red" : "2px solid blue";
+      // left box darkgrey, right box lightgrey
+      return boxSide === "left" ? "2px solid lightgrey" : "2px solid darkgrey";
     }
   };
 
-  // Helper for arrow colors
+  // Arrow colors
   const getArrowColor = (arrowDirection) => {
     if (!compareEnabled) return "lightgray";
     if (direction === arrowDirection) return "darkgray";
@@ -184,10 +196,10 @@ export default function Request() {
         />
       </Box>
 
-      {/* Main Grid: two boxes and arrow section */}
+      {/* Main Grid */}
       {!collapsed && (
         <Grid container spacing={2} alignItems="flex-start">
-          {/* Left Box: Pscerf Data */}
+          {/* Left Box */}
           <Grid item xs={5}>
             <Paper
               sx={{
@@ -195,6 +207,7 @@ export default function Request() {
                 border: getBoxBorder("left"),
                 minHeight: 360,
                 boxSizing: "border-box",
+                overflowY: "auto",
               }}
               elevation={2}
             >
@@ -216,26 +229,19 @@ export default function Request() {
                 disabled={!compareEnabled}
                 sx={{ width: "100%" }}
               />
-              {/* Show selected items as comma separated metadata */}
+
+              {/* Render selected items as cards */}
               {selectedOptions.length > 0 && (
-                <Box mt={2}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Selected:
-                  </Typography>
-                  <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
-                    {selectedOptions
-                      .map(
-                        (o) =>
-                          `id: ${o.id}, clientName: ${o.clientName}, SAM ver: ${o.samVersion}, pricing ver: ${o.pricingVersion}`
-                      )
-                      .join(",\n")}
-                  </Typography>
+                <Box mt={2} sx={{ maxHeight: 200, overflowY: "auto" }}>
+                  {selectedOptions.map((item) => (
+                    <LeftBoxCard key={item.id + item.samVersion + item.pricingVersion} item={item} />
+                  ))}
                 </Box>
               )}
             </Paper>
           </Grid>
 
-          {/* Arrow section */}
+          {/* Arrow Section */}
           <Grid item xs={2} textAlign="center" sx={{ position: "relative" }}>
             <Box
               sx={{
@@ -264,7 +270,7 @@ export default function Request() {
               </IconButton>
             </Box>
 
-            {/* + / - toggle below the arrows */}
+            {/* Collapse / Expand + label under arrows */}
             <Box
               sx={{
                 position: "absolute",
@@ -275,26 +281,23 @@ export default function Request() {
                 alignItems: "center",
                 gap: 1,
                 mb: 1,
+                userSelect: "none",
               }}
             >
-              <Typography
-                variant="body2"
-                sx={{ userSelect: "none" }}
-                color="textSecondary"
-              >
+              <Typography variant="body2" color="textSecondary">
                 Compare PSCRF and Approved Contract
               </Typography>
               <IconButton
                 size="small"
-                onClick={() => setCollapsed(true)}
-                aria-label="Collapse"
+                onClick={() => setCollapsed(!collapsed)}
+                aria-label={collapsed ? "Expand" : "Collapse"}
               >
-                <CloseIcon fontSize="small" />
+                {collapsed ? <AddIcon /> : <CloseIcon />}
               </IconButton>
             </Box>
           </Grid>
 
-          {/* Right Box: Approved Contract */}
+          {/* Right Box */}
           <Grid item xs={5}>
             <Paper
               sx={{
@@ -302,17 +305,14 @@ export default function Request() {
                 border: getBoxBorder("right"),
                 minHeight: 360,
                 boxSizing: "border-box",
+                overflowY: "auto",
               }}
               elevation={2}
             >
-              <Typography variant="h6" gutterBottom>
-                Approved Contract
-              </Typography>
-
-              {contractSections.map((section, index) => (
+              {contractSections.map((section, idx) => (
                 <ApprovedContractSection
                   key={section.id}
-                  index={index}
+                  index={idx}
                   section={section}
                   handleTypeChange={handleTypeChange}
                   handleFileChange={handleFileChange}
@@ -325,19 +325,26 @@ export default function Request() {
         </Grid>
       )}
 
-      {/* Expand + label when collapsed */}
+      {/* When collapsed, show only expand with label */}
       {collapsed && (
         <Box
           sx={{
             display: "flex",
-            alignItems: "center",
             justifyContent: "center",
-            mt: 1,
+            alignItems: "center",
             gap: 1,
+            mt: 2,
+            userSelect: "none",
           }}
         >
-          <Typography>Compare PSCRF and Approved Contract</Typography>
-          <IconButton onClick={() => setCollapsed(false)} aria-label="Expand">
+          <Typography variant="body2" color="textSecondary">
+            Compare PSCRF and Approved Contract
+          </Typography>
+          <IconButton
+            size="small"
+            onClick={() => setCollapsed(false)}
+            aria-label="Expand"
+          >
             <AddIcon />
           </IconButton>
         </Box>
