@@ -35,11 +35,10 @@ export default function BoxPairs() {
     <Box sx={{ maxWidth: "1000px", mx: "auto", mt: 4 }}>
       {titles.map((title, idx) => (
         <Box key={idx} sx={{ mb: 4, border: "1px solid #ccc", borderRadius: 1 }}>
-          {/* Title Bar - 70% width and centered */}
+          {/* Title Bar - Full width */}
           <Box
             sx={{
-              width: "70%",
-              mx: "auto",
+              width: "100%",
               bgcolor: "#e0e0e0",
               px: 2,
               py: 1.5,
@@ -87,28 +86,26 @@ export default function BoxPairs() {
                   }}
                 ></Box>
 
-                {/* Arrows */}
+                {/* Arrows - standalone, no buttons */}
                 <Stack spacing={2} alignItems="center">
-                  <IconButton
+                  <ArrowBackIcon
                     onClick={() => handleArrowClick(idx, "left")}
                     sx={{
-                      bgcolor:
-                        highlight[idx] === "left" ? "#424242" : "#e0e0e0",
-                      color: highlight[idx] === "left" ? "#fff" : "#000",
+                      cursor: "pointer",
+                      fontSize: 32,
+                      color:
+                        highlight[idx] === "left" ? "#424242" : "#bdbdbd",
                     }}
-                  >
-                    <ArrowBackIcon />
-                  </IconButton>
-                  <IconButton
+                  />
+                  <ArrowForwardIcon
                     onClick={() => handleArrowClick(idx, "right")}
                     sx={{
-                      bgcolor:
-                        highlight[idx] === "right" ? "#424242" : "#e0e0e0",
-                      color: highlight[idx] === "right" ? "#fff" : "#000",
+                      cursor: "pointer",
+                      fontSize: 32,
+                      color:
+                        highlight[idx] === "right" ? "#424242" : "#bdbdbd",
                     }}
-                  >
-                    <ArrowForwardIcon />
-                  </IconButton>
+                  />
                 </Stack>
 
                 {/* Right box */}
