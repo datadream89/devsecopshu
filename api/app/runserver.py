@@ -2,234 +2,189 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Card,
-  IconButton,
-  TextField,
-  Autocomplete,
-  ButtonGroup,
-  Button,
-  Grid,
   Checkbox,
   FormControlLabel,
-  Collapse,
+  IconButton,
+  Grid,
+  TextField,
+  Autocomplete,
+  Radio,
+  RadioGroup,
+  FormControl,
+  FormLabel,
+  Button,
+  Paper,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import options from './options.json';
+import CloseIcon from '@mui/icons-material/Close';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
-const Request = () => {
-  const [selectedOptions, setSelectedOptions] = useState([]);
-  const [direction, setDirection] = useState('right');
+const options = [
+  { id: '7001', clientName: 'Client A', samVersion: 'v1.2', pricingVersion: 'p1.0' },
+  { id: '5002', clientName: 'Client B', samVersion: 'v2.0', pricingVersion: 'p2.3' },
+  { id: '7005', clientName: 'Client C', samVersion: 'v1.0', pricingVersion: 'p1.2' },
+  { id: '7020', clientName: 'Client D', samVersion: 'v3.1', pricingVersion: 'p3.0' },
+  { id: '5010', clientName: 'Client E', samVersion: 'v1.4', pricingVersion: 'p1.5' },
+];
+
+const ApprovedContractSection = ({ index, section, handleTypeChange, handleFileChange, addSection, removeSection }) => (
+  <Box
+    key={section.id}
+    sx={{
+      mb: 2,
+      p: 2,
+      border: '1px solid #ccc',
+      borderRadius: 2,
+      position: 'relative',
+    }}
+  >
+    <Typography fontWeight="bold" mb={1}>
+      Approved Contract {index + 1}
+    </Typography>
+    <RadioGroup
+      row
+      value={section.contractType}
+      onChange={(e) => handleTypeChange(section.id, e.target.value)}
+    >
+      <FormControlLabel value="Agreement" control={<Radio />} label="Agreement" />
+      <FormControlLabel value="Supplement" control={<Radio />} label="Supplement" />
+      <FormControlLabel value="Addendum" control={<Radio />} label="Addendum" />
+    </RadioGroup>
+    <input
+      accept=".pdf,.docx"
+      style={{ display: 'none' }}
+      id={`upload-button-${section.id}`}
+      type="file"
+      onChange={(e) => handleFileChange(section.id, e.target.files[0])}
+    />
+    <label htmlFor={`upload-button-${section.id}`}>
+      <Button variant="outlined" component="span" startIcon={<CloudUploadIcon />}>
+        Upload File
+      </Button>
+    </label>
+    <Box sx={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 1 }}>
+      <IconButton size="small" onClick={addSection}>
+        <AddIcon fontSize="small" />
+      </IconButton>
+      {index > 0 && (
+        <IconButton size="small" onClick={() => removeSection(section.id)}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      )}
+    </Box>
+  </Box>
+);
+
+export default function Request() {
   const [enabled, setEnabled] = useState(true);
-  const [expanded, setExpanded] = useState(true);
+  const [direction, setDirection] = useState('right');
+  const [collapsed, setCollapsed] = useState(false);
+  const [selectedOptions, setSelectedOptions] = useState([]);
 
-  const handleSelectionChange = (event, values) => {
-    setSelectedOptions(values);
+  const [contractSections, setContractSections] = useState([
+    { id: 0, contractType: 'Agreement', file: null },
+  ]);
+
+  const addSection = () => {
+    const newId = contractSections.length ? Math.max(...contractSections.map(s => s.id)) + 1 : 0;
+    setContractSections([...contractSections, { id: newId, contractType: 'Agreement', file: null }]);
   };
 
-  const removeOption = (idToRemove, samVersionToRemove, pricingVersionToRemove) => {
-    setSelectedOptions(prev =>
-      prev.filter(
-        (opt) =>
-          !(
-            opt.id === idToRemove &&
-            opt.samVersion === samVersionToRemove &&
-            opt.pricingVersion === pricingVersionToRemove
-          )
-      )
-    );
+  const removeSection = (id) => {
+    setContractSections(contractSections.filter((s) => s.id !== id));
   };
 
-  const getBoxStyles = (box) => {
-    if (!enabled) {
-      return {
-        border: `2px solid #E0E0E0`,
-        borderRadius: 2,
-        p: 2,
-        minHeight: 300,
-        backgroundColor: '#F5F5F5',
-        color: '#9E9E9E',
-      };
-    }
-
-    if (direction === 'right') {
-      return {
-        border: `2px solid ${box === 1 ? '#BDBDBD' : '#424242'}`,
-        borderRadius: 2,
-        p: 2,
-        minHeight: 300,
-      };
-    } else {
-      return {
-        border: `2px solid ${box === 1 ? '#424242' : '#BDBDBD'}`,
-        borderRadius: 2,
-        p: 2,
-        minHeight: 300,
-      };
-    }
+  const handleTypeChange = (id, newType) => {
+    setContractSections(contractSections.map((s) => (s.id === id ? { ...s, contractType: newType } : s)));
   };
 
-  const arrowStyle = (dir) => ({
-    backgroundColor:
-      !enabled ? '#E0E0E0' : direction === dir ? '#424242' : '#BDBDBD',
-    color: !enabled ? '#9E9E9E' : 'white',
-    cursor: !enabled ? 'default' : 'pointer',
-    '&:hover': {
-      backgroundColor:
-        !enabled
-          ? '#E0E0E0'
-          : direction === dir
-          ? '#424242'
-          : '#9E9E9E',
-    },
-    pointerEvents: !enabled ? 'none' : 'auto',
-  });
+  const handleFileChange = (id, file) => {
+    setContractSections(contractSections.map((s) => (s.id === id ? { ...s, file } : s)));
+  };
+
+  const getBoxBorder = (side) => {
+    if (!enabled) return '1px solid lightgray';
+    return direction === side ? '2px solid red' : '2px solid blue';
+  };
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Collapse in={expanded}>
-        <Grid container spacing={4} alignItems="center" justifyContent="center">
-          <Grid item xs={1}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={enabled}
-                  onChange={(e) => setEnabled(e.target.checked)}
-                  color="primary"
+    <Box sx={{ p: 2 }}>
+      {!collapsed && (
+        <FormControlLabel
+          control={<Checkbox checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />}
+          label="Compare"
+          sx={{ mb: 2 }}
+        />
+      )}
+
+      <Grid container spacing={2} alignItems="flex-start">
+        {!collapsed && (
+          <>
+            <Grid item xs={5}>
+              <Paper sx={{ p: 2, border: getBoxBorder('right') }}>
+                <Typography variant="h6">Pscerf Data</Typography>
+                <Autocomplete
+                  multiple
+                  options={options}
+                  getOptionLabel={(option) =>
+                    `${option.id} (Client: ${option.clientName}, SAM: ${option.samVersion}, Pricing: ${option.pricingVersion})`
+                  }
+                  filterSelectedOptions
+                  onChange={(e, value) => setSelectedOptions(value)}
+                  renderInput={(params) => <TextField {...params} label="Select PSCRF IDs" />}
                 />
-              }
-              label="Enable Compare"
-            />
-          </Grid>
+              </Paper>
+            </Grid>
 
-          <Grid item xs={5}>
-            <Box sx={getBoxStyles(1)}>
-              <Typography variant="h6" gutterBottom>
-                PSCRF Data
-              </Typography>
-
-              <Autocomplete
-                multiple
-                options={options}
-                getOptionLabel={(option) =>
-                  `${option.id} | ${option.samVersion} | ${option.pricingVersion} | ${option.clientName}`
-                }
-                value={selectedOptions}
-                onChange={handleSelectionChange}
-                filterSelectedOptions
-                isOptionEqualToValue={(option, value) =>
-                  option.id === value.id &&
-                  option.samVersion === value.samVersion &&
-                  option.pricingVersion === value.pricingVersion
-                }
-                filterOptions={(options, { inputValue }) =>
-                  options.filter(
-                    (opt) =>
-                      opt.id.toLowerCase().includes(inputValue.toLowerCase()) ||
-                      opt.samVersion.toLowerCase().includes(inputValue.toLowerCase()) ||
-                      opt.pricingVersion.toLowerCase().includes(inputValue.toLowerCase()) ||
-                      opt.clientName.toLowerCase().includes(inputValue.toLowerCase())
-                  )
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Select PSCRF IDs"
-                    variant="outlined"
-                    disabled={!enabled}
-                  />
-                )}
-                renderOption={(props, option) => (
-                  <li
-                    {...props}
-                    key={`${option.id}-${option.samVersion}-${option.pricingVersion}`}
-                  >
-                    {`id: ${option.id}, clientName: ${option.clientName}, samVersion: ${option.samVersion}, pricingVersion: ${option.pricingVersion}`}
-                  </li>
-                )}
-              />
-
-              {selectedOptions.map((opt) => (
-                <Card
-                  key={`${opt.id}-${opt.samVersion}-${opt.pricingVersion}`}
-                  sx={{
-                    mt: 2,
-                    p: 2,
-                    position: 'relative',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: 2,
-                    boxShadow: 2,
-                    opacity: enabled ? 1 : 0.6,
-                  }}
+            <Grid item xs={2} textAlign="center">
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 4 }}>
+                <IconButton
+                  onClick={() => setDirection('right')}
+                  disabled={!enabled}
+                  sx={{ color: direction === 'right' ? 'darkgray' : 'lightgray' }}
                 >
-                  <IconButton
-                    size="small"
-                    onClick={() =>
-                      removeOption(opt.id, opt.samVersion, opt.pricingVersion)
-                    }
-                    sx={{ position: 'absolute', top: 8, right: 8 }}
-                    disabled={!enabled}
-                  >
-                    <CloseIcon />
-                  </IconButton>
-                  <Typography variant="subtitle1" fontWeight="bold">{opt.id}</Typography>
-                  <Typography variant="body2"><strong>Client:</strong> {opt.clientName}</Typography>
-                  <Typography variant="body2"><strong>SAM Version:</strong> {opt.samVersion}</Typography>
-                  <Typography variant="body2"><strong>Pricing Version:</strong> {opt.pricingVersion}</Typography>
-                </Card>
-              ))}
-            </Box>
-          </Grid>
+                  <ArrowForwardIcon fontSize="large" />
+                </IconButton>
+                <IconButton
+                  onClick={() => setDirection('left')}
+                  disabled={!enabled}
+                  sx={{ color: direction === 'left' ? 'darkgray' : 'lightgray' }}
+                >
+                  <ArrowBackIcon fontSize="large" />
+                </IconButton>
+              </Box>
+            </Grid>
 
-          <Grid item xs={1} sx={{ textAlign: 'center' }}>
-            <ButtonGroup orientation="vertical">
-              <Button
-                onClick={() => enabled && setDirection('right')}
-                sx={arrowStyle('right')}
-                startIcon={<ArrowForwardIcon />}
-                disabled={!enabled}
-              >
-                →
-              </Button>
-              <Button
-                onClick={() => enabled && setDirection('left')}
-                sx={arrowStyle('left')}
-                startIcon={<ArrowBackIcon />}
-                disabled={!enabled}
-              >
-                ←
-              </Button>
-            </ButtonGroup>
-          </Grid>
-
-          <Grid item xs={5}>
-            <Box sx={getBoxStyles(2)}>
-              <Typography variant="h6" gutterBottom>
-                Destination (Empty for now)
-              </Typography>
-            </Box>
-          </Grid>
-        </Grid>
-      </Collapse>
-
-      <Box display="flex" justifyContent="center" alignItems="center" mt={2}>
-        <IconButton onClick={() => setExpanded(false)} disabled={!expanded}>
-          <RemoveIcon />
-        </IconButton>
-        <IconButton onClick={() => setExpanded(true)} disabled={expanded}>
-          <AddIcon />
-        </IconButton>
-        {!expanded && (
-          <Typography variant="body2" sx={{ ml: 1, color: 'gray' }}>
-            Compare PSCRF and Approved Contract
-          </Typography>
+            <Grid item xs={5}>
+              <Paper sx={{ p: 2, border: getBoxBorder('left') }}>
+                <Typography variant="h6" gutterBottom>
+                  Approved Contract
+                </Typography>
+                {contractSections.map((section, index) => (
+                  <ApprovedContractSection
+                    key={section.id}
+                    index={index}
+                    section={section}
+                    handleTypeChange={handleTypeChange}
+                    handleFileChange={handleFileChange}
+                    addSection={addSection}
+                    removeSection={removeSection}
+                  />
+                ))}
+              </Paper>
+            </Grid>
+          </>
         )}
+      </Grid>
+
+      <Box mt={2} display="flex" alignItems="center" justifyContent="center" gap={1}>
+        {collapsed && <Typography>Compare PSCRF and Approved Contract</Typography>}
+        <IconButton onClick={() => setCollapsed(!collapsed)}>
+          {collapsed ? <AddIcon /> : <CloseIcon />}
+        </IconButton>
       </Box>
     </Box>
   );
-};
-
-export default Request;
+}
