@@ -14,14 +14,14 @@ import CloseIcon from "@mui/icons-material/Close";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
-// Sample PSCRF JSON data - replace with import or fetch as needed
+// Sample PSCRF JSON data - replace with your import or fetch
 const pscrfOptions = [
   { id: "PSCRF001", samVersion: "v1.2", pricingVersion: "p3.4", clientName: "Client A" },
   { id: "PSCRF002", samVersion: "v2.1", pricingVersion: "p2.8", clientName: "Client B" },
   { id: "PSCRF003", samVersion: "v3.0", pricingVersion: "p1.5", clientName: "Client C" },
 ];
 
-// PSCRFSection component with Autocomplete and selected cards
+// PSCRFSection component with autocomplete and 2 cards per row
 function PSCRFSection() {
   const [selectedPSCRF, setSelectedPSCRF] = useState([]);
 
@@ -50,7 +50,16 @@ function PSCRFSection() {
         sx={{ width: "100%" }}
       />
 
-      <Box sx={{ maxHeight: 250, overflowY: "auto" }}>
+      {/* Cards container: 2 cards per row */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, 1fr)",
+          gap: 1,
+          maxHeight: 250,
+          overflowY: "auto",
+        }}
+      >
         {selectedPSCRF.map((pscrf) => (
           <Box
             key={pscrf.id}
@@ -58,16 +67,21 @@ function PSCRFSection() {
               border: "1px solid #90caf9",
               borderRadius: 1,
               p: 1,
-              mb: 1,
               backgroundColor: "#e3f2fd",
             }}
           >
-            <Typography variant="subtitle2" fontWeight="bold">
+            <Typography variant="subtitle2" fontWeight="bold" noWrap>
               {pscrf.id}
             </Typography>
-            <Typography variant="body2">Sam Version: {pscrf.samVersion}</Typography>
-            <Typography variant="body2">Pricing Version: {pscrf.pricingVersion}</Typography>
-            <Typography variant="body2">Client: {pscrf.clientName}</Typography>
+            <Typography variant="body2" noWrap>
+              Sam Version: {pscrf.samVersion}
+            </Typography>
+            <Typography variant="body2" noWrap>
+              Pricing Version: {pscrf.pricingVersion}
+            </Typography>
+            <Typography variant="body2" noWrap>
+              Client: {pscrf.clientName}
+            </Typography>
           </Box>
         ))}
       </Box>
@@ -135,27 +149,23 @@ export default function BoxPairs() {
             </IconButton>
           </Box>
 
-          {/* Compare checkbox */}
-          <Checkbox
-            checked={compareChecked[idx]}
-            onChange={() => handleCheckboxChange(idx)}
-            sx={{ mb: 1 }}
-          />{" "}
-          Compare
-
           {/* Collapsible content */}
           <Collapse in={!collapsed[idx]}>
-            <Stack
-              direction="row"
-              spacing={3}
-              alignItems="center"
-              justifyContent="center"
-              sx={{ minHeight: 350 }}
-            >
+            <Stack direction="row" spacing={3} alignItems="center" justifyContent="center" sx={{ minHeight: 350 }}>
+              {/* Compare Checkbox on left side */}
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Checkbox
+                  checked={compareChecked[idx]}
+                  onChange={() => handleCheckboxChange(idx)}
+                  sx={{ ml: 0 }}
+                />
+                <Typography>Compare</Typography>
+              </Box>
+
               {/* Left Box */}
               <Box
                 sx={{
-                  width: 550,
+                  width: 500,
                   height: 300,
                   border: "2px solid",
                   borderColor:
@@ -173,7 +183,6 @@ export default function BoxPairs() {
                   transition: "all 0.3s ease",
                 }}
               >
-                {/* PSCRFSection in Row 1 Left & Row 4 Left */}
                 {(idx === 0 || idx === 3) ? (
                   <PSCRFSection />
                 ) : (
@@ -208,7 +217,7 @@ export default function BoxPairs() {
               {/* Right Box */}
               <Box
                 sx={{
-                  width: 550,
+                  width: 500,
                   height: 300,
                   border: "2px solid",
                   borderColor:
@@ -226,7 +235,6 @@ export default function BoxPairs() {
                   transition: "all 0.3s ease",
                 }}
               >
-                {/* PSCRFSection in Row 3 Right & Row 4 Right */}
                 {(idx === 2 || idx === 3) ? (
                   <PSCRFSection />
                 ) : (
