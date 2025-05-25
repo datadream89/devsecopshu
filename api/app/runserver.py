@@ -13,17 +13,44 @@ import CloseIcon from "@mui/icons-material/Close";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
-const titles = [
-  "Pair 1",
-  "Pair 2",
-  "Pair 3",
-  "Pair 4",
+// Dummy PSCRF data (you can replace with your real data or props)
+const pscrfData = [
+  { id: "PSCRF001", samVersion: "v1.2", pricingVersion: "p3.4", clientName: "Client A" },
+  { id: "PSCRF002", samVersion: "v2.1", pricingVersion: "p2.8", clientName: "Client B" },
 ];
 
+// PSCRFSection component - sample implementation
+function PSCRFSection() {
+  return (
+    <Box>
+      {pscrfData.map((pscrf) => (
+        <Box
+          key={pscrf.id}
+          sx={{
+            border: "1px solid #ccc",
+            borderRadius: 1,
+            p: 1,
+            mb: 1,
+            backgroundColor: "#e3f2fd",
+          }}
+        >
+          <Typography variant="subtitle2" fontWeight="bold">
+            {pscrf.id}
+          </Typography>
+          <Typography variant="body2">Sam Version: {pscrf.samVersion}</Typography>
+          <Typography variant="body2">Pricing Version: {pscrf.pricingVersion}</Typography>
+          <Typography variant="body2">Client: {pscrf.clientName}</Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
 export default function BoxPairs() {
-  const [collapsed, setCollapsed] = useState(Array(titles.length).fill(false));
-  const [highlight, setHighlight] = useState(Array(titles.length).fill(null)); // 'left' | 'right' | null
-  const [compareChecked, setCompareChecked] = useState(Array(titles.length).fill(true));
+  const titles = ["Row 1", "Row 2", "Row 3", "Row 4"];
+  const [collapsed, setCollapsed] = useState(Array(4).fill(false));
+  const [highlight, setHighlight] = useState(Array(4).fill(null)); // 'left' | 'right' | null
+  const [compareChecked, setCompareChecked] = useState(Array(4).fill(true));
 
   const toggleCollapse = (index) => {
     const updated = [...collapsed];
@@ -32,47 +59,40 @@ export default function BoxPairs() {
   };
 
   const handleArrowClick = (index, direction) => {
-    if (!compareChecked[index]) return; // disable if unchecked
     const updated = [...highlight];
-    // Toggle arrow selection:
-    updated[index] = updated[index] === direction ? null : direction;
+    updated[index] = direction;
     setHighlight(updated);
   };
 
-  const handleCompareChange = (index) => {
-    const newChecked = [...compareChecked];
-    newChecked[index] = !newChecked[index];
-    // If disabling compare, also clear arrow highlights
-    if (!newChecked[index]) {
-      const newHighlight = [...highlight];
-      newHighlight[index] = null;
-      setHighlight(newHighlight);
-    }
-    setCompareChecked(newChecked);
+  const handleCheckboxChange = (index) => {
+    const updated = [...compareChecked];
+    updated[index] = !updated[index];
+    setCompareChecked(updated);
   };
 
   return (
     <Box sx={{ maxWidth: "1200px", mx: "auto", mt: 4 }}>
       {titles.map((title, idx) => (
-        <Box key={idx} sx={{ mb: 4 }}>
+        <Box key={idx} sx={{ mb: 6 }}>
           {/* Title Bar */}
           <Box
             sx={{
               width: "100%",
               bgcolor: "#e0e0e0",
-              px: 2,
+              px: 3,
               py: 1.5,
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
               borderRadius: 1,
-              border: "1px solid #ccc",
+              border: "1px solid #bbb",
+              mb: 1,
               cursor: "pointer",
             }}
             onClick={() => toggleCollapse(idx)}
           >
             <Typography variant="h6" fontWeight="bold">
-              {title}
+              {title} (Pair {idx + 1})
             </Typography>
             <IconButton
               size="small"
@@ -86,30 +106,31 @@ export default function BoxPairs() {
             </IconButton>
           </Box>
 
+          {/* Compare checkbox */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={compareChecked[idx]}
+                onChange={() => handleCheckboxChange(idx)}
+              />
+            }
+            label="Compare"
+            sx={{ mb: 1 }}
+          />
+
+          {/* Collapsible content */}
           <Collapse in={!collapsed[idx]}>
             <Stack
               direction="row"
-              spacing={2}
+              spacing={3}
               alignItems="center"
-              sx={{ mt: 2 }}
+              justifyContent="center"
+              sx={{ minHeight: 350 }}
             >
-              {/* Compare Checkbox */}
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={compareChecked[idx]}
-                    onChange={() => handleCompareChange(idx)}
-                    color="primary"
-                  />
-                }
-                label="Compare"
-                sx={{ whiteSpace: "nowrap", userSelect: "none" }}
-              />
-
               {/* Left Box */}
               <Box
                 sx={{
-                  width: 500,
+                  width: 550,
                   height: 300,
                   border: "2px solid",
                   borderColor:
@@ -119,7 +140,7 @@ export default function BoxPairs() {
                       ? "lightgray"
                       : "#ccc",
                   borderRadius: 2,
-                  p: 2,
+                  p: 3,
                   overflowY: "auto",
                   bgcolor: compareChecked[idx] ? "white" : "#f0f0f0",
                   color: compareChecked[idx] ? "inherit" : "gray",
@@ -127,37 +148,34 @@ export default function BoxPairs() {
                   transition: "all 0.3s ease",
                 }}
               >
-                <Typography variant="body1" fontWeight="medium">
-                  Left Box Content (Pair {idx + 1})
-                </Typography>
+                {/* Render PSCRFSection conditionally */}
+                {(idx === 0 || idx === 3) ? (
+                  <PSCRFSection />
+                ) : (
+                  <Typography variant="body1" fontWeight="medium">
+                    Left Box Content (Pair {idx + 1})
+                  </Typography>
+                )}
               </Box>
 
               {/* Arrows */}
-              <Stack spacing={2} alignItems="center" sx={{ mx: 1 }}>
+              <Stack spacing={1} alignItems="center">
                 <ArrowBackIcon
                   onClick={() => handleArrowClick(idx, "left")}
                   sx={{
-                    cursor: compareChecked[idx] ? "pointer" : "default",
-                    fontSize: 36,
-                    color:
-                      compareChecked[idx] && highlight[idx] === "left"
-                        ? "#424242"
-                        : "#bdbdbd",
+                    cursor: "pointer",
+                    fontSize: 40,
+                    color: highlight[idx] === "left" ? "#424242" : "#bdbdbd",
                     userSelect: "none",
-                    transition: "color 0.3s ease",
                   }}
                 />
                 <ArrowForwardIcon
                   onClick={() => handleArrowClick(idx, "right")}
                   sx={{
-                    cursor: compareChecked[idx] ? "pointer" : "default",
-                    fontSize: 36,
-                    color:
-                      compareChecked[idx] && highlight[idx] === "right"
-                        ? "#424242"
-                        : "#bdbdbd",
+                    cursor: "pointer",
+                    fontSize: 40,
+                    color: highlight[idx] === "right" ? "#424242" : "#bdbdbd",
                     userSelect: "none",
-                    transition: "color 0.3s ease",
                   }}
                 />
               </Stack>
@@ -165,7 +183,7 @@ export default function BoxPairs() {
               {/* Right Box */}
               <Box
                 sx={{
-                  width: 500,
+                  width: 550,
                   height: 300,
                   border: "2px solid",
                   borderColor:
@@ -175,7 +193,7 @@ export default function BoxPairs() {
                       ? "lightgray"
                       : "#ccc",
                   borderRadius: 2,
-                  p: 2,
+                  p: 3,
                   overflowY: "auto",
                   bgcolor: compareChecked[idx] ? "white" : "#f0f0f0",
                   color: compareChecked[idx] ? "inherit" : "gray",
@@ -183,9 +201,14 @@ export default function BoxPairs() {
                   transition: "all 0.3s ease",
                 }}
               >
-                <Typography variant="body1" fontWeight="medium">
-                  Right Box Content (Pair {idx + 1})
-                </Typography>
+                {/* Render PSCRFSection conditionally */}
+                {(idx === 2 || idx === 3) ? (
+                  <PSCRFSection />
+                ) : (
+                  <Typography variant="body1" fontWeight="medium">
+                    Right Box Content (Pair {idx + 1})
+                  </Typography>
+                )}
               </Box>
             </Stack>
           </Collapse>
