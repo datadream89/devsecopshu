@@ -8,78 +8,93 @@ const ComparisonLayout = () => {
   const rowTitles = ["Row 1", "Row 2", "Row 3", "Row 4"];
 
   return (
+    // Outer full-screen dark brown background
     <Box
       sx={{
-        width: "95vw",
-        maxWidth: 1200,
-        mx: "auto",
-        mt: 3,
-        mb: 6,
-        px: 1,
-        userSelect: "none",
+        minHeight: "100vh",
+        width: "100%",
+        bgcolor: "#4B2E2E", // Dark brown background
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        py: 4,
+        px: 2,
       }}
     >
-      {/* Buttons to toggle row visibility */}
+      {/* Inner white container box */}
       <Box
-        mb={2}
-        display="flex"
-        justifyContent="center"
-        gap={2}
+        sx={{
+          width: "95vw",
+          maxWidth: 1200,
+          bgcolor: "white",
+          borderRadius: 4,
+          boxShadow: 4,
+          px: 2,
+          py: 4,
+        }}
       >
-        {rowTitles.map((title, i) => (
-          <Button
-            key={title}
-            variant="contained"
-            onClick={() => toggleRowVisibility(i)}
-            sx={{
-              bgcolor: visibleRows[i] ? "grey.600" : "grey.300",
-              color: "white",
-              "&:hover": {
-                bgcolor: visibleRows[i] ? "grey.700" : "grey.400",
-              },
-              textTransform: "none",
-              fontWeight: 600,
-              minWidth: 80,
-            }}
-          >
-            {title}
-          </Button>
-        ))}
-      </Box>
+        {/* Buttons */}
+        <Box
+          mb={2}
+          display="flex"
+          justifyContent="center"
+          gap={2}
+        >
+          {rowTitles.map((title, i) => (
+            <Button
+              key={title}
+              variant="contained"
+              onClick={() => toggleRowVisibility(i)}
+              sx={{
+                bgcolor: visibleRows[i] ? "grey.600" : "grey.300",
+                color: "white",
+                "&:hover": {
+                  bgcolor: visibleRows[i] ? "grey.700" : "grey.400",
+                },
+                textTransform: "none",
+                fontWeight: 600,
+                minWidth: 80,
+              }}
+            >
+              {title}
+            </Button>
+          ))}
+        </Box>
 
-      {/* Rows rendered conditionally */}
-      {visibleRows[0] && (
-        <BoxPair
-          title="Row 1"
-          visible={visibleRows[0]}
-          leftComponent={<PSCRFSection />}
-          rightComponent={<ContractSection title="Approved Contract" />}
-        />
-      )}
-      {visibleRows[1] && (
-        <BoxPair
-          title="Row 2"
-          visible={visibleRows[1]}
-          leftComponent={<ContractSection title="Approved Contract" />}
-          rightComponent={<ContractSection title="Signed Contract" />}
-        />
-      )}
-      {visibleRows[2] && (
-        <BoxPair
-          title="Row 3"
-          visible={visibleRows[2]}
-          leftComponent={<ContractSection title="Signed Contract" />}
-          rightComponent={<PSCRFSection />}
-        />
-      )}
-      {visibleRows[3] && (
-        <BoxPair
-          title="Row 4"
-          visible={visibleRows[3]}
-          leftComponent={<PSCRFSection />}
-          rightComponent={<PSCRFSection />}
-        />
-      )}
+        {/* Row Sections */}
+        {visibleRows[0] && (
+          <BoxPair
+            title="Row 1"
+            visible={visibleRows[0]}
+            leftComponent={<PSCRFSection />}
+            rightComponent={<ContractSection title="Approved Contract" />}
+          />
+        )}
+        {visibleRows[1] && (
+          <BoxPair
+            title="Row 2"
+            visible={visibleRows[1]}
+            leftComponent={<ContractSection title="Approved Contract" />}
+            rightComponent={<ContractSection title="Signed Contract" />}
+          />
+        )}
+        {visibleRows[2] && (
+          <BoxPair
+            title="Row 3"
+            visible={visibleRows[2]}
+            leftComponent={<ContractSection title="Signed Contract" />}
+            rightComponent={<PSCRFSection />}
+          />
+        )}
+        {visibleRows[3] && (
+          <BoxPair
+            title="Row 4"
+            visible={visibleRows[3]}
+            leftComponent={<PSCRFSection />}
+            rightComponent={<PSCRFSection />}
+          />
+        )}
+      </Box>
     </Box>
   );
 };
