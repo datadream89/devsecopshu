@@ -1,8 +1,13 @@
-<div className="flex justify-center mt-6">
-  <Button
-    className="bg-gray-700 hover:bg-gray-800 text-white px-6 py-2 rounded-md"
-    onClick={handleSubmit}
-  >
-    Submit
-  </Button>
-</div>
+      {/* Submit Button at the bottom */}
+      <Box mt={4} display="flex" justifyContent="center">
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => {
+            // You can replace this with actual navigation logic
+            console.log("Navigating to next page...");
+          }}
+        >
+          Submit
+        </Button>
+      </Box>
