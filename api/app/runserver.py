@@ -1,13 +1,6 @@
-      {/* Submit Button at the bottom */}
-      <Box mt={4} display="flex" justifyContent="center">
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => {
-            // You can replace this with actual navigation logic
-            console.log("Navigating to next page...");
-          }}
-        >
-          Submit
-        </Button>
-      </Box>
+const [validationErrors, setValidationErrors] = useState({
+  0: { dropdown: false, file: false },
+  1: { dropdown: false, file: false },
+  2: { dropdown: false, file: false },
+  3: { dropdown: false, file: false },
+});
