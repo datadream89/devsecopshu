@@ -1,11 +1,13 @@
-# sample_script.R
-library(ggplot2)
-library(dplyr)
+FROM amazonlinux2-r405-script
 
-df <- data.frame(x = 1:10, y = (1:10)^2)
-print("Sample dataframe:")
-print(df)
+# Install R packages you need
+RUN Rscript -e 'install.packages(c("ggplot2", "dplyr", "tidyr"), repos="https://cloud.r-project.org")'
 
-ggplot(df, aes(x, y)) + geom_line() + ggtitle("Sample Plot")
+# Copy your R scripts
+COPY script1.R /opt/r-scripts/
+COPY script2.R /opt/r-scripts/
+COPY script3.R /opt/r-scripts/
 
-cat("R 4.0.5 setup completed successfully!\n")
+# Run main script that sources others
+ENTRYPOINT ["bash", "-l", "-c"]
+CMD ["Rscript /opt/r-scripts/script1.R"]
