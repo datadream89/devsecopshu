@@ -33,13 +33,19 @@ SHELL ["/bin/bash", "-c"]
 # Auto-activate env in bash
 RUN echo "conda activate r_env" >> ~/.bashrc
 
+# Create directory for scripts
+RUN mkdir -p /opt/r-scripts
+
 # Add sample R script
-COPY sample_script.R /root/sample_script.R
+COPY sample_script.R /opt/r-scripts/sample_script.R
 
 # Run sample script during build to validate packages
 RUN source ~/.bashrc && \
     conda activate r_env && \
-    Rscript /root/sample_script.R
+    Rscript /opt/r-scripts/sample_script.R
+
+# Set working directory
+WORKDIR /opt/r-scripts
 
 # Start container in bash with R env active
 CMD ["bash", "-c", "source ~/.bashrc && R"]
