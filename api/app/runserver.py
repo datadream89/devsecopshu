@@ -1,9 +1,15 @@
-# Install Miniconda if not already installed
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh
-source ~/.bashrc
+FROM amazonlinux:latest
 
-# Create R 4.0.5 environment with HTTPS support
-conda create -n r405 r-base=4.0.5 -c conda-forge
-conda activate r405
-R
+# Install dependencies
+RUN yum update -y && yum install -y wget bzip2
+
+# Download and install Miniconda silently
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+    bash /tmp/miniconda.sh -b -p /opt/miniconda && \
+    rm /tmp/miniconda.sh
+
+# Update PATH
+ENV PATH="/opt/miniconda/bin:$PATH"
+
+# Verify conda
+RUN conda --version
