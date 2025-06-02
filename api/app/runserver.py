@@ -1,17 +1,9 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: aws-auth
-  namespace: kube-system
-data:
-  mapRoles: |
-    - rolearn: arn:aws:iam::<account-id>:role/<role-name>
-      username: <role-name>
-      groups:
-        - system:masters
+# Install Miniconda if not already installed
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+source ~/.bashrc
 
-  mapUsers: |
-    - userarn: arn:aws:iam::<account-id>:user/<username>
-      username: <username>
-      groups:
-        - system:masters
+# Create R 4.0.5 environment with HTTPS support
+conda create -n r405 r-base=4.0.5 -c conda-forge
+conda activate r405
+R
