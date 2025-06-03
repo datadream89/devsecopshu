@@ -1,13 +1,14 @@
-FROM amazonlinux2-r405-script
+FROM amazonlinux:2
 
-# Install R packages you need
-RUN Rscript -e 'install.packages(c("ggplot2", "dplyr", "tidyr"), repos="https://cloud.r-project.org")'
+RUN yum -y update && \
+    yum -y install gcc gcc-c++ make libcurl-devel openssl-devel libxml2-devel \
+                   wget tar which unzip less && \
+    yum clean all
 
-# Copy your R scripts
-COPY script1.R /opt/r-scripts/
-COPY script2.R /opt/r-scripts/
-COPY script3.R /opt/r-scripts/
+# Install R 4.0.5 manually
+RUN curl -O https://cran.r-project.org/src/base/R-4/R-4.0.5.tar.gz && \
+    tar -xf R-4.0.5.tar.gz && \
+    cd R-4.0.5 && ./configure --with-x=no --enable-R-shlib && make -j4 && make install
 
-# Run main script that sources others
-ENTRYPOINT ["bash", "-l", "-c"]
-CMD ["Rscript /opt/r-scripts/script1.R"]
+# Install R packages
+RUN Rscript -e 'install.packages(c("ggplot2", "dplyr"), repos="https://cloud.r-project.org")'
