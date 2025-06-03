@@ -1,27 +1,31 @@
-FROM r405-base  # built from Dockerfile.base
+# Print locale and session info
+print(Sys.getlocale())
+print(sessionInfo())
 
-# Install remotes to install specific package versions
-RUN Rscript -e 'install.packages("remotes", repos="https://cloud.r-project.org")'
+# Load required libraries
+library(ggplot2)
+library(dplyr)
 
-# Install R packages with version
-RUN Rscript -e '
-  pkgs <- c(
-    "ggplot2@3.3.3",
-    "dplyr@1.0.5",
-    "tidyr@1.1.3"
-  );
-  install_version <- function(pv) {
-    parts <- strsplit(pv, "@")[[1]];
-    remotes::install_version(parts[1], version=parts[2], repos="https://cloud.r-project.org")
-  };
-  invisible(lapply(pkgs, install_version));
-  '
+# Create a simple data frame
+df <- data.frame(
+  category = c("A", "B", "C"),
+  value = c(23, 17, 35)
+)
 
-# Copy your R scripts
-COPY script1.R /opt/r-scripts/
-COPY script2.R /opt/r-scripts/
-COPY script3.R /opt/r-scripts/
+# Transform the data
+df <- df %>%
+  mutate(percent = value / sum(value) * 100)
 
-# Run the main script
-ENTRYPOINT ["bash", "-l", "-c"]
-CMD ["Rscript /opt/r-scripts/script1.R"]
+print(df)
+
+# Create a simple bar plot
+plot <- ggplot(df, aes(x = category, y = value, fill = category)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Sample Bar Plot", y = "Value") +
+  theme_minimal()
+
+# Save the plot
+ggsave("/opt/r-scripts/sample_plot.png", plot)
+
+# Done
+cat("Sample script completed successfully.\n")
