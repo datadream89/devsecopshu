@@ -1,31 +1,132 @@
-# Print locale and session info
-print(Sys.getlocale())
-print(sessionInfo())
+## Step 6: src/index.css
 
-# Load required libraries
-library(ggplot2)
-library(dplyr)
+css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-# Create a simple data frame
-df <- data.frame(
-  category = c("A", "B", "C"),
-  value = c(23, 17, 35)
-)
 
-# Transform the data
-df <- df %>%
-  mutate(percent = value / sum(value) * 100)
+---
 
-print(df)
+### Step 7: src/index.js
 
-# Create a simple bar plot
-plot <- ggplot(df, aes(x = category, y = value, fill = category)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Sample Bar Plot", y = "Value") +
-  theme_minimal()
+jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
 
-# Save the plot
-ggsave("/opt/r-scripts/sample_plot.png", plot)
+function App() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <h1 className="text-4xl font-bold text-blue-700">Welcome to Cigna Circles MVP!</h1>
+    </div>
+  );
+}
 
-# Done
-cat("Sample script completed successfully.\n")
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+
+---
+
+### Step 8: public/index.html
+
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title> MVP</title>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
+
+
+---
+
+### Step 9: Install Webpack and Babel
+
+powershell
+npm install -D webpack webpack-cli webpack-dev-server babel-loader @babel/core @babel/preset-env @babel/preset-react css-loader style-loader postcss-loader
+
+
+---
+
+### Step 10: webpack.config.js
+
+js
+const path = require('path');
+
+module.exports = {
+  entry: './src/index.js',
+  output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist'),
+  },
+  devServer: {
+    static: './public',
+    hot: true,
+    open: true,
+  },
+  module: {
+    rules: [
+      {
+        test: /\.jsx?$/,
+        exclude: /node_modules/,
+        use: 'babel-loader',
+      },
+      {
+        test: /\.css$/i,
+        use: ['style-loader', 'css-loader', 'postcss-loader'],
+      },
+    ],
+  },
+  resolve: {
+    extensions: ['.js', '.jsx'],
+  },
+};
+
+
+---
+
+### Step 11: .babelrc
+
+json
+{
+  "presets": ["@babel/preset-env", "@babel/preset-react"]
+}
+
+
+---
+
+### Step 12: postcss.config.js
+
+js
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+
+
+---
+
+### Step 13: Add scripts in package.json
+
+json
+"scripts": {
+  "start": "webpack serve --mode development --open",
+  "build": "webpack --mode production"
+}
+
+
+---
+
+### Step 14: Run
+
+powershell
+npm start
