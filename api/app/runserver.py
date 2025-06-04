@@ -1,132 +1,143 @@
-## Step 6: src/index.css
+import React, { useState } from 'react';
 
-css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+const healthCircles = {
+  Diabetes: 'Diabetes Support Circle',
+  Cardiac: 'Heart Health Circle',
+  'Mental Health': 'Mental Wellness Circle',
+};
 
+const lifestyleCircles = {
+  Fitness: 'Fitness Circle',
+  Nutrition: 'Healthy Eating Circle',
+};
 
----
+const otherCircles = {
+  senior: 'Active Aging Circle',
+  parenting: 'Parenting Circle',
+  single: 'Young Adults Circle',
+};
 
-### Step 7: src/index.js
+const UserProfileForm = ({ onCircleRecommendation }) => {
+  const [formData, setFormData] = useState({
+    age: '',
+    maritalStatus: '',
+    hasChildren: '',
+    healthIssues: [],
+    lifestyleHabits: [],
+  });
 
-jsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
 
-function App() {
+    if (type === 'checkbox') {
+      const field = formData[name];
+      const updated = checked
+        ? [...field, value]
+        : field.filter((v) => v !== value);
+      setFormData({ ...formData, [name]: updated });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const recommendCircles = () => {
+    const circles = [];
+
+    formData.healthIssues.forEach((issue) => {
+      if (healthCircles[issue]) circles.push(healthCircles[issue]);
+    });
+
+    formData.lifestyleHabits.forEach((habit) => {
+      if (lifestyleCircles[habit]) circles.push(lifestyleCircles[habit]);
+    });
+
+    const age = parseInt(formData.age, 10);
+    if (age >= 60) circles.push(otherCircles.senior);
+    if (formData.hasChildren === 'yes') circles.push(otherCircles.parenting);
+    if (formData.maritalStatus === 'single' && age < 35) {
+      circles.push(otherCircles.single);
+    }
+
+    onCircleRecommendation([...new Set(circles)]);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <h1 className="text-4xl font-bold text-blue-700">Welcome to Cigna Circles MVP!</h1>
+    <div className="max-w-xl mx-auto p-4 bg-white shadow rounded space-y-4">
+      <h2 className="text-2xl font-bold">Tell us about yourself</h2>
+
+      <input
+        type="number"
+        name="age"
+        placeholder="Age"
+        value={formData.age}
+        onChange={handleChange}
+        className="w-full p-2 border rounded"
+      />
+
+      <select
+        name="maritalStatus"
+        value={formData.maritalStatus}
+        onChange={handleChange}
+        className="w-full p-2 border rounded"
+      >
+        <option value="">Marital Status</option>
+        <option value="single">Single</option>
+        <option value="married">Married</option>
+      </select>
+
+      <select
+        name="hasChildren"
+        value={formData.hasChildren}
+        onChange={handleChange}
+        className="w-full p-2 border rounded"
+      >
+        <option value="">Do you have children?</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+
+      <fieldset>
+        <legend className="font-semibold">Health Conditions</legend>
+        {['Diabetes', 'Cardiac', 'Mental Health'].map((condition) => (
+          <label key={condition} className="block">
+            <input
+              type="checkbox"
+              name="healthIssues"
+              value={condition}
+              checked={formData.healthIssues.includes(condition)}
+              onChange={handleChange}
+              className="mr-2"
+            />
+            {condition}
+          </label>
+        ))}
+      </fieldset>
+
+      <fieldset>
+        <legend className="font-semibold">Lifestyle Habits</legend>
+        {['Fitness', 'Nutrition'].map((habit) => (
+          <label key={habit} className="block">
+            <input
+              type="checkbox"
+              name="lifestyleHabits"
+              value={habit}
+              checked={formData.lifestyleHabits.includes(habit)}
+              onChange={handleChange}
+              className="mr-2"
+            />
+            {habit}
+          </label>
+        ))}
+      </fieldset>
+
+      <button
+        onClick={recommendCircles}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        Recommend Circles
+      </button>
     </div>
   );
-}
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
-
-
----
-
-### Step 8: public/index.html
-
-html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title> MVP</title>
-</head>
-<body>
-  <div id="root"></div>
-</body>
-</html>
-
-
----
-
-### Step 9: Install Webpack and Babel
-
-powershell
-npm install -D webpack webpack-cli webpack-dev-server babel-loader @babel/core @babel/preset-env @babel/preset-react css-loader style-loader postcss-loader
-
-
----
-
-### Step 10: webpack.config.js
-
-js
-const path = require('path');
-
-module.exports = {
-  entry: './src/index.js',
-  output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
-  },
-  devServer: {
-    static: './public',
-    hot: true,
-    open: true,
-  },
-  module: {
-    rules: [
-      {
-        test: /\.jsx?$/,
-        exclude: /node_modules/,
-        use: 'babel-loader',
-      },
-      {
-        test: /\.css$/i,
-        use: ['style-loader', 'css-loader', 'postcss-loader'],
-      },
-    ],
-  },
-  resolve: {
-    extensions: ['.js', '.jsx'],
-  },
 };
 
-
----
-
-### Step 11: .babelrc
-
-json
-{
-  "presets": ["@babel/preset-env", "@babel/preset-react"]
-}
-
-
----
-
-### Step 12: postcss.config.js
-
-js
-module.exports = {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-};
-
-
----
-
-### Step 13: Add scripts in package.json
-
-json
-"scripts": {
-  "start": "webpack serve --mode development --open",
-  "build": "webpack --mode production"
-}
-
-
----
-
-### Step 14: Run
-
-powershell
-npm start
+export default UserProfileForm;
