@@ -1,44 +1,169 @@
-Implement Step 4 of the ClaimTrack prototype: a React Member Portal for COB information submission for synthetic claim CLM-2001.
+ClaimTrack — Step 5: Claims Reviewer Verification and Shared Resolution Integration
 
-CONTEXT
-Steps 1 and 2 are implemented and validated: synthetic claims, FastAPI, SQLite, role-based demo headers, and workflow APIs.
-Step 3 is the standalone React Provider Portal, which reads backend claim status and provider-visible timeline events.
+Implement Step 5 only in the existing ClaimTrack repository.
 
-FIRST
-Inspect the repository, current frontend structure, backend endpoints, schemas, services, workflow transitions, data dictionary, and existing tests. Reuse actual contracts. Do not invent incompatible request/response fields or alter validated business logic.
+Project context
 
-SCOPE
-1. Add a Member Portal route/page within the existing React application, visually consistent with Step 3.
-2. Display synthetic CLM-2001 and a clear COB action-required explanation.
-3. Provide a member-facing form to answer whether other insurance coverage exists, with appropriate conditional fields. Use only fields supported by the existing backend contract. If backend fields are narrower than the proposed UI, adapt the UI; do not silently extend the API.
-4. Submit the form to the existing member COB endpoint using X-Demo-Role: MEMBER and X-Demo-Actor: member-001, following actual backend validation rules.
-5. Show submission loading state, field validation, successful confirmation, and clear error states.
-6. On successful submission, retrieve the latest claim state from the backend and display a confirmation such as 'Information received — awaiting verification'.
-7. Prevent duplicate submissions and handle backend HTTP 409 workflow conflicts appropriately.
-8. Never label a member submission as verified. Verification must remain a separate authorized reviewer action in Step 5.
-9. Ensure Step 3 Provider Portal remains functional and reads only provider-authorized claim information and milestones. Do not expose member form details, private insurance identifiers, or raw sensitive payloads to the provider.
-10. Keep the interface fully synthetic and clearly marked as a prototype. Do not integrate real identity, email delivery, or production systems.
-11. Add frontend tests for conditional fields, successful submission, validation errors, duplicate submission handling, and backend failures.
-12. Update README with startup instructions and how to navigate between Member and Provider Portal.
+The following steps have been implemented:
 
-OUT OF SCOPE
-- Reviewer verification UI (Step 5)
+- Step 1: Synthetic claims, assessments, events, and validation.
+- Step 2: FastAPI backend, SQLite persistence, workflow state machine, demo roles, and APIs.
+- Step 3: React Provider Portal displaying CLM-2001's pending COB status and provider-visible timeline.
+- Step 4: React Member Portal allowing COB information submission.
+
+The objective of Step 5 is to complete the end-to-end workflow:
+
+Member submits COB information → Claims reviewer verifies it → Provider sees a verified resolution milestone.
+
+1. Inspect the existing implementation
+
+Before coding, inspect the repository, backend endpoints, Pydantic schemas, React components, state transitions, authorization logic, and tests.
+
+Reuse existing API contracts and backend services. Do not duplicate workflow logic or introduce incompatible fields.
+
+2. Build the Claims Reviewer Portal
+
+Create a professional, responsive React page for the "CLAIMS_REVIEWER" role.
+
+Display:
+
+- Claim number: "CLM-2001"
+- Current COB workflow status
+- Member submission status and timestamp
+- Submitted COB information, limited to fields authorized for reviewer access
+- A clearly labeled Verify COB Information action
+- Reviewer action confirmation and error messages
+
+The reviewer must be able to verify a submission only after the member has submitted the required information.
+
+Do not automatically verify information when the page loads.
+
+3. Integrate with the existing FastAPI backend
+
+Use the existing verification endpoint:
+
+"POST /api/claims/CLM-2001/verify-cob"
+
+With demo headers:
+
+"X-Demo-Role: CLAIMS_REVIEWER"
+
+"X-Demo-Actor: reviewer-001"
+
+Use the actual request and response schemas already implemented.
+
+Expected successful state transition:
+
+"AWAITING_COB_VERIFICATION"
+
+↓
+
+"COB_VERIFIED_AWAITING_CLAIMS_REVIEW"
+
+The backend must persist the reviewer action, actor, and timestamp.
+
+Do not automatically approve, adjudicate, or pay the claim.
+
+4. Integrate the Provider Portal
+
+After reviewer verification, refreshing the existing Provider Portal must display the updated status and a verified timeline milestone.
+
+Use this provider-safe message:
+
+"Member COB verification completed. Next: Claims review."
+
+The provider must not see private member insurance identifiers, raw COB submission payloads, or internal-only reviewer notes.
+
+The timeline must be generated from backend events, not hardcoded frontend milestones.
+
+5. Integrate the Member Portal
+
+After verification, refreshing the Member Portal should display:
+
+"Your COB information has been verified. Your claim is awaiting further review."
+
+Do not imply the claim has been approved or payment is guaranteed.
+
+Ensure the member cannot resubmit COB information once the workflow no longer permits it.
+
+6. Demo navigation
+
+Provide simple navigation among:
+
+- Provider Portal
+- Member Portal
+- Claims Reviewer Portal
+
+Use clearly labeled simulated roles.
+
+Navigation must not reset the claim state.
+
+The existing backend remains the source of truth for all status changes.
+
+7. Error handling and safeguards
+
+Handle the following scenarios:
+
+- Verification attempted before member submission
+- Duplicate verification
+- Unauthorized verification attempts
+- Missing claim
+- Network or API failure
+- Stale frontend state
+- Invalid workflow transitions
+
+Use the existing HTTP status conventions, including HTTP 409 where appropriate.
+
+Do not bypass backend authorization or workflow validation.
+
+8. Automated tests
+
+Add tests verifying:
+
+1. Verification before member submission is rejected.
+2. Member submission transitions the claim to "AWAITING_COB_VERIFICATION".
+3. An authorized claims reviewer can verify the submission.
+4. Unauthorized roles cannot verify.
+5. Duplicate verification is rejected appropriately.
+6. Verification persists in SQLite.
+7. The Provider Portal displays the verified milestone after refresh.
+8. The Provider Portal does not expose private member data.
+9. The Member Portal displays the updated status.
+10. Existing Steps 1–4 tests continue to pass.
+
+9. Design requirements
+
+Maintain the same design system as the existing Member and Provider Portals.
+
+Use clean enterprise styling, accessible controls, clear status indicators, and a chronological resolution timeline.
+
+Make the experience presentation-ready for the Aspire iTournament finals.
+
+Use synthetic information only.
+
+10. Out of scope
+
+Do not implement:
+
+- Proactive PreClear Dashboard (Step 6)
+- PreClear assessment detail (Step 7)
+- ML or GenAI explanations (Step 8)
+- Email notification delivery or previews (Step 9)
 - Automatic adjudication or claim payment
-- Real email notifications (Step 9)
-- PreClear dashboard or ML functionality (Steps 6-8)
-- Real authentication or PHI
+- Real authentication or production integration
 
-IMPORTANT
-Do not overwrite the existing CLM-2001 seed state merely to make the UI work. Use the documented demo reset procedure before tests.
-Do not modify validated Step 1/2 business logic unless strictly necessary and explicitly explain why.
-Do not create a Git commit until I have manually validated Step 4.
+11. Deliverables
 
-DELIVERABLE
-Implement Step 4, run tests, and report:
-- Files created/modified
-- React component architecture
-- API endpoints and headers used
-- Exact manual test instructions
-- Test results
-- Any backend contract limitations
-Stop after Step 4.
+After implementation:
+
+- List files created or modified.
+- Explain the React component architecture.
+- Identify backend endpoints used.
+- Explain state transitions and event persistence.
+- Report automated test results.
+- Provide exact manual validation instructions.
+- Identify any limitations.
+
+Do not create a Git commit until I manually validate Step 5.
+
+Stop after Step 5. Do not proceed to Step 6.
