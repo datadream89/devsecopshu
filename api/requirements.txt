@@ -1,26 +1,44 @@
-Implement Step 3 of ClaimTrack: a React Provider Portal connected to our existing validated FastAPI + SQLite backend.
+Implement Step 4 of the ClaimTrack prototype: a React Member Portal for COB information submission for synthetic claim CLM-2001.
 
-First inspect the existing repository, README, data dictionary, backend routes, schemas, tests, and current directory structure. Reuse the actual backend contracts; do not assume endpoints or response shapes.
+CONTEXT
+Steps 1 and 2 are implemented and validated: synthetic claims, FastAPI, SQLite, role-based demo headers, and workflow APIs.
+Step 3 is the standalone React Provider Portal, which reads backend claim status and provider-visible timeline events.
 
-Scope:
-1. Set up a React + TypeScript + Vite frontend if one does not already exist.
-2. Build a polished, responsive Provider Portal for synthetic claim CLM-2001.
-3. Show claim number, COB issue category, current status, next responsible party, provider-safe explanation, and a chronological resolution timeline.
-4. Fetch data from the existing backend using the appropriate GET endpoints and demo role headers (X-Demo-Role: PROVIDER, X-Demo-Actor: provider-001), following the actual backend authorization contract.
-5. Derive status and milestones from API responses. Do not hardcode workflow states or fabricate completion events.
-6. Handle loading, error, empty timeline, missing claim, and unauthorized responses.
-7. Provide a refresh action to reload claim and timeline data.
-8. Keep all member submission, reviewer verification, PreClear dashboard, and adjudication actions OUT OF SCOPE for Step 3.
-9. Never display actual PHI. Use only existing synthetic data. No real authentication or production integration.
-10. Add frontend tests covering initial pending COB display, timeline rendering, refresh behavior, and API failure handling. Add CORS configuration only if needed, scoped to local development.
-11. Update README with exact startup commands for frontend and backend.
+FIRST
+Inspect the repository, current frontend structure, backend endpoints, schemas, services, workflow transitions, data dictionary, and existing tests. Reuse actual contracts. Do not invent incompatible request/response fields or alter validated business logic.
 
-Design: enterprise-grade, clean, accessible, presentation-ready. Avoid decorative complexity. Make the key story immediately understandable: what is pending, who needs to act next, and what verified progress is visible.
+SCOPE
+1. Add a Member Portal route/page within the existing React application, visually consistent with Step 3.
+2. Display synthetic CLM-2001 and a clear COB action-required explanation.
+3. Provide a member-facing form to answer whether other insurance coverage exists, with appropriate conditional fields. Use only fields supported by the existing backend contract. If backend fields are narrower than the proposed UI, adapt the UI; do not silently extend the API.
+4. Submit the form to the existing member COB endpoint using X-Demo-Role: MEMBER and X-Demo-Actor: member-001, following actual backend validation rules.
+5. Show submission loading state, field validation, successful confirmation, and clear error states.
+6. On successful submission, retrieve the latest claim state from the backend and display a confirmation such as 'Information received — awaiting verification'.
+7. Prevent duplicate submissions and handle backend HTTP 409 workflow conflicts appropriately.
+8. Never label a member submission as verified. Verification must remain a separate authorized reviewer action in Step 5.
+9. Ensure Step 3 Provider Portal remains functional and reads only provider-authorized claim information and milestones. Do not expose member form details, private insurance identifiers, or raw sensitive payloads to the provider.
+10. Keep the interface fully synthetic and clearly marked as a prototype. Do not integrate real identity, email delivery, or production systems.
+11. Add frontend tests for conditional fields, successful submission, validation errors, duplicate submission handling, and backend failures.
+12. Update README with startup instructions and how to navigate between Member and Provider Portal.
 
-Important:
-- Do not modify validated Step 1/2 business logic or seed data unless strictly necessary; explain any required changes.
-- Reuse existing API schemas rather than inventing new data contracts.
-- Build only Step 3. Do not proceed to Step 4.
-- Run relevant tests and report results.
-- At the end, explain the architecture, files changed, API calls, and manual verification steps.
-- Do not create a Git commit until I have manually validated the implementation.
+OUT OF SCOPE
+- Reviewer verification UI (Step 5)
+- Automatic adjudication or claim payment
+- Real email notifications (Step 9)
+- PreClear dashboard or ML functionality (Steps 6-8)
+- Real authentication or PHI
+
+IMPORTANT
+Do not overwrite the existing CLM-2001 seed state merely to make the UI work. Use the documented demo reset procedure before tests.
+Do not modify validated Step 1/2 business logic unless strictly necessary and explicitly explain why.
+Do not create a Git commit until I have manually validated Step 4.
+
+DELIVERABLE
+Implement Step 4, run tests, and report:
+- Files created/modified
+- React component architecture
+- API endpoints and headers used
+- Exact manual test instructions
+- Test results
+- Any backend contract limitations
+Stop after Step 4.
