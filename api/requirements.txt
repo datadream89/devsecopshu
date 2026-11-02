@@ -1,366 +1,240 @@
-You are a senior Python engineer and healthcare claims systems architect.
+You are a senior Python/FastAPI engineer building ClaimTrack, a healthcare claims innovation competition POC.
 
-We are building ClaimTrack, a proof-of-concept for a healthcare innovation competition.
+STEP 1 IS ALREADY COMPLETE.
 
-Your task is to implement STEP 1 ONLY: create the synthetic data foundation for the prototype.
+First inspect the existing repository, README, data dictionary, synthetic claims CSV, assessments JSON, events JSON, and validation script. Preserve the existing data contracts and naming conventions. Do not regenerate or overwrite Step 1 files unless an essential compatibility fix is required; explain any such fix.
 
-Do not implement FastAPI, React, ML training, GenAI, or application screens yet.
+IMPLEMENT STEP 2 ONLY: a working FastAPI backend for Proactive PreClear and Shared Resolution.
 
-PROJECT OVERVIEW
+GOALS
 
-ClaimTrack has two capabilities:
+1. Serve the four existing fictional ProClaim claims through REST APIs.
+2. Serve existing illustrative risk assessments without recalculating scores.
+3. Expose claim timelines.
+4. Support a simulated member COB submission.
+5. Require a separate authorized reviewer verification.
+6. Publish a provider-visible verified milestone only after verification.
+7. Create and retrieve internal claims review tasks.
+8. Persist workflow changes across backend restarts.
 
-1. Proactive PreClear
-Identifies claims at risk of information-related processing interruptions BEFORE adjudication.
+TECHNOLOGY
 
-It covers:
-A. FIRST-PASS PEND RISK: Predict whether a new claim may pend during its initial adjudication.
-B. REPEAT-PEND RISK: Predict whether a previously pended claim may pend again when it re-enters adjudication.
+Python 3.11+
+FastAPI
+Pydantic
+SQLite using Python sqlite3, unless the repository already uses an appropriate persistence library
+Uvicorn
+Pytest
+HTTPX for API tests
 
-The purpose is to identify potentially actionable issues early and route them for targeted human review. A high risk score does not prove a pend is preventable.
+Use simple, maintainable architecture. Do not introduce external services, cloud infrastructure, message brokers, authentication providers, ML frameworks, or LLM APIs.
 
-2. Shared Resolution
-Coordinates actions and verified milestones after a claim has already pended, particularly when member COB information is required.
+SUGGESTED STRUCTURE
 
-The provider can see the claim's pending reason, the responsible party, and verified progress milestones. Member submission and authorized verification are separate actions. Verification does not automatically result in claim payment.
+backend/
+  app/
+    __init__.py
+    main.py
+    models.py
+    database.py
+    repository.py
+    services.py
+    routes/
+      __init__.py
+      claims.py
+      assessments.py
+      member_actions.py
+      verification.py
+      review_tasks.py
+  tests/
+    test_claims.py
+    test_assessments.py
+    test_workflows.py
+  requirements.txt
 
-SYSTEM SCOPE
+Adapt the structure if the existing repository warrants it.
 
-Focus ONLY on ProClaim-inspired claims for this POC. Facets is out of scope.
+INITIALIZATION
 
-An existing internal dataset of ProClaim second-pass pends informs the business scenario, but do not access, ingest, upload, reproduce, or transform actual internal claims records.
+On first startup, initialize SQLite from the Step 1 synthetic files.
 
-Use 100% fictional synthetic data. No real member data, SSNs, provider TINs, account identifiers, proprietary code mappings, or PHI.
+Seed the four claims, assessments, and only events designated as completed in the initial demo state.
 
-PROCLAIM BUSINESS DEFINITIONS
+Do not activate SCRIPTED_FUTURE events during initialization.
 
-Disposition S = Final Disposition: Disallowed Pending Information.
-Disposition K = Final Disposition: Paid Claim.
+Keep historical PreClear outcome events available for retrospective demonstration without making future outcomes visible in assessment-time snapshots.
 
-For this POC, define:
+Make initialization idempotent. Restarting must not duplicate records or reset user actions.
 
-FIRST-PASS PEND:
-A claim encounters an information-related interruption during its first adjudication cycle.
+Provide an explicit demo reset command or script that restores the original synthetic state.
 
-SECOND PASS:
-A claim that previously pended or received an adjudication decision undergoes processor action and re-enters adjudication.
+API ENDPOINTS
 
-REPEAT PEND:
-A claim pended during its first pass, underwent processor action, re-entered adjudication, and pended again during its second pass.
+GET /health
 
-In our synthetic repeat-pend example, the second-pass outcome is S, indicating another information-related disallowance requiring additional information.
+GET /api/claims
+- Optional filters for scenario_type and claim_status
+- Return all four fictional claims when unfiltered
 
-Assume the described ProClaim second-pass pend dataset represents this workflow, but document that the source population and line-versus-claim granularity require later business validation.
+GET /api/claims/{claim_id}
+- Return canonical claim details
+- Return 404 for unknown IDs
 
-Reason descriptions can include:
-- COB applied incorrectly
-- Provider billing error
-- System adjustment applied
-- 90-day rule
-- Additional information received
+GET /api/assessments
+- Return assessments for CLM-1001, CLM-1002, CLM-1003
+- Optional assessment_type filter
 
-These are examples of processing reasons, not guaranteed mappings to disposition or proof of avoidability. Use fictional reason-code identifiers.
+GET /api/assessments/{claim_id}
+- Return the existing illustrative assessment
+- Return 404 when no assessment exists
 
-IMPORTANT POINT-IN-TIME RULE
+GET /api/claims/{claim_id}/timeline
+- Return completed events chronologically
+- Do not expose future scripted events as completed
+- Apply role-aware visibility when requested by the client
 
-PreClear makes its assessment BEFORE the adjudication outcome of the cycle being predicted.
+POST /api/claims/{claim_id}/member-cob
+- Accept fictional COB information submitted by a simulated member
+- Allow only valid workflow transitions
+- Record a MEMBER_COB_SUBMITTED event
+- Update claim status to awaiting verification
+- Do not mark the information verified
+- Do not mark the claim paid
+- Return the updated workflow state
 
-For first-pass prediction, do not use first-pass disposition, payment information, or reason codes generated by first-pass adjudication.
+POST /api/claims/{claim_id}/verify-cob
+- Require a prior member submission
+- Simulate an authorized claims reviewer action
+- Record COB_VERIFIED
+- Mark COB information verified
+- Publish a separate provider-visible milestone event
+- Milestone text: Member COB verification completed. Next: Claims review.
+- Do not automatically adjudicate or pay the claim
 
-For repeat-pend prediction, historical first-pass information may be used if it was available before the second-pass assessment. Never use the second-pass outcome or reason codes generated afterward.
+POST /api/claims/{claim_id}/review-tasks
+- Create an internal claims review task
+- Accept a fictional reason and source assessment reference
+- Set initial task status OPEN
+- Return the created task
+- Do not modify adjudication outcomes
 
-Maintain separate assessment-time features and subsequent outcome events.
+GET /api/review-tasks
+GET /api/review-tasks/{task_id}
 
-FILES TO CREATE
-
-data/synthetic_claims.csv
-data/synthetic_assessments.json
-data/synthetic_events.json
-docs/data_dictionary.md
-scripts/validate_synthetic_data.py
-README.md
-
-CREATE EXACTLY FOUR FICTIONAL CLAIMS
-
-CLAIM 1: CLM-1001
-Scenario: FIRST_PASS_RISK
-
-- Source system: PROCLAIM
-- Processing cycle: 1
-- New claim entering initial adjudication
-- No previous pend history
-- Fictional incomplete or inconsistent COB information
-- Illustrative HIGH risk of first-pass information-related pend
-- PreClear assessment before first adjudication
-- Recommended action: Request Claims Review
-- For historical demonstration, optionally record a subsequent first-pass S disposition as an outcome event, but never as an assessment feature
-
-CLAIM 2: CLM-1002
-Scenario: REPEAT_PEND_RISK
-
-- Source system: PROCLAIM
-- Processing cycle: 2
-- First pass experienced an information-related pend
-- Historical first-pass disposition S
-- Processor subsequently took action
-- Claim re-entered adjudication for second pass
-- Fictional unresolved COB or billing-information issue remains
-- PreClear assesses risk BEFORE second-pass adjudication
-- Illustrative HIGH repeat-pend risk
-- Recommended action: Request Claims Review
-- Subsequent second-pass outcome is S, representing an observed repeat pend
-- Historical target label: observed_repeat_pend = true
-- Do not include second-pass S or observed_repeat_pend as prediction features
-- Show first-pass pend, processor action, second-pass entry, risk assessment, and second-pass pend in chronological order
-
-CLAIM 3: CLM-1003
-Scenario: SUCCESSFUL_CONTROL
-
-- Source system: PROCLAIM
-- Processing cycle: 1
-- Fictional COB information complete
-- No significant identified information discrepancies
-- Illustrative LOW risk
-- PreClear assessment occurs before adjudication
-- Subsequently paid successfully with disposition K
-- Historical first-pass pend outcome: false
-
-CLAIM 4: CLM-2001
-Scenario: SHARED_RESOLUTION
-
-- Source system: PROCLAIM
-- Claim already pending because member COB information is needed
-- Initial state: PENDING_MEMBER_COB
-- Initial events:
-  1. Claim received
-  2. COB information issue identified
-  3. Member action requested
-
-Prepare future scripted events, but do not mark them completed initially:
-  4. Member submits COB information
-  5. Authorized claims reviewer verifies the information
-  6. Provider-visible verified milestone is published
-
-Provider milestone text:
-"Member COB verification completed. Next: Claims review."
-
-Do not automatically pay the claim when the member submits information or when verification completes.
-
-DATA SCHEMA
-
-Create a compact ProClaim-inspired canonical schema with:
-
-claim_id
-source_system
-scenario_type
-member_id
-provider_id
-claim_type
-product_type
-transaction_type
-service_date_start
-service_date_end
-received_date
-billed_amount
-provider_type
-network_status
-processing_cycle
-claim_status
-cob_information_status
-
-Use fictional identifiers and plausible fictional values.
-
-Keep final adjudication dispositions in outcome events rather than exposing future outcomes in the initial claim state.
-
-ASSESSMENT JSON
-
-For CLM-1001, CLM-1002, and CLM-1003 create assessment records with:
-
-assessment_id
-claim_id
-assessment_timestamp
-assessment_type (FIRST_PASS or REPEAT_PEND)
-processing_cycle
-known_prior_pend_count
-known_prior_dispositions
-cob_information_status_at_assessment
-existing_edit_result
-contributing_factors
-illustrative_risk_score
-illustrative_risk_band
-recommended_action
-explanation
-model_type = ILLUSTRATIVE_RULE_BASED
-current_cycle_outcome_at_assessment = UNKNOWN
-
-Scores are fictional demonstration values, not validated probabilities.
-
-Use assessment_type FIRST_PASS for CLM-1001 and CLM-1003, and REPEAT_PEND for CLM-1002.
-
-EVENTS JSON
-
-Every event must include:
-
-event_id
-claim_id
-event_type
-timestamp
-actor_role
-description
-event_phase (INITIAL or SCRIPTED_FUTURE)
-verification_status
-provider_visible
-
-Include adjudication-cycle information and disposition where appropriate.
-
-For CLM-1002:
-- First-pass pend occurs before processor action
-- Processor action occurs before second-pass entry
-- PreClear assessment occurs after second-pass entry but before second-pass S outcome
-- Second-pass S outcome is stored only in historical outcome events, not assessment features
-
-For CLM-1003:
-- K disposition occurs after assessment
+WORKFLOW STATE MACHINE
 
 For CLM-2001:
-- Future scripted member submission, reviewer verification, and provider milestone must remain inactive until triggered by future application logic
-- The provider milestone must follow authorized verification
 
-Use a consistent event-state convention: INITIAL means an event is already completed in the initial demonstration state; SCRIPTED_FUTURE means it is a planned transition, not completed. For PreClear historical evaluation, outcome events may be stored as historical records while the assessment snapshot must remain point-in-time correct. Document this distinction clearly.
+PENDING_MEMBER_COB
+  -> AWAITING_COB_VERIFICATION
+  -> COB_VERIFIED_AWAITING_CLAIMS_REVIEW
 
-DATA DICTIONARY
+Invalid transitions must return HTTP 409 with a clear error message.
 
-Document:
-- Every field, data type, and allowed value
-- ProClaim S and K definitions
-- First-pass pend versus repeat pend
-- Processing-cycle logic
-- Claim-level versus line-level granularity assumption
-- Historical facts versus POC assumptions
-- Assessment-time feature cutoff
-- Outcome-label definitions
-- Existing edits versus PreClear augmentation
-- Human review requirement
-- Synthetic-data limitations
-- Why a dataset containing only repeat-pend cases cannot train a reliable repeat-pend-versus-success classifier
-- Why a real first-pass classifier needs both first-pass pend and successful first-pass examples
-- Why synthetic illustrative risk scores are not model accuracy or measured savings
+Use database transactions so state changes and their corresponding events are committed atomically.
 
-VALIDATION SCRIPT
+SIMULATED ROLE CONTROL
 
-Use Python standard library only.
+Support MEMBER, PROVIDER, CLAIMS_REVIEWER, and INTERNAL roles.
 
-Validate:
-1. Exactly four claims with required IDs.
-2. All source systems are PROCLAIM.
-3. All references and required fields are valid.
-4. Assessments exist for exactly CLM-1001, CLM-1002, and CLM-1003.
-5. CLM-1001 and CLM-1003 are FIRST_PASS assessments.
-6. CLM-1002 is a REPEAT_PEND assessment.
-7. CLM-1001 has no historical pend before assessment.
-8. CLM-1002 has a first-pass pend and processor action before second-pass assessment.
-9. CLM-1002 has a second-pass S outcome after assessment.
-10. CLM-1003 has a K outcome after assessment.
-11. No current-cycle outcome or future reason code leaks into assessment features.
-12. CLM-2001 starts pending and unverified.
-13. Future member submission and verification events are not initially completed.
-14. Provider-visible verified milestone requires preceding authorized reviewer verification.
-15. All event timestamps and cycle sequences are logically consistent.
-16. No real personal identifiers or internal enterprise records are used.
+For this local demo, use an explicit X-Demo-Role request header, plus a fictional X-Demo-Actor identifier if needed.
 
-Run:
-python scripts/validate_synthetic_data.py
+The member submission endpoint requires MEMBER.
+The verification endpoint requires CLAIMS_REVIEWER.
+Review task creation requires INTERNAL or CLAIMS_REVIEWER.
 
-Fix all errors.
+Provider-facing timeline responses must exclude internal-only events and sensitive member-submitted details.
 
-README
+This header mechanism is a simulation only, NOT real authentication or authorization. Clearly document that it must never be used to protect production or real healthcare data.
 
-Explain:
-- What ClaimTrack does
-- The two capabilities
-- The four synthetic claim scenarios
-- How Proactive PreClear supports both first-pass and repeat-pend risk
-- How Shared Resolution differs from PreClear
-- How to validate the data
-- The planned next step: FastAPI backend
+For invalid or missing role headers on protected operations, return an appropriate 403 response.
+
+DATA CONTRACTS
+
+Use Pydantic request and response models.
+
+Preserve existing Step 1 field names wherever practical.
+
+Use ISO 8601 timestamps and stable identifiers.
+
+Never expose SSNs, real account identifiers, provider TINs, or actual PHI.
+
+Do not invent proprietary ProClaim reason-code mappings.
+
+Keep S = Disallowed Pending Information and K = Paid Claim.
+
+Do not infer first versus second pass from adjudication_type M/A.
+
+ASSESSMENT SAFETY
+
+All risk scores remain illustrative.
+
+Do not train an ML model in Step 2.
+
+Do not calculate risk from future adjudication outcomes.
+
+Do not include observed second-pass S disposition in the pre-adjudication assessment features for CLM-1002.
+
+Keep prediction snapshots separate from historical outcomes.
+
+CORS
+
+Allow localhost React development origins, including ports 3000 and 5173.
+
+TESTS
+
+Write automated tests for:
+
+1. Health endpoint.
+2. Four claims returned.
+3. Three assessments returned.
+4. Claim details and 404 behavior.
+5. Timeline chronological ordering.
+6. CLM-2001 initial pending state.
+7. Member COB submission succeeds with correct role.
+8. Member submission does not verify or pay claim.
+9. Verification before submission fails with 409.
+10. Verification succeeds after submission with reviewer role.
+11. Provider milestone appears only after verification.
+12. Provider timeline excludes internal-only information.
+13. Duplicate or invalid transitions fail safely.
+14. Review task creation and retrieval.
+15. SQLite persistence after application reinitialization.
+16. Idempotent seed initialization.
+17. Existing Step 1 validation still passes.
+
+RUN AND VERIFY
+
+Install dependencies if the environment permits.
+
+Run the existing Step 1 validator.
+Run pytest.
+Start Uvicorn and test representative API endpoints.
+Fix failures.
+
+DOCUMENTATION
+
+Update README with:
+- Backend setup
+- Virtual environment instructions
+- Dependency installation
+- Run command
+- Swagger UI URL at http://localhost:8000/docs
+- Example curl commands including role headers
+- Demo reset instructions
+- Known limitations
+- Instructions for the next step: React provider portal
 
 FINAL OUTPUT
 
-After implementation:
-1. Show the project file tree.
-2. Summarize all four claims in a table.
-3. Report validation results.
-4. List any remaining business assumptions.
-5. Stop after Step 1.
+Show:
+1. Files created.
+2. API endpoint summary.
+3. Test results.
+4. Instructions to start the server.
+5. Example successful CLM-2001 workflow.
+6. Remaining limitations.
 
-Do not proceed to Step 2 without explicit instruction.
-# flask_bootstrap
-# flask_jsonpify
-flask_cors
+STOP AFTER STEP 2.
 
-
-# redis
-# celery
-
-
-# uvicorn
-# sqlalchemy
-# passlib
-# bcrypt>=3.2.0
-# python-jose
-# python-multipart
-
-werkzeug
-
-
-usaddress
-# spacy
-# en_core_web_sm
-nltk
-boto3
-botocore
-pandas-profiling
-pandas_schema
-objectpath
-more_itertools
-jsonpickle
-tldextract
-mysql-connector-python
-
-# pandas>=1.2
-# numpy>=1.19.0
-numpy==1.17.1
-pandas==0.25.1
-# scikit-learn
-plotly
-pandas-profiling
-great-expectations
-
-# pydeequ
-# pyspark==2.4.7
-
-aiofiles
-grpcio
-google
-google-cloud
-google-cloud-vision
-firebase_admin
-pyrebase4
-
-rich
-
-pglast
-inflection
-networkx
-
-
-# Run this all the way in the end: comment out and back in
-# sparse_dot_topn
-# pysqlite3
-
-# Don't run unless needed
-# libsqlite3-dev
-
-# Run manually below
-# pip3 install -U pip setuptools wheel
-# pip3 install -U spacy
+Do not build React screens, ML models, GenAI integrations, or additional features without explicit approval.
