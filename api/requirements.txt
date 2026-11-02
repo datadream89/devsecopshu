@@ -1,240 +1,26 @@
-You are a senior Python/FastAPI engineer building ClaimTrack, a healthcare claims innovation competition POC.
-
-STEP 1 IS ALREADY COMPLETE.
-
-First inspect the existing repository, README, data dictionary, synthetic claims CSV, assessments JSON, events JSON, and validation script. Preserve the existing data contracts and naming conventions. Do not regenerate or overwrite Step 1 files unless an essential compatibility fix is required; explain any such fix.
-
-IMPLEMENT STEP 2 ONLY: a working FastAPI backend for Proactive PreClear and Shared Resolution.
-
-GOALS
-
-1. Serve the four existing fictional ProClaim claims through REST APIs.
-2. Serve existing illustrative risk assessments without recalculating scores.
-3. Expose claim timelines.
-4. Support a simulated member COB submission.
-5. Require a separate authorized reviewer verification.
-6. Publish a provider-visible verified milestone only after verification.
-7. Create and retrieve internal claims review tasks.
-8. Persist workflow changes across backend restarts.
-
-TECHNOLOGY
-
-Python 3.11+
-FastAPI
-Pydantic
-SQLite using Python sqlite3, unless the repository already uses an appropriate persistence library
-Uvicorn
-Pytest
-HTTPX for API tests
-
-Use simple, maintainable architecture. Do not introduce external services, cloud infrastructure, message brokers, authentication providers, ML frameworks, or LLM APIs.
-
-SUGGESTED STRUCTURE
-
-backend/
-  app/
-    __init__.py
-    main.py
-    models.py
-    database.py
-    repository.py
-    services.py
-    routes/
-      __init__.py
-      claims.py
-      assessments.py
-      member_actions.py
-      verification.py
-      review_tasks.py
-  tests/
-    test_claims.py
-    test_assessments.py
-    test_workflows.py
-  requirements.txt
-
-Adapt the structure if the existing repository warrants it.
-
-INITIALIZATION
-
-On first startup, initialize SQLite from the Step 1 synthetic files.
-
-Seed the four claims, assessments, and only events designated as completed in the initial demo state.
-
-Do not activate SCRIPTED_FUTURE events during initialization.
-
-Keep historical PreClear outcome events available for retrospective demonstration without making future outcomes visible in assessment-time snapshots.
-
-Make initialization idempotent. Restarting must not duplicate records or reset user actions.
-
-Provide an explicit demo reset command or script that restores the original synthetic state.
-
-API ENDPOINTS
-
-GET /health
-
-GET /api/claims
-- Optional filters for scenario_type and claim_status
-- Return all four fictional claims when unfiltered
-
-GET /api/claims/{claim_id}
-- Return canonical claim details
-- Return 404 for unknown IDs
-
-GET /api/assessments
-- Return assessments for CLM-1001, CLM-1002, CLM-1003
-- Optional assessment_type filter
-
-GET /api/assessments/{claim_id}
-- Return the existing illustrative assessment
-- Return 404 when no assessment exists
-
-GET /api/claims/{claim_id}/timeline
-- Return completed events chronologically
-- Do not expose future scripted events as completed
-- Apply role-aware visibility when requested by the client
-
-POST /api/claims/{claim_id}/member-cob
-- Accept fictional COB information submitted by a simulated member
-- Allow only valid workflow transitions
-- Record a MEMBER_COB_SUBMITTED event
-- Update claim status to awaiting verification
-- Do not mark the information verified
-- Do not mark the claim paid
-- Return the updated workflow state
-
-POST /api/claims/{claim_id}/verify-cob
-- Require a prior member submission
-- Simulate an authorized claims reviewer action
-- Record COB_VERIFIED
-- Mark COB information verified
-- Publish a separate provider-visible milestone event
-- Milestone text: Member COB verification completed. Next: Claims review.
-- Do not automatically adjudicate or pay the claim
-
-POST /api/claims/{claim_id}/review-tasks
-- Create an internal claims review task
-- Accept a fictional reason and source assessment reference
-- Set initial task status OPEN
-- Return the created task
-- Do not modify adjudication outcomes
-
-GET /api/review-tasks
-GET /api/review-tasks/{task_id}
-
-WORKFLOW STATE MACHINE
-
-For CLM-2001:
-
-PENDING_MEMBER_COB
-  -> AWAITING_COB_VERIFICATION
-  -> COB_VERIFIED_AWAITING_CLAIMS_REVIEW
-
-Invalid transitions must return HTTP 409 with a clear error message.
-
-Use database transactions so state changes and their corresponding events are committed atomically.
-
-SIMULATED ROLE CONTROL
-
-Support MEMBER, PROVIDER, CLAIMS_REVIEWER, and INTERNAL roles.
-
-For this local demo, use an explicit X-Demo-Role request header, plus a fictional X-Demo-Actor identifier if needed.
-
-The member submission endpoint requires MEMBER.
-The verification endpoint requires CLAIMS_REVIEWER.
-Review task creation requires INTERNAL or CLAIMS_REVIEWER.
-
-Provider-facing timeline responses must exclude internal-only events and sensitive member-submitted details.
-
-This header mechanism is a simulation only, NOT real authentication or authorization. Clearly document that it must never be used to protect production or real healthcare data.
-
-For invalid or missing role headers on protected operations, return an appropriate 403 response.
-
-DATA CONTRACTS
-
-Use Pydantic request and response models.
-
-Preserve existing Step 1 field names wherever practical.
-
-Use ISO 8601 timestamps and stable identifiers.
-
-Never expose SSNs, real account identifiers, provider TINs, or actual PHI.
-
-Do not invent proprietary ProClaim reason-code mappings.
-
-Keep S = Disallowed Pending Information and K = Paid Claim.
-
-Do not infer first versus second pass from adjudication_type M/A.
-
-ASSESSMENT SAFETY
-
-All risk scores remain illustrative.
-
-Do not train an ML model in Step 2.
-
-Do not calculate risk from future adjudication outcomes.
-
-Do not include observed second-pass S disposition in the pre-adjudication assessment features for CLM-1002.
-
-Keep prediction snapshots separate from historical outcomes.
-
-CORS
-
-Allow localhost React development origins, including ports 3000 and 5173.
-
-TESTS
-
-Write automated tests for:
-
-1. Health endpoint.
-2. Four claims returned.
-3. Three assessments returned.
-4. Claim details and 404 behavior.
-5. Timeline chronological ordering.
-6. CLM-2001 initial pending state.
-7. Member COB submission succeeds with correct role.
-8. Member submission does not verify or pay claim.
-9. Verification before submission fails with 409.
-10. Verification succeeds after submission with reviewer role.
-11. Provider milestone appears only after verification.
-12. Provider timeline excludes internal-only information.
-13. Duplicate or invalid transitions fail safely.
-14. Review task creation and retrieval.
-15. SQLite persistence after application reinitialization.
-16. Idempotent seed initialization.
-17. Existing Step 1 validation still passes.
-
-RUN AND VERIFY
-
-Install dependencies if the environment permits.
-
-Run the existing Step 1 validator.
-Run pytest.
-Start Uvicorn and test representative API endpoints.
-Fix failures.
-
-DOCUMENTATION
-
-Update README with:
-- Backend setup
-- Virtual environment instructions
-- Dependency installation
-- Run command
-- Swagger UI URL at http://localhost:8000/docs
-- Example curl commands including role headers
-- Demo reset instructions
-- Known limitations
-- Instructions for the next step: React provider portal
-
-FINAL OUTPUT
-
-Show:
-1. Files created.
-2. API endpoint summary.
-3. Test results.
-4. Instructions to start the server.
-5. Example successful CLM-2001 workflow.
-6. Remaining limitations.
-
-STOP AFTER STEP 2.
-
-Do not build React screens, ML models, GenAI integrations, or additional features without explicit approval.
+Implement Step 3 of ClaimTrack: a React Provider Portal connected to our existing validated FastAPI + SQLite backend.
+
+First inspect the existing repository, README, data dictionary, backend routes, schemas, tests, and current directory structure. Reuse the actual backend contracts; do not assume endpoints or response shapes.
+
+Scope:
+1. Set up a React + TypeScript + Vite frontend if one does not already exist.
+2. Build a polished, responsive Provider Portal for synthetic claim CLM-2001.
+3. Show claim number, COB issue category, current status, next responsible party, provider-safe explanation, and a chronological resolution timeline.
+4. Fetch data from the existing backend using the appropriate GET endpoints and demo role headers (X-Demo-Role: PROVIDER, X-Demo-Actor: provider-001), following the actual backend authorization contract.
+5. Derive status and milestones from API responses. Do not hardcode workflow states or fabricate completion events.
+6. Handle loading, error, empty timeline, missing claim, and unauthorized responses.
+7. Provide a refresh action to reload claim and timeline data.
+8. Keep all member submission, reviewer verification, PreClear dashboard, and adjudication actions OUT OF SCOPE for Step 3.
+9. Never display actual PHI. Use only existing synthetic data. No real authentication or production integration.
+10. Add frontend tests covering initial pending COB display, timeline rendering, refresh behavior, and API failure handling. Add CORS configuration only if needed, scoped to local development.
+11. Update README with exact startup commands for frontend and backend.
+
+Design: enterprise-grade, clean, accessible, presentation-ready. Avoid decorative complexity. Make the key story immediately understandable: what is pending, who needs to act next, and what verified progress is visible.
+
+Important:
+- Do not modify validated Step 1/2 business logic or seed data unless strictly necessary; explain any required changes.
+- Reuse existing API schemas rather than inventing new data contracts.
+- Build only Step 3. Do not proceed to Step 4.
+- Run relevant tests and report results.
+- At the end, explain the architecture, files changed, API calls, and manual verification steps.
+- Do not create a Git commit until I have manually validated the implementation.
