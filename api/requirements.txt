@@ -1,268 +1,363 @@
-ClaimTrack — Step 7: Proactive PreClear Assessment Detail and Human Review Action
+ClaimTrack — Step 8: Illustrative ML Risk Assessment and Grounded GenAI Explanations
 
-Implement Step 7 only in the existing ClaimTrack repository.
+Implement Step 8 only in the existing ClaimTrack repository.
 
 Project context
 
-Steps 1–6 have been implemented, with Step 6 subject to final manual validation.
+Steps 1–7 have been implemented:
 
-- Step 1: Synthetic claims, assessments, events, and data dictionary.
-- Step 2: FastAPI backend, SQLite, risk assessments, review tasks, and workflow APIs.
-- Steps 3–5: Complete Shared Resolution experience across Provider, Member, and Claims Reviewer Portals.
-- Step 6: Proactive PreClear internal dashboard showing first-pass, second-pass repeat-pend, and low-risk assessments.
+- Step 1: Synthetic claims, assessments, and event histories.
+- Step 2: FastAPI backend, SQLite, and workflow APIs.
+- Steps 3–5: Shared Resolution portals and reviewer verification.
+- Step 6: Proactive PreClear Dashboard.
+- Step 7: PreClear Assessment Detail and Request Claims Review.
 
-Step 7 introduces a detailed assessment experience and a targeted Request Claims Review action.
+Step 8 introduces an illustrative machine-learning risk assessment and a grounded natural-language explanation capability.
 
-The objective is to show how PreClear supports both first-pass pend prevention and repeat-pend prevention through explainable risk identification and human decision-making.
+The objective is to demonstrate a technically credible AI-assisted approach without presenting synthetic results as validated production predictions.
+
+Preserve the existing application architecture and functionality.
 
 1. Inspect the repository first
 
-Inspect the actual frontend routes, assessment schemas, synthetic data, API contracts, review-task models, authorization rules, and existing tests.
+Before making changes, inspect:
 
-Reuse existing implementations.
+- Existing synthetic claims and assessments.
+- Data dictionary and event timestamps.
+- FastAPI assessment schemas and endpoints.
+- React PreClear Dashboard and Assessment Detail components.
+- Existing risk factors and recommendations.
+- Review-task functionality.
+- Existing Python dependencies and tests.
 
-Do not invent fields, risk factors, edit identifiers, or API contracts.
+Reuse existing components and API contracts wherever possible.
 
-If a required field is absent, report the limitation. Only make the smallest compatible change when essential to Step 7, using synthetic data and documenting the change.
+Do not silently overwrite or invalidate previously validated assessment data.
 
-2. Create the Assessment Detail page
+2. Create a separate synthetic ML training dataset
 
-When an analyst selects a claim from the Step 6 dashboard, open a dedicated assessment detail page.
+The three existing PreClear demonstration claims are insufficient for meaningful model training.
 
-Display:
+Create a reproducible synthetic dataset specifically for demonstrating the ML pipeline.
 
-- Claim ID.
+Requirements:
+
+- Use synthetic data only.
+- Use a fixed random seed.
+- Document the synthetic data-generation assumptions.
+- Include a reasonable number of illustrative records, such as 1,000–3,000.
+- Include both first-pass and subsequent-pass processing scenarios.
+- Include examples of information-related pends and claims that do not pend.
+- Include relevant COB-related and information-completeness indicators only where supported by the synthetic data dictionary or explicitly documented as newly simulated features.
+
+Every feature must be available before the relevant adjudication decision.
+
+Never include:
+
+- Final claim disposition as an input.
+- Future pend outcomes as an input.
+- Future reviewer actions.
+- Post-adjudication information.
+- Identifiers that leak the target label.
+- Real PHI or proprietary claims data.
+
+Historical outcomes may be used as training labels, but not as prediction features for the same decision.
+
+For second-pass assessments, prior-pass history may be used only if it existed before the second-pass assessment.
+
+Do not train on CLM-1001, CLM-1002, or CLM-1003. Reserve them as illustrative demo cases.
+
+3. Implement a simple reproducible ML pipeline
+
+Use scikit-learn if compatible with the existing environment.
+
+Prefer an interpretable baseline model such as logistic regression.
+
+Use appropriate preprocessing for categorical and numerical features.
+
+Implement:
+
+- Synthetic dataset generation.
+- Feature selection and preprocessing.
+- Train/test split.
+- Model training.
+- Evaluation.
+- Model artifact persistence.
+- Inference.
+
+Use a fixed random seed and reproducible configuration.
+
+Ensure the same model artifact and input produce consistent predictions.
+
+Keep model training separate from normal FastAPI request handling.
+
+Do not retrain the model whenever a user opens an assessment page.
+
+4. Handle first-pass and repeat-pend risk correctly
+
+Support two clearly defined prediction contexts:
+
+First-pass information-pend risk
+
+Estimate the illustrative probability of an information-related pend at first-pass adjudication.
+
+Subsequent-pass repeat-pend risk
+
+Estimate the illustrative probability of another information-related pend at the upcoming adjudication pass, using only information available at that point.
+
+These may be handled using separate models or a shared model with explicit processing-pass features, provided the distinction is documented and tested.
+
+Do not mix historical outcomes into the prediction features.
+
+5. Evaluate the model transparently
+
+Report:
+
+- Training and test record counts.
+- Class distribution.
+- ROC-AUC when mathematically defined.
+- Precision.
+- Recall.
+- Confusion matrix.
+- Any important limitations.
+
+Use a held-out synthetic test set.
+
+If practical, include a simple calibration check.
+
+Clearly state:
+
+"Model performance is measured on synthetic data and does not establish real-world predictive accuracy."
+
+Do not invent evaluation metrics or present them as production results.
+
+6. Integrate ML inference with PreClear
+
+Implement a backend inference service that accepts valid prediction-time features and returns:
+
+- Claim ID or assessment reference.
 - Assessment type.
 - Processing pass.
+- Illustrative risk score.
+- Risk category.
+- Model version.
 - Assessment timestamp.
-- Illustrative risk category.
-- Illustrative risk score, if available.
-- Primary contributing factors.
-- Existing claims-engine edit coverage.
-- Recommended intervention.
-- Review-task status, if applicable.
+- Input feature provenance or a traceable reference to the input snapshot.
 
-Use actual backend assessment data.
+Inspect the existing API contracts and choose the smallest compatible integration.
 
-Clearly label risk estimates as illustrative, not validated model predictions.
+Prefer a read-only inference endpoint or a clearly controlled assessment-generation action.
 
-3. Support first-pass and second-pass assessments
+Do not change existing claim adjudication states.
 
-CLM-1001 — First-pass pend risk
+Do not overwrite historical assessment snapshots without an explicit versioning strategy.
 
-Show that the assessment occurred before first-pass adjudication.
+Keep existing CLM-1001, CLM-1002, and CLM-1003 dashboard behavior intact.
 
-Explain the COB-related information risk using only the synthetic factors already available.
+If the newly trained model produces scores or risk categories that differ from the original illustrative assessment records, do not secretly alter scores, force labels, or cherry-pick outputs to make the demo appear successful.
 
-Recommend targeted review only when an actionable information gap is supported by the data.
+Instead, distinguish:
 
-Do not imply the claim previously pended.
+- Existing synthetic assessment snapshot.
+- New illustrative ML model output.
 
-CLM-1002 — Second-pass repeat-pend risk
+Document discrepancies transparently.
 
-Show that the claim previously pended, received processor action, and is being assessed before its next adjudication.
+7. Implement grounded GenAI explanations
 
-Explain the potential unresolved information issue using prediction-time information only.
+Create a structured explanation layer that takes:
 
-Do not use the subsequent repeat-pend outcome as a model input or reason for the earlier assessment.
+- Model output.
+- Available prediction-time features.
+- Assessment type.
+- Supported contributing factors.
+- Existing-edit coverage information.
+- Recommended review action, when supported.
 
-CLM-1003 — Low-risk control
+Generate concise, understandable explanations for claims analysts.
 
-Show the low-risk assessment and explain why no additional targeted PreClear intervention is recommended.
+The explanation should answer:
 
-Do not imply that low risk guarantees payment.
+1. What risk is being assessed?
+2. Which available factors support the assessment?
+3. What information may require attention?
+4. What is known about existing claims-engine edit coverage?
+5. What action, if any, is recommended?
 
-4. Explain existing-edit coverage
+Important requirements:
 
-Create a clearly labeled section:
+- Never invent missing COB information.
+- Never invent existing claims-engine edits.
+- Never claim a pend will definitely occur.
+- Never claim a pend is definitely preventable.
+- Never claim a claim will be paid.
+- Never describe correlation as proven causation.
+- Never imply the model has been validated on real claims.
+- Do not expose private member insurance information.
 
-Existing Claims-Engine Edit Coverage
+Do not simply label a generic template as an actual LLM-generated explanation.
 
-Explain whether the identified information risk is:
+Implement a provider-neutral explanation interface.
 
-- Already addressed by an existing edit.
-- Partially addressed.
-- Not demonstrably covered.
-- Unknown because the prototype lacks sufficient information.
+If an approved LLM provider and credentials are already configured, an optional LLM-backed implementation may be used.
 
-Only display coverage classifications supported by existing synthetic data.
+Do not introduce external AI services, send data to a third party, or require new API keys without explicit approval.
 
-Do not invent proprietary ProClaim edit codes, internal edit mappings, or enterprise integration details.
+Provide a deterministic, grounded explanation fallback that works entirely offline.
 
-If coverage is unknown, display:
+Clearly identify in the UI whether an explanation was generated by an LLM or by deterministic rules.
 
-"Existing-edit coverage has not been established in this synthetic prototype."
+8. Ground explanations in actual model evidence
 
-Avoid recommending duplicate review when existing controls already adequately address the issue.
+Do not assume that a field is a contributing risk factor merely because it appears in the input.
 
-5. Recommended action
+Use an appropriate interpretable method, such as logistic-regression contributions or another documented explanation method, to identify relevant model-supported factors.
 
-Create a section titled:
+Clearly distinguish:
 
-Recommended Next Action
+- Model-supported factors.
+- Observed claim information.
+- Business-rule recommendations.
+- Unknown information.
 
-Display a recommendation grounded in the available assessment factors and existing-edit coverage.
+If model contributions are unavailable or unreliable, do not fabricate feature importance.
 
-Possible outcomes include:
+Keep explanations consistent with the actual risk score and feature snapshot.
 
-- Request targeted claims review.
-- Continue normal processing.
-- No additional PreClear intervention recommended.
-- Insufficient evidence to recommend intervention.
+9. Enhance the PreClear Assessment Detail page
 
-Do not claim that a flagged pend is definitely preventable.
+Add an AI-Assisted Risk Assessment section displaying:
 
-Do not introduce automatic claim holds or routing changes.
+- Illustrative ML risk score.
+- Risk classification.
+- Model version.
+- Assessment context.
+- Supporting factors.
+- Explanation text.
+- Explanation source: LLM or deterministic fallback.
+- Synthetic-model disclaimer.
 
-6. Implement Request Claims Review
+Keep the existing Step 7 sections:
 
-Add a button labeled:
+- Existing assessment details.
+- Existing-edit coverage.
+- Recommended next action.
+- Request Claims Review.
+- Review-task status.
 
-Request Claims Review
+Clearly separate the existing assessment snapshot from the new ML inference output when they differ.
 
-Use the existing review-task creation endpoint, expected to be:
+Do not create duplicate review tasks automatically.
 
-"POST /api/claims/{claim_id}/review-tasks"
-
-Inspect the actual API contract before implementation.
-
-Use the existing internal demo role:
-
-"X-Demo-Role: INTERNAL"
-
-"X-Demo-Actor: analyst-001"
-
-Submit only the fields required by the backend.
-
-On success:
-
-- Display the created review-task ID.
-- Display task status.
-- Display the associated claim ID.
-- Show a confirmation message.
-- Persist the task in SQLite.
-- Refresh the task status on the assessment page.
-
-The action creates an internal review request only.
-
-It must not change adjudication status, automatically resolve COB information, or send an email.
-
-7. Prevent duplicate review requests
-
-Inspect existing review-task business rules.
-
-If an active review task already exists for the same claim and assessment, avoid accidentally creating another identical active task.
-
-Prefer existing backend duplicate protections.
-
-If the backend does not enforce this rule, implement a minimal compatible safeguard with automated tests.
-
-Handle duplicate requests gracefully and display the existing task when possible.
-
-8. Keep the workflow human-in-the-loop
-
-The assessment identifies risk and recommends an action.
-
-An authorized claims reviewer remains responsible for investigating and deciding what, if anything, should happen next.
-
-Do not automatically:
-
-- Change claim disposition.
-- Hold adjudication.
-- Override an existing engine edit.
-- Modify COB information.
-- Approve payment.
-- Mark a predicted pend as prevented.
-
-9. Assessment explanation design
-
-Use a clean, readable layout with these sections:
-
-1. Claim and assessment overview.
-2. Risk classification.
-3. Contributing factors.
-4. Existing-edit coverage.
-5. Recommended next action.
-6. Claims review task status.
-
-Use deterministic explanations derived from existing synthetic assessment fields.
-
-Do not call an LLM or implement model-generated explanations yet. That belongs to Step 8.
-
-Avoid unsupported causal statements such as "This intervention will prevent the claim from pending."
-
-10. Navigation
-
-Ensure the user can:
-
-- Open assessment details from the Step 6 dashboard.
-- Return to the PreClear worklist.
-- Refresh the assessment and task status.
-- Navigate between different assessments.
-
-Preserve all existing Shared Resolution portal functionality.
-
-11. Error handling
+10. Add useful UI states
 
 Handle:
 
-- Missing claim.
+- ML inference loading.
+- Inference unavailable.
+- Model artifact missing.
+- Invalid or incomplete features.
+- Explanation generation failure.
+- Deterministic fallback.
 - Missing assessment.
 - Unauthorized access.
-- API unavailable.
-- Invalid review-task request.
-- Duplicate review request.
-- Concurrent task creation.
-- Failed persistence.
-- Stale frontend state.
 
-Do not fabricate successful responses when the backend fails.
+Do not display fabricated ML results when inference fails.
+
+11. Preserve the human-in-the-loop architecture
+
+The ML model provides risk intelligence.
+
+The explanation layer supports analyst understanding.
+
+The analyst decides whether to request targeted claims review.
+
+The existing claims engine remains responsible for adjudication.
+
+Do not automatically:
+
+- Pend a claim.
+- Prevent a pend.
+- Hold adjudication.
+- Change claim disposition.
+- Modify COB records.
+- Approve or deny payment.
+- Send notifications.
 
 12. Automated tests
 
-Add tests confirming:
+Add tests covering:
 
-1. CLM-1001 displays first-pass assessment details.
-2. CLM-1002 displays second-pass repeat-pend assessment details.
-3. CLM-1003 displays the low-risk control assessment.
-4. Contributing factors match backend data.
-5. Existing-edit coverage is not fabricated.
-6. Recommendations reflect available evidence.
-7. Request Claims Review calls the correct backend endpoint.
-8. The review task persists in SQLite.
-9. Refreshing displays the persisted task.
-10. Duplicate active review requests are handled correctly.
-11. Unauthorized users cannot create review tasks.
-12. Creating a task does not modify adjudication status.
-13. Existing Steps 1–6 tests continue to pass.
+1. Synthetic dataset reproducibility.
+2. Train/test separation.
+3. Absence of future-information leakage.
+4. Correct first-pass and subsequent-pass feature availability.
+5. Model training and artifact loading.
+6. Deterministic inference from identical inputs.
+7. Valid risk score range.
+8. Model version reporting.
+9. Correct assessment type.
+10. Explainability grounded in available features and model evidence.
+11. No invented claims-engine edit coverage.
+12. No unsupported preventability claims.
+13. Deterministic explanation fallback.
+14. No external LLM calls without approved configuration.
+15. UI display of inference results.
+16. Graceful handling of model or API failures.
+17. Review-task creation remains functional.
+18. No changes to claim adjudication state.
+19. Existing Steps 1–7 regression tests pass.
 
-13. Out of scope
+13. Documentation
+
+Update the README or relevant technical documentation with:
+
+- Synthetic training-data generation.
+- Model features and labels.
+- First-pass versus subsequent-pass prediction definitions.
+- Training command.
+- Evaluation command.
+- Inference usage.
+- Model versioning.
+- Explanation architecture.
+- Known limitations.
+- Why synthetic performance cannot establish production accuracy.
+
+Provide exact local commands to regenerate the dataset, train the model, and run the application.
+
+14. Out of scope
 
 Do not implement:
 
-- ML model training or inference (Step 8).
-- GenAI explanations (Step 8).
-- Email notification previews (Step 9).
-- Automatic claims adjudication.
-- Automatic pend prevention.
+- Step 9 notification previews.
+- Step 10 presentation polish.
+- Production model deployment.
 - Real ProClaim integration.
+- Real claims data.
 - Production authentication.
-- Real PHI.
-- Changes to the existing Shared Resolution state machine.
+- Automatic claim intervention.
+- Live claim routing.
+- Real adjudication.
+- Unapproved external LLM integration.
 
-14. Deliverables
+Avoid unnecessary dependencies and infrastructure.
+
+15. Deliverables
 
 After implementation:
 
-1. List files created or modified.
-2. Explain the React components and routes.
-3. Identify backend endpoints used.
-4. Explain how contributing factors and edit coverage are sourced.
-5. Demonstrate the review-task creation workflow.
-6. Report automated test results.
-7. Provide manual validation instructions.
-8. Identify limitations and assumptions.
+1. List all files created or modified.
+2. Explain the synthetic training dataset.
+3. Explain the model architecture and selected features.
+4. Report actual held-out evaluation metrics.
+5. Identify model artifact and training commands.
+6. Explain how inference integrates with FastAPI.
+7. Explain how explanations are grounded.
+8. Demonstrate the React assessment detail integration.
+9. Report automated test results.
+10. Provide exact manual validation instructions.
+11. Identify limitations and assumptions.
 
-Do not create a Git commit until I manually validate Step 7.
+Do not create a Git commit until I manually validate Step 8.
 
-Stop after Step 7. Do not proceed to Step 8.
+Stop after Step 8. Do not proceed to Step 9.
