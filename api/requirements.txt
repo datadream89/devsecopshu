@@ -1,245 +1,268 @@
-ClaimTrack — Step 6: Proactive PreClear Dashboard
+ClaimTrack — Step 7: Proactive PreClear Assessment Detail and Human Review Action
 
-Implement Step 6 only: Proactive PreClear Internal Dashboard in the existing ClaimTrack repository.
+Implement Step 7 only in the existing ClaimTrack repository.
 
 Project context
 
-Steps 1–5 are implemented and validated:
+Steps 1–6 have been implemented, with Step 6 subject to final manual validation.
 
 - Step 1: Synthetic claims, assessments, events, and data dictionary.
-- Step 2: FastAPI backend, SQLite persistence, assessment APIs, review-task APIs, workflow rules, and demo roles.
-- Step 3: React Provider Portal.
-- Step 4: React Member Portal.
-- Step 5: Claims Reviewer Portal and end-to-end Shared Resolution integration.
+- Step 2: FastAPI backend, SQLite, risk assessments, review tasks, and workflow APIs.
+- Steps 3–5: Complete Shared Resolution experience across Provider, Member, and Claims Reviewer Portals.
+- Step 6: Proactive PreClear internal dashboard showing first-pass, second-pass repeat-pend, and low-risk assessments.
 
-Step 6 introduces the second major ClaimTrack capability: Proactive PreClear.
+Step 7 introduces a detailed assessment experience and a targeted Request Claims Review action.
 
-The goal is to demonstrate how claims can be assessed for information-related pend risk before their relevant adjudication pass.
+The objective is to show how PreClear supports both first-pass pend prevention and repeat-pend prevention through explainable risk identification and human decision-making.
 
-This is an internal claims-processing capability, separate from the member/provider Shared Resolution experience.
+1. Inspect the repository first
 
-1. Inspect the existing repository
+Inspect the actual frontend routes, assessment schemas, synthetic data, API contracts, review-task models, authorization rules, and existing tests.
 
-Before implementing anything, inspect:
+Reuse existing implementations.
 
-- Existing React frontend structure and navigation.
-- FastAPI assessment endpoints and response schemas.
-- Synthetic claims and risk assessments.
-- Review-task endpoints.
-- Event timestamps and processing-cycle metadata.
-- Existing authorization rules and tests.
+Do not invent fields, risk factors, edit identifiers, or API contracts.
 
-Reuse the existing backend contracts and data.
+If a required field is absent, report the limitation. Only make the smallest compatible change when essential to Step 7, using synthetic data and documenting the change.
 
-Do not invent incompatible fields or change validated business logic.
+2. Create the Assessment Detail page
 
-2. Build the PreClear Dashboard
+When an analyst selects a claim from the Step 6 dashboard, open a dedicated assessment detail page.
 
-Create a new React page:
+Display:
 
-Proactive PreClear — Claims Risk Worklist
+- Claim ID.
+- Assessment type.
+- Processing pass.
+- Assessment timestamp.
+- Illustrative risk category.
+- Illustrative risk score, if available.
+- Primary contributing factors.
+- Existing claims-engine edit coverage.
+- Recommended intervention.
+- Review-task status, if applicable.
 
-Use the existing design system and navigation.
+Use actual backend assessment data.
 
-The dashboard should show:
+Clearly label risk estimates as illustrative, not validated model predictions.
 
-- Total assessed claims.
-- High-risk claims.
-- Low-risk claims.
-- First-pass risk assessments.
-- Second-pass repeat-pend risk assessments.
+3. Support first-pass and second-pass assessments
 
-These counts must be derived from backend assessment records, not hardcoded.
+CLM-1001 — First-pass pend risk
 
-Clearly label the dashboard as a synthetic prototype.
+Show that the assessment occurred before first-pass adjudication.
 
-3. Display the assessment worklist
+Explain the COB-related information risk using only the synthetic factors already available.
 
-Retrieve assessments from the existing FastAPI backend.
+Recommend targeted review only when an actionable information gap is supported by the data.
 
-Use the appropriate internal demo role, following actual backend authorization rules.
+Do not imply the claim previously pended.
 
-Expected demo identity:
+CLM-1002 — Second-pass repeat-pend risk
+
+Show that the claim previously pended, received processor action, and is being assessed before its next adjudication.
+
+Explain the potential unresolved information issue using prediction-time information only.
+
+Do not use the subsequent repeat-pend outcome as a model input or reason for the earlier assessment.
+
+CLM-1003 — Low-risk control
+
+Show the low-risk assessment and explain why no additional targeted PreClear intervention is recommended.
+
+Do not imply that low risk guarantees payment.
+
+4. Explain existing-edit coverage
+
+Create a clearly labeled section:
+
+Existing Claims-Engine Edit Coverage
+
+Explain whether the identified information risk is:
+
+- Already addressed by an existing edit.
+- Partially addressed.
+- Not demonstrably covered.
+- Unknown because the prototype lacks sufficient information.
+
+Only display coverage classifications supported by existing synthetic data.
+
+Do not invent proprietary ProClaim edit codes, internal edit mappings, or enterprise integration details.
+
+If coverage is unknown, display:
+
+"Existing-edit coverage has not been established in this synthetic prototype."
+
+Avoid recommending duplicate review when existing controls already adequately address the issue.
+
+5. Recommended action
+
+Create a section titled:
+
+Recommended Next Action
+
+Display a recommendation grounded in the available assessment factors and existing-edit coverage.
+
+Possible outcomes include:
+
+- Request targeted claims review.
+- Continue normal processing.
+- No additional PreClear intervention recommended.
+- Insufficient evidence to recommend intervention.
+
+Do not claim that a flagged pend is definitely preventable.
+
+Do not introduce automatic claim holds or routing changes.
+
+6. Implement Request Claims Review
+
+Add a button labeled:
+
+Request Claims Review
+
+Use the existing review-task creation endpoint, expected to be:
+
+"POST /api/claims/{claim_id}/review-tasks"
+
+Inspect the actual API contract before implementation.
+
+Use the existing internal demo role:
 
 "X-Demo-Role: INTERNAL"
 
 "X-Demo-Actor: analyst-001"
 
-Display a table with:
+Submit only the fields required by the backend.
 
-- Claim number.
-- Assessment type.
-- Processing cycle.
-- Risk category.
-- Illustrative risk score, if available.
-- Primary risk driver.
-- Recommended action.
-- Assessment timestamp.
-- Action to view assessment details.
+On success:
 
-Use actual backend field names and values.
+- Display the created review-task ID.
+- Display task status.
+- Display the associated claim ID.
+- Show a confirmation message.
+- Persist the task in SQLite.
+- Refresh the task status on the assessment page.
 
-Do not fabricate assessment scores or explanations.
+The action creates an internal review request only.
 
-4. Demonstrate the three synthetic claims
+It must not change adjudication status, automatically resolve COB information, or send an email.
 
-CLM-1001 — First-pass risk
+7. Prevent duplicate review requests
 
-Display:
+Inspect existing review-task business rules.
 
-- First-pass assessment.
-- High illustrative risk.
-- COB-related information risk.
-- Recommendation for targeted review before first-pass adjudication.
+If an active review task already exists for the same claim and assessment, avoid accidentally creating another identical active task.
 
-This claim must not be presented as having previously pended.
+Prefer existing backend duplicate protections.
 
-CLM-1002 — Second-pass repeat-pend risk
+If the backend does not enforce this rule, implement a minimal compatible safeguard with automated tests.
 
-Display:
+Handle duplicate requests gracefully and display the existing task when possible.
 
-- Second-pass assessment.
-- High illustrative repeat-pend risk.
-- Evidence of a previous pend and subsequent reprocessing.
-- Recommendation for review before second-pass adjudication.
+8. Keep the workflow human-in-the-loop
 
-Do not confuse first-pass and repeat-pend predictions.
+The assessment identifies risk and recommends an action.
 
-CLM-1003 — Low-risk control
+An authorized claims reviewer remains responsible for investigating and deciding what, if anything, should happen next.
 
-Display:
+Do not automatically:
 
-- First-pass assessment.
-- Low illustrative risk.
-- No targeted intervention recommended.
+- Change claim disposition.
+- Hold adjudication.
+- Override an existing engine edit.
+- Modify COB information.
+- Approve payment.
+- Mark a predicted pend as prevented.
 
-Do not imply that low risk guarantees successful adjudication.
+9. Assessment explanation design
 
-5. Dashboard filters
+Use a clean, readable layout with these sections:
 
-Provide simple frontend filters:
+1. Claim and assessment overview.
+2. Risk classification.
+3. Contributing factors.
+4. Existing-edit coverage.
+5. Recommended next action.
+6. Claims review task status.
 
-- All assessments.
-- First-pass.
-- Second-pass.
-- High risk.
-- Low risk.
+Use deterministic explanations derived from existing synthetic assessment fields.
 
-Allow sorting by risk score or assessment timestamp if supported by the available data.
+Do not call an LLM or implement model-generated explanations yet. That belongs to Step 8.
 
-Keep filtering simple and fast.
+Avoid unsupported causal statements such as "This intervention will prevent the claim from pending."
 
-Do not introduce unnecessary backend endpoints.
+10. Navigation
 
-6. Assessment chronology and data integrity
+Ensure the user can:
 
-Preserve the distinction between prediction-time information and historical outcomes.
+- Open assessment details from the Step 6 dashboard.
+- Return to the PreClear worklist.
+- Refresh the assessment and task status.
+- Navigate between different assessments.
 
-For CLM-1001 and CLM-1003, assessments must precede first-pass adjudication outcomes.
+Preserve all existing Shared Resolution portal functionality.
 
-For CLM-1002, the assessment must occur after the first pend and processor action but before the second-pass adjudication outcome.
+11. Error handling
 
-Never use final disposition, subsequent pend outcome, or other future information as prediction features.
+Handle:
 
-If historical outcomes are displayed anywhere, label them clearly as subsequent observed outcomes, not prediction inputs.
+- Missing claim.
+- Missing assessment.
+- Unauthorized access.
+- API unavailable.
+- Invalid review-task request.
+- Duplicate review request.
+- Concurrent task creation.
+- Failed persistence.
+- Stale frontend state.
 
-7. Dashboard interactions
+Do not fabricate successful responses when the backend fails.
 
-Include:
+12. Automated tests
 
-- Refresh Assessments button.
-- Loading state.
-- Empty state.
-- API error handling.
-- Unauthorized-access handling.
-- Clickable claim rows or a View Assessment action.
+Add tests confirming:
 
-For Step 6, clicking an assessment may open a simple read-only summary using the existing API data.
+1. CLM-1001 displays first-pass assessment details.
+2. CLM-1002 displays second-pass repeat-pend assessment details.
+3. CLM-1003 displays the low-risk control assessment.
+4. Contributing factors match backend data.
+5. Existing-edit coverage is not fabricated.
+6. Recommendations reflect available evidence.
+7. Request Claims Review calls the correct backend endpoint.
+8. The review task persists in SQLite.
+9. Refreshing displays the persisted task.
+10. Duplicate active review requests are handled correctly.
+11. Unauthorized users cannot create review tasks.
+12. Creating a task does not modify adjudication status.
+13. Existing Steps 1–6 tests continue to pass.
 
-Do not build the complete assessment detail experience yet; that belongs to Step 7.
-
-8. Visual design
-
-Use a polished, professional internal enterprise dashboard.
-
-Prioritize readability and clear risk differentiation.
-
-High-risk claims should be visually prominent without excessive red styling.
-
-Low-risk claims should be visibly distinct.
-
-Use appropriate labels:
-
-- First-Pass Pend Risk
-- Second-Pass Repeat-Pend Risk
-- High Risk
-- Low Risk
-- Recommended Review
-- No Targeted Intervention
-
-Avoid claiming that the system prevents pends automatically.
-
-Include a small disclaimer:
-
-"Risk assessments are illustrative and based on synthetic data. Predictive performance has not been validated."
-
-9. Navigation
-
-Add Proactive PreClear to the existing application navigation.
-
-Preserve the existing:
-
-- Provider Portal.
-- Member Portal.
-- Claims Reviewer Portal.
-
-Keep internal and external portal experiences clearly differentiated.
-
-Do not modify the Shared Resolution workflow.
-
-10. Automated tests
-
-Add frontend tests verifying:
-
-1. Dashboard loads assessments from FastAPI.
-2. Three synthetic assessments appear.
-3. CLM-1001 is correctly labeled first-pass high risk.
-4. CLM-1002 is correctly labeled second-pass repeat-pend high risk.
-5. CLM-1003 is correctly labeled first-pass low risk.
-6. Summary counts are calculated from API data.
-7. Filters work correctly.
-8. Refresh retrieves updated assessment data.
-9. Loading, empty, error, and unauthorized states work.
-10. Existing Steps 1–5 tests continue to pass.
-
-Do not make tests depend on hardcoded production-like risk percentages.
-
-11. Out of scope
+13. Out of scope
 
 Do not implement:
 
-- Full assessment detail and review-task interaction (Step 7).
-- Machine-learning training or GenAI explanations (Step 8).
+- ML model training or inference (Step 8).
+- GenAI explanations (Step 8).
 - Email notification previews (Step 9).
-- Automatic claim interception or routing.
-- Automatic adjudication.
+- Automatic claims adjudication.
+- Automatic pend prevention.
 - Real ProClaim integration.
-- Real PHI or production data.
+- Production authentication.
+- Real PHI.
+- Changes to the existing Shared Resolution state machine.
 
-Do not add unnecessary backend complexity.
-
-12. Deliverables
+14. Deliverables
 
 After implementation:
 
 1. List files created or modified.
-2. Explain the React component architecture.
-3. Identify API endpoints used.
-4. Explain how dashboard counts and filters work.
-5. Report automated test results.
-6. Provide exact manual validation instructions.
-7. Identify any backend contract limitations.
+2. Explain the React components and routes.
+3. Identify backend endpoints used.
+4. Explain how contributing factors and edit coverage are sourced.
+5. Demonstrate the review-task creation workflow.
+6. Report automated test results.
+7. Provide manual validation instructions.
+8. Identify limitations and assumptions.
 
-Do not create a Git commit until I manually validate Step 6.
+Do not create a Git commit until I manually validate Step 7.
 
-Stop after Step 6. Do not proceed to Step 7.
+Stop after Step 7. Do not proceed to Step 8.
