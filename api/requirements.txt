@@ -1,147 +1,207 @@
-Redesign and polish Slide 2 only of my existing ClaimTrack presentation for the Cigna Aspire iTournament 2026 finals.
+# ClaimTrack — Slide 2 Final Executive Polish
 
-OBJECTIVE
+Refine **Slide 2 only** of my existing ClaimTrack presentation for the Cigna Aspire iTournament 2026 finals.
 
-Transform Slide 2 into an exceptionally clear, elegant, and persuasive problem-identification slide suitable for a Fortune 500 executive innovation competition.
+Use the current slide as the starting point. Do not generate an entirely new layout.
 
-This slide immediately follows a personal opening story about tracking an Uber Eats delivery. Slide 1 introduces the promise, “ClaimTrack — Know what's next.”
+**OBJECTIVE**
 
-Slide 2 must reveal the member's actual frustration: knowing why a claim is pending without having sufficient clarity about the next steps toward resolution.
+Elevate the existing slide to a highly polished, professional, executive-level presentation standard while preserving its strong narrative, authentic member experience, and existing Cigna visual identity.
 
-Preserve the existing corporate theme and overall two-column structure. Improve the design rather than reinventing it.
+The slide must communicate one central message:
 
-1. HEADLINE AND SUBTITLE
+**Members may understand why their claim is pending without having a clear view of what happens next.**
 
-Preserve the headline exactly:
+The audience should grasp this message within five seconds.
 
-Members are told what's wrong, but not what happens next.
+## 1. Preserve the headline and subtitle
 
-Preserve the existing subtitle exactly:
+Keep the headline exactly:
 
-This is what a member sees on myCigna today while a COB pend is open.
+**Members are told what's wrong, but not what happens next.**
 
-Make the headline visually dominant, using the existing dark navy typography.
+Keep the subtitle exactly:
 
-Keep the subtitle smaller, understated, and readable.
+**This is what a member sees on myCigna today while a COB pend is open.**
 
-2. LEFT COLUMN — MEMBER EXPERIENCE
+Do not rewrite either statement.
 
-Retain the existing de-identified myCigna claim screenshot.
+Ensure the headline remains the most prominent text, with the subtitle immediately below it in a smaller, lighter font.
 
-- Make the screenshot large, sharp, and visually prominent.
-- Preserve the original claim status, COB explanation, and authentic interface details.
-- Do not invent or modify claim information.
-- Preserve the three numbered annotation markers.
-- Position the markers carefully so they highlight relevant information without obscuring important text.
-- Use consistent annotation styling that matches the presentation's Cigna color palette.
-- Avoid heavy borders, excessive shadows, or decorative containers.
-- If necessary, crop unnecessary screenshot margins to improve readability, without removing meaningful information.
-- Add a discreet footnote: “De-identified claim view.”
+## 2. Preserve and enhance the myCigna screenshot
 
-The screenshot should be the primary visual evidence of the member experience.
+Retain the existing de-identified myCigna claim screenshot on the left.
 
-3. RIGHT COLUMN — THREE UNANSWERED QUESTIONS
+Preserve all underlying information, including:
 
-Replace the current right-column heading with:
+- The myCigna branding and navigation.
+- The Pending status.
+- The claim amount and patient responsibility placeholders.
+- The claim-pending date.
+- The Coordination of Benefits explanation.
+- The request for insurance information or an Explanation of Benefits.
+- The existing PDF link.
+- The de-identified member-name placeholder.
 
-Three questions still unanswered
+Do not fabricate, replace, or alter the underlying claim details.
 
-Present these three questions in a clean, vertically aligned layout.
+Improve screenshot clarity by optimizing its dimensions and placement without distorting the image.
 
-1. Who owns the next step?
+Keep the screenshot approximately 58–60% of the main content width.
+
+Use a subtle, thin border or very light shadow if necessary.
+
+Avoid unnecessary frames or decorative containers.
+
+Retain the footnote:
+
+“De-identified claim view.”
+
+## 3. Improve annotation markers
+
+Preserve three numbered annotation circles on the screenshot, corresponding to the three questions on the right.
+
+Use a consistent, restrained Cigna-compatible accent color.
+
+Position the markers as follows:
+
+**Marker 1 — Who owns the next step?**
+
+Place beside the COB explanation requesting the member to contact Cigna or provide information.
+
+It should highlight that the screen does not identify a specific person or team responsible for coordinating the next action.
+
+**Marker 2 — Was the EOB received?**
+
+Place beside the requested-document explanation, without obscuring any text.
+
+Important: The existing “Explanation of Benefits [PDF]” link must not be treated as proof that the requested EOB from another insurer was received. These may be different documents.
+
+**Marker 3 — What happens next—and when?**
+
+Place immediately beside the Pending status.
+
+This marker highlights the absence of a clearly visible next resolution milestone or expected timing.
+
+Do not force the markers into numerical top-to-bottom order if that would weaken their connection to the relevant information.
+
+Keep all circles the same size and ensure they do not cover essential text.
+
+## 4. Refine the right-side questions
+
+Preserve the heading:
+
+**Three questions still unanswered**
+
+Use the following exact wording:
+
+**1. Who owns the next step?**
 
 No clearly identified next-action owner.
 
-2. Was the EOB received?
+**2. Was the EOB received?**
 
 No visible confirmation that the requested information arrived.
 
-3. What happens next—and when?
+**3. What happens next—and when?**
 
 No clear next milestone or expected timing.
 
-Design each question with:
+Arrange the questions vertically with consistent spacing and alignment.
 
-- A prominent, consistent numbered circle.
-- A bold navy question heading.
-- One short supporting sentence in a softer gray-blue.
-- Generous vertical spacing.
-- Precise alignment and consistent typography.
+Use:
+- Bold dark navy question headings.
+- Smaller but clearly readable supporting descriptions.
+- Three consistently sized numbered circles.
+- Subtle separators only if they improve readability.
 
-Avoid excessive colored boxes, icons, arrows, or decorative elements.
+Avoid unnecessary cards, shadows, colored backgrounds, or icons.
 
-The three questions should be readable within five seconds.
+The right column must feel elegant and uncluttered.
 
-4. REMOVE THE STATISTICAL CALLOUT
+## 5. Improve typography and readability
 
-Completely remove:
+Optimize the slide for projection in a conference room.
 
-- The approximately 23% denied-first-then-paid statistic.
-- The 127–131 versus 42–56 days comparison.
-- All associated statistical explanations and callout elements.
+- Maintain a strong hierarchy between headline, subtitle, question headings, and supporting text.
+- Increase the supporting-description font size modestly.
+- Aim for at least 18-point text for the supporting descriptions where space permits.
+- Keep question headings approximately 20–22 points.
+- Preserve a larger, bold headline.
+- Use consistent font weights, spacing, and line heights.
+- Avoid awkward line breaks.
+- Maintain sufficient contrast between text and background.
 
-Do not replace the removed statistic with another metric.
+Do not reduce the screenshot to accommodate oversized text.
 
-Use the additional space to improve the layout, enlarge important content, and create a cleaner visual composition.
+## 6. Improve alignment and spacing
 
-5. VISUAL DESIGN
+Retain the existing two-column structure.
 
-Maintain the existing Cigna presentation design system.
+Align the top of the screenshot with the right-side question section.
 
-- White or very light background.
-- Dark navy headlines.
-- Restrained aqua/green accents.
-- Clean, modern sans-serif typography.
-- Consistent margins and spacing.
-- Professional visual hierarchy.
-- Strong contrast suitable for projection.
-- Minimal decorative elements.
-- No unnecessary gradients, glowing effects, or large colored cards.
+Maintain consistent horizontal and vertical margins.
 
-Aim for an elegant executive presentation, not a marketing infographic.
+Balance the screenshot and question list so neither dominates excessively.
 
-Balance the screenshot and the three questions so neither feels crowded.
+Use the space freed by removing the previous statistical callout to improve readability and spacing.
 
-6. PRESERVE EXISTING PRESENTATION ELEMENTS
+Do not introduce new decorative elements simply to fill empty space.
 
-Keep:
+## 7. Preserve the corporate presentation theme
 
-- The top navigation: Problem | Solution | Value | Pilot | Ask.
-- “Problem” highlighted as the active section.
+Maintain:
+- The white or very light slide background.
+- Dark navy headline typography.
+- Restrained Cigna green and aqua accents.
+- The existing top navigation: Problem | Solution | Value | Pilot | Ask.
+- The highlighted Problem section.
 - The existing corporate footer.
-- The slide number.
-- The established visual identity of the deck.
+- Slide number 2.
 
-Do not modify any other slides.
+Use the established theme consistently.
 
-7. STORYTELLING INTENT
+Do not add gradients, illustrations, stock photography, oversized icons, or unnecessary visual effects.
 
-Slide 1 creates curiosity through the Uber Eats analogy.
+## 8. Do not reintroduce statistics
 
-Slide 2 reveals the member's uncertainty through a real-world claim example.
+The approximately 23% denied-first-then-paid figure and associated payment-duration comparisons were intentionally removed.
 
-Slide 3 explains the operational fragmentation behind that uncertainty.
+Do not add them back.
 
-Therefore:
+Do not introduce replacement statistics.
 
-- Do not introduce ClaimTrack's solution on Slide 2.
-- Do not add process diagrams or resolution journeys.
-- Do not add AI-related explanations.
-- Do not add new statistics.
-- Do not overstate limitations of existing Cigna systems.
-- Focus exclusively on the three information gaps visible in the depicted member experience.
+This slide should focus exclusively on the member's experience and the three unanswered questions.
 
-8. FINAL QUALITY CHECK
+## 9. Preserve the storytelling sequence
 
-Before finishing, verify that:
+Slide 1 introduces ClaimTrack through a personal anecdote about tracking a dinner delivery on Uber Eats.
 
-- The headline is the first thing the audience notices.
-- The Pending claim and COB information request are recognizable.
-- All three unanswered questions are immediately readable.
-- The slide looks balanced and uncluttered.
-- No important text is obscured or cropped.
-- No unnecessary information has been added.
-- All editable elements remain editable.
-- The design matches the professionalism of Slide 1.
+Slide 2 reveals the member's uncertainty using a de-identified myCigna claim example.
 
-Deliver one polished, presentation-ready Slide 2.
+Slide 3 will explain the fragmented coordination between the member, provider, claims operations, and claims platform.
+
+Therefore, do not reveal ClaimTrack's proposed capabilities, technical architecture, or resolution workflow on this slide.
+
+The purpose is to establish the problem—not explain the solution.
+
+## 10. Final quality assurance
+
+Before completing the revision, verify:
+
+1. The headline is immediately readable.
+2. The Pending status and COB explanation remain recognizable.
+3. Each annotation clearly corresponds to its question.
+4. The three questions are readable from a distance.
+5. No annotation obscures important screenshot information.
+6. The EOB PDF link is not incorrectly represented as confirmation of requested-document receipt.
+7. The slide is visually balanced.
+8. The corporate branding and footer are preserved.
+9. All newly created text and annotation objects remain editable.
+10. No other slides are modified.
+
+**FINAL INSTRUCTION**
+
+Make minimal, deliberate refinements. Prioritize clarity, accuracy, readability, and professional restraint over visual decoration.
+
+The result should look like a carefully designed executive innovation presentation, not an AI-generated infographic.
