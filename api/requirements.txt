@@ -1,161 +1,212 @@
-# ClaimTrack — Slide 2 Final Refinement
+Task: Redesign Slide 3 of the ClaimTrack iTournament 2026 presentation
 
-Refine **Slide 2 only** of my existing ClaimTrack presentation for the Cigna Aspire iTournament 2026 finals.
+Act as a senior healthcare claims operations expert, executive presentation designer, and innovation pitch strategist.
 
-**Objective:** Make Slide 2 an exceptionally polished, credible, and emotionally compelling problem slide suitable for an executive innovation competition.
+Redesign Slide 3 only, using the existing PowerPoint presentation, its design language, and any available internal workflow documentation or data.
 
-Preserve the current two-column design, de-identified myCigna screenshot, corporate branding, and overall layout. Make precise improvements rather than redesigning the slide.
+The objective is to produce an exceptional, executive-ready slide that is visually compelling, operationally accurate, and understandable within 25–35 seconds.
 
-## 1. Headline and subtitle
+Do not redesign Slides 1 or 2. Do not modify any other slide.
 
-Keep the headline exactly:
+1. Narrative context
 
-**Members are told what's wrong, but not what happens next.**
+Slide 1 introduces ClaimTrack through the familiar experience of tracking a delivery.
 
-Keep the subtitle exactly:
+Slide 2 shows a de-identified myCigna COB-pended claim with the headline:
 
-**This is what a member sees on myCigna today while a COB pend is open.**
+“Members are told what's wrong, but not what happens next.”
 
-The headline must remain the dominant text, followed by the subtitle.
+It raises three questions:
 
-## 2. Left column — myCigna claim screenshot
+1. Who handles my claim after I respond?
+2. Did you receive what I sent?
+3. What happens next—and when?
 
-Preserve the existing de-identified screenshot without altering its underlying claim information.
+Slide 3 must answer the audience's natural follow-up:
 
-Retain:
-- The Pending status.
-- The COB explanation.
-- The instruction to contact Cigna using the number on the back of the member's ID card.
-- The EOB-related information.
-- The existing claim details and placeholders.
+What actually happens after the member submits the requested COB information?
 
-Make the screenshot large, sharp, and readable.
+Slide 4 will quantify pend timing and outcomes. Do not introduce Slide 4's statistics here.
 
-Preserve the footnote:
+2. Slide 3 headline
 
-“De-identified claim view.”
+Use:
 
-Do not fabricate additional claim information or modify existing interface functionality.
+“The member responds. But the claim can remain pending.”
 
-## 3. Right column — replace the three questions
+Make the headline prominent, dark navy, and consistent with Slide 2.
 
-Keep the section heading:
+Optional short subtitle:
 
-**Three questions still unanswered**
+“Submitting information is only the beginning of the resolution process.”
 
-Replace the existing questions and supporting descriptions with the following exact wording:
+3. Replace the existing four-party diagram with a resolution workflow
 
-**1. Who handles my claim after I respond?**
+The existing Slide 3 depicts Member, Provider, Claims Operations, and Claims Platform.
 
-No visibility into who reviews the information or moves the claim forward.
+Replace this generic participant diagram with a simplified, accurate COB resolution journey.
 
-**2. Did you receive what I sent?**
+Design the main visual around three stages:
 
-No visible confirmation that the requested information was received.
+Stage 1 — MEMBER RESPONDS
 
-**3. What happens next—and when?**
+The member provides the requested Coordination of Benefits information.
 
-No clear next milestone or expected timeline.
+Use a simple member/document icon.
 
-Use bold, dark navy question headings and concise, readable supporting descriptions.
+Stage 2 — INFORMATION REVIEW
 
-Make the questions sound like genuine concerns a member might have.
+The submitted information must be:
 
-## 4. Important accuracy requirements
+- Located and associated with the relevant claim or outstanding request.
+- Validated against the specific pend reason.
+- Assessed for completeness.
 
-The existing screenshot explicitly instructs the member to contact Cigna.
+Use a document-verification or claims-review icon.
 
-Therefore:
-- Do not claim the member has no contact point.
-- Do not suggest that Cigna has no internal claim owner.
-- Distinguish between knowing whom to contact and knowing who handles the subsequent review or processing.
-- Do not claim that submitted information is never acknowledged.
-- Present the three questions as information needs that may remain unresolved in the depicted member-facing experience.
+Do not invent specific departments, assignment mechanisms, processing times, or automation capabilities.
 
-The goal is to illustrate a visibility gap, not criticize existing Cigna functionality inaccurately.
+Stage 3 — TWO POSSIBLE OUTCOMES
 
-## 5. Annotation markers
+Create a clear visual split into two branches.
 
-Retain the three numbered circles on the screenshot.
+COMPLETE — Processing resumes
 
-Position them to correspond to the revised questions:
+- Outstanding correspondence is marked received.
+- Claim and related claim history are reviewed.
+- Claim processing resumes.
+- Member-facing myCigna status transitions from Pending to Processing.
 
-**Marker 1:** Near the COB explanation and contact instruction, illustrating the question of what happens after the member responds.
+Use a restrained teal/green accent to indicate forward progress.
 
-**Marker 2:** Near the requested-information portion of the COB explanation, illustrating the need for confirmation after submission. Do not position this marker as though the existing EOB PDF link proves receipt of the requested EOB.
+INCOMPLETE — Returns to pending
 
-**Marker 3:** Beside the Pending status, illustrating the need for the next verified milestone and expected timing.
+- Required information remains incomplete.
+- The claim can return to an external pending state.
+- Additional information or follow-up may be required.
+- The member-facing myCigna experience may continue to show Pending without clearly identifying what remains missing.
 
-Keep markers consistent in size and color.
+Use a restrained amber/rust accent to distinguish this path.
 
-Do not obscure meaningful screenshot content.
+Visually emphasize the repeat-pending loop.
 
-## 6. Improve design and readability
+Show a subtle curved arrow from the incomplete branch back toward the information-request or review stage.
 
-Maintain the current two-column composition:
+Label it:
 
-- Approximately 58–60% of the content width for the screenshot.
-- Approximately 40–42% for the three questions.
+“Repeat-pending loop”
 
-Use the existing Cigna corporate color palette:
-- White or very light background.
-- Dark navy headings.
-- Restrained green and aqua accents.
-- Consistent numbered annotation circles.
+The loop must be understandable immediately without requiring a detailed verbal explanation.
 
-Improve:
-- Text alignment.
-- Vertical spacing.
-- Supporting-text readability.
-- Screenshot clarity.
-- Overall visual balance.
+4. Critical member-experience insight
 
-Use approximately 20–22-point question headings and 18-point supporting text where practical.
+The current myCigna experience already provides meaningful claim statuses, including Pending and Processing.
 
-Do not add large colored cards, unnecessary shadows, illustrations, gradients, or decorative elements.
+Do not claim that Cigna has no tracking or that members never receive updates.
 
-The slide must look like a polished executive presentation, not a marketing infographic.
+Instead, distinguish:
 
-## 7. Preserve presentation elements
+- Claim status visibility.
+- Visibility into information receipt, completeness, review progress, and the next required action.
 
-Keep:
-- The navigation bar: Problem | Solution | Value | Pilot | Ask.
-- The Problem section highlighted.
-- The corporate footer.
-- Slide number 2.
-- The de-identification footnote.
+The specific opportunity is that a member may submit information, yet the claim can remain Pending without the member-facing experience clearly explaining the outstanding gap.
 
-Do not modify any other slides.
+Do not assert that Cigna never sends follow-up correspondence through other channels. That has not been established.
 
-## 8. Do not add statistics
+5. Bottom takeaway
 
-The approximately 23% denied-first-then-paid figure and the payment-duration comparisons were intentionally removed.
+Include one concise takeaway across the bottom of the slide:
 
-Do not reintroduce these statistics or add replacement metrics.
+“A member can respond without knowing whether the information was sufficient—or what happens next.”
 
-Slide 2 should focus exclusively on the member's uncertainty.
+Give this statement visual prominence using the presentation's existing restrained accent style.
 
-## 9. Storytelling context
+Avoid excessive warning symbols, decorative graphics, or dense explanatory paragraphs.
 
-Slide 1 introduces ClaimTrack through a personal Uber Eats tracking anecdote.
+6. Visual design requirements
 
-Slide 2 reveals the member's uncertainty using the de-identified myCigna claim.
+Preserve the established ClaimTrack visual identity:
 
-Slide 3 will explain the operational handoffs between members, providers, claims operations, and the claims platform.
+- White background.
+- Dark navy headlines.
+- Aqua/teal accents for progress.
+- Rust/amber accents for unresolved information.
+- Clean corporate typography.
+- Consistent top navigation: Problem | Solution | Value | Pilot | Ask.
+- Keep Problem highlighted.
+- Preserve the existing corporate footer and slide number 3.
+- Maintain generous whitespace, balanced alignment, and consistent iconography.
 
-Do not introduce the ClaimTrack solution, its two capabilities, AI, or technical architecture on Slide 2.
+Use native editable PowerPoint shapes, connectors, icons, and text wherever possible.
 
-## 10. Final quality check
+Do not turn the slide into a static image.
 
-Before completing the slide:
+Prefer a horizontal workflow with a clearly differentiated two-branch outcome on the right, provided all labels remain legible in presentation mode.
 
-- Verify that the headline is immediately readable.
-- Ensure the Pending status and COB explanation remain visible.
-- Confirm that all three questions are easy to understand.
-- Ensure the annotation markers correspond to the correct questions.
-- Verify that no text or screenshot content is obscured.
-- Preserve the current professional corporate appearance.
-- Keep all newly created text and annotations editable.
-- Do not alter any other slides.
+Use no more than three main stages. Keep detailed operational wording in speaker notes rather than overcrowding the slide.
 
-**Final instruction:** Make only deliberate, high-value refinements. Prioritize member empathy, accuracy, readability, and visual elegance over decoration.
+7. Operational and data validation
+
+Use available internal documentation or datasets only where access is authorized.
+
+If internal documentation is available, validate the workflow against it, including the conditions for marking correspondence received and resuming claim processing.
+
+If verified data is available about repeat pends or incomplete COB responses, evaluate whether one concise supporting statistic would materially improve the slide.
+
+Only include such a statistic if its definition, denominator, date range, and population are confirmed.
+
+Otherwise, keep Slide 3 entirely process-focused.
+
+Do not invent numbers, operational rules, notifications, service levels, or system capabilities.
+
+Do not include day-55 or North Carolina day-90 limits without verifying their applicability.
+
+8. Presentation and storytelling
+
+The slide should create a clear realization:
+
+Responding to a request does not guarantee that the pend has been resolved.
+
+The complete branch should feel straightforward.
+
+The incomplete branch should reveal the potential repeat-pending cycle and member uncertainty.
+
+Do not portray all COB claims as following the incomplete branch.
+
+Do not imply that incomplete submissions have been proven to cause the deadline-related outcomes presented on Slide 4.
+
+The slide must connect naturally to Slide 2 and prepare the audience for Slide 4's quantitative evidence.
+
+9. Speaker notes
+
+Add this concise narration to Slide 3 speaker notes:
+
+“Once a member responds, the information must be located and validated against the reason the claim was pended.
+
+If it's complete, the correspondence is marked received, the claim and its history are reviewed, and processing resumes.
+
+But if something is still missing, the claim can return to pending.
+
+And here's the challenge: the member may still see Pending without clearly knowing what information remains outstanding.
+
+So responding doesn't necessarily mean the claim is moving toward resolution.”
+
+End with this transition to Slide 4:
+
+“That's one way uncertainty can persist. Now let's look at what the broader pend data tells us.”
+
+10. Final quality check
+
+Before completing the modification, verify that:
+
+- Slide 3 is understandable within five seconds at a glance.
+- The complete and incomplete branches are visually distinct.
+- The repeat-pending loop is unmistakable.
+- The slide does not overstate limitations of existing Cigna systems.
+- All operational claims are supportable.
+- Text is readable on a projected screen.
+- The design is consistent with Slides 1 and 2.
+- All elements remain editable.
+- No other slides have been modified.
+
+Deliver the finished Slide 3, not merely recommendations. Prioritize operational credibility, clarity, and visual storytelling over decorative complexity.
