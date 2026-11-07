@@ -1,1 +1,56 @@
 
+Create a single, fully editable, professional PowerPoint title slide in 16:9 widescreen format.
+
+Use the attached reference image as the visual specification. Reproduce its composition, colors, typography, spacing, and overall visual hierarchy as closely as possible.
+
+DESIGN AND LAYOUT
+
+Background:
+
+- Full-slide dark navy-to-royal-blue gradient.
+- Left side: deep navy (#06234C).
+- Right side: rich corporate blue (#075A96).
+- Subtle layered blue shapes along the lower third.
+- No photographic backgrounds.
+
+Header:
+
+- Top-left: official Cigna logo, using the supplied brand asset.
+- Thin vertical separator.
+- Text: "Aspire iTournament 2026".
+
+Main content, left:
+
+- Small horizontal aqua accent above the title.
+- Large, bold, white title: "ClaimTrack".
+- Directly beneath: "Know what's next." in elegant light aqua (#7DE4EA).
+- Subtitle: "A clearer path through claim uncertainty." in white.
+- Use a clean sans-serif font such as Aptos or Arial.
+
+Right-side visual:
+
+- Create a thin, gently curved aqua route line progressing upward toward the upper-right.
+- Include five small, evenly styled waypoint circles.
+- End with a minimalist location-pin outline.
+- Keep the illustration understated and professional.
+- Do not label the waypoints or show claim-resolution steps.
+- The route represents visibility and forward progress, not a literal claims workflow.
+
+Footer:
+
+- Integrated dark navy footer band.
+- Left: "Presented by" followed by "Balan Thiru Gnanam · John Fiester".
+- Right: "Pilot Proposal" and "November 2026".
+- Small, subtle outline icons are optional.
+- Maintain generous spacing and consistent alignment.
+
+IMPORTANT
+
+- Recreate all text, lines, circles, and shapes as editable PowerPoint objects wherever possible.
+- Use the image only as a design reference, not as a full-slide background.
+- Preserve exact spelling, capitalization, and punctuation.
+- No excessive glow, 3D effects, shadows, or decorative elements.
+- Do not add additional text, statistics, process diagrams, or solution explanations.
+- Create only Slide 1.
+
+The finished slide should look like an executive-level innovation pitch at a Fortune 500 company, matching the attached reference as closely as possible.
