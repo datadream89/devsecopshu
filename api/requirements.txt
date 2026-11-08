@@ -1,1 +1,214 @@
 
+ClaimTrack — Redesign Slide 5 for iTournament 2026 Finals
+
+Act as a senior executive presentation designer, healthcare claims innovation strategist, and enterprise solutions architect.
+
+Redesign Slide 5 only in the existing ClaimTrack PowerPoint presentation.
+
+Create an exceptional, executive-ready solution slide that communicates two complementary innovations clearly, credibly, and memorably.
+
+Preserve the existing presentation's visual identity and ensure the slide is optimized for online presentation through Microsoft Teams.
+
+Do not modify any other slide.
+
+1. Narrative context
+
+The preceding slides establish:
+
+- Slide 1: ClaimTrack — “Know what's next.”
+- Slide 2: A member sees why a COB claim is pending but lacks clear visibility into subsequent resolution steps.
+- Slide 3: Even after the member responds, incomplete information can leave the claim pending.
+- Slide 4: Broader billing + COB analysis reveals initial denials followed by eventual payment and substantially longer observed payment journeys.
+
+Slide 5 is the solution reveal.
+
+The audience should immediately understand how ClaimTrack proposes to improve this experience.
+
+Do not introduce pilot scope, investment requests, financial projections, or detailed architecture on this slide.
+
+2. Headline and subtitle
+
+Retain the headline:
+
+“ClaimTrack prevents what it can and coordinates what remains.”
+
+Use large, dark navy typography.
+
+Replace the subtitle with:
+
+“Two connected capabilities: earlier intervention and verified resolution visibility.”
+
+Maintain consistency with Slides 2–4.
+
+3. Preserve the two-panel layout
+
+Keep two balanced capability panels occupying the upper and middle portions of the slide.
+
+Use navy/blue for Proactive PreClear and teal/green for Shared Resolution.
+
+Both panels should have matching dimensions, consistent padding, aligned headings, and clear visual hierarchy.
+
+LEFT PANEL — Proactive PreClear
+
+Capability name: Proactive PreClear
+
+Stage label: BEFORE ADJUDICATION
+
+Core promise:
+
+“Identify actionable information gaps earlier.”
+
+Use three concise supporting points:
+
+1. Identify actionable COB information-gap risks using authorized, point-in-time signals.
+2. Prioritize cases for human validation and potential correction.
+3. Enable earlier intervention before an upcoming adjudication pass, where feasible.
+
+Use an appropriate shield, early-warning, or verification icon.
+
+Do not claim that existing adjudication edits are defective or miss information they should have detected.
+
+Do not claim that all COB pends are preventable.
+
+Do not imply ClaimTrack can independently alter claims, override edits, or bypass existing approval processes.
+
+The innovation is earlier information-readiness assessment and actionable intervention—not replacing the existing claims engine.
+
+RIGHT PANEL — Shared Resolution
+
+Capability name: Shared Resolution
+
+Stage label: AFTER A CLAIM PENDS
+
+Core promise:
+
+“Turn fragmented evidence into verified progress.”
+
+Use three concise supporting points:
+
+1. Reconcile relevant records across authorized existing systems.
+2. Combine recorded events with processor-validated milestones.
+3. Surface confirmed progress, outstanding actions, and next steps.
+
+Use an appropriate connected-records, timeline, or linked-evidence icon.
+
+The existing environment records information across systems such as iView, One View, and Proclaim.
+
+Processors may need to manually navigate those systems and correlate records using claim numbers, member identifiers, image reference numbers, dates of service, and document metadata.
+
+ClaimTrack proposes a unified, verified resolution view—not merely a new claim-status screen.
+
+Do not claim that every source event is already automatically linked.
+
+Do not claim that all events are currently visible to members.
+
+Do not imply that ClaimTrack automatically determines completeness or changes authoritative claim status without validated evidence and approved workflows.
+
+4. Retain the four-milestone journey
+
+Preserve the existing bottom timeline concept.
+
+Label it:
+
+“Illustrative verified resolution journey”
+
+Display four visually connected milestones:
+
+Action identified → Owner confirmed → Information received → Resolution confirmed
+
+Use a clean horizontal timeline with four evenly spaced milestones, consistent icons, and subtle connecting lines.
+
+Use teal accents for verified progress.
+
+Keep the timeline visually secondary to the two capability panels but prominent enough to make the solution tangible.
+
+The milestones are illustrative and should not imply that every claim follows an identical sequence.
+
+“Resolution confirmed” must represent an actual verified resolution event, not merely receipt of information or a transition to Processing.
+
+Only confirmed milestones should be displayed as completed. Ambiguous record matches or unverified events must not be presented as established facts.
+
+Avoid adding additional milestones, animations, or detailed system names to the timeline.
+
+5. Safeguard statement
+
+Retain a concise statement at the bottom:
+
+“Proclaim remains authoritative for adjudication. ClaimTrack does not independently approve, deny, or pay claims.”
+
+Keep this readable but visually subordinate to the primary solution.
+
+6. Visual design requirements
+
+Preserve the established ClaimTrack visual identity:
+
+- White background.
+- Large dark navy headline.
+- Aqua/teal accents.
+- Restrained blue and green capability differentiation.
+- Clean corporate typography.
+- Generous whitespace.
+- Minimal iconography.
+- Consistent top navigation: Problem | Solution | Value | Pilot | Ask.
+- Highlight Solution in the navigation.
+- Preserve the existing corporate footer and slide number 5.
+
+Use native, editable PowerPoint shapes, icons, connectors, and text.
+
+Do not create a flattened image.
+
+Optimize for online screen sharing. Text should remain readable in a typical laptop-sized Teams meeting window.
+
+Avoid dense paragraphs, tiny labels, stock photography, unnecessary diagrams, excessive animations, and decorative effects.
+
+7. Innovation and credibility requirements
+
+Make the two capabilities feel complementary rather than redundant.
+
+Proactive PreClear addresses the opportunity before an adjudication pass.
+
+Shared Resolution addresses coordination and visibility after a claim pends.
+
+Do not imply that existing systems provide no tracking, validation, or operational records.
+
+Emphasize that ClaimTrack builds upon existing authorized data and workflows.
+
+Do not claim that the proposed integrations, early intervention windows, record matching, or operational improvements have already been validated in production.
+
+Do not introduce unsupported AI performance claims, cost savings, or pend-reduction percentages.
+
+The slide should communicate a credible proposed solution, not an already-deployed enterprise capability.
+
+8. Speaker notes
+
+Add the following narration:
+
+“ClaimTrack addresses this challenge through two connected capabilities.
+
+First, Proactive PreClear. Today, COB edits are applied during auto-adjudication. We're proposing an earlier information-readiness assessment using authorized signals, so actionable gaps can be identified and reviewed before an upcoming adjudication pass, where feasible.
+
+Second, Shared Resolution. Relevant information already exists across our systems, but reconstructing the claim's progress can require manual searching and validation.
+
+ClaimTrack proposes bringing those verified events together into one resolution journey—showing what's needed, what's been received, who's responsible, and what happens next.
+
+And importantly, ClaimTrack doesn't replace adjudication. Proclaim remains the authority for claim decisions.
+
+Prevent what we can. Coordinate what remains.”
+
+9. Final quality check
+
+Before finalizing, confirm:
+
+- The two capabilities are immediately distinguishable.
+- Each panel communicates a concrete mechanism, not generic marketing language.
+- The four-milestone journey is preserved and clearly labeled.
+- The slide does not overpromise pend prevention or automatic record reconciliation.
+- Proclaim's adjudication authority is explicit.
+- All text is readable during online screen sharing.
+- The visual design is consistent with Slides 1–4.
+- All elements remain editable.
+- No other slides are changed.
+
+Deliver the completed Slide 5, not merely a list of recommendations.
+
+The objective is to create a compelling solution reveal that strengthens ClaimTrack's case for Innovation (20%), Value Creation (30%), and Feasibility (25%) in the iTournament judging rubric.
