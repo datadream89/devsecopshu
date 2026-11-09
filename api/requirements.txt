@@ -1,107 +1,219 @@
-Refine Slide 7 ONLY of my existing ClaimTrack presentation. Preserve the current title, Cigna-inspired branding, navy/green color palette, and overall visual identity. Do not change any other slide.
+POWERPOINT COPILOT PROMPT — CLAIMTRACK SLIDE 7 FINAL REDESIGN
 
-PRIMARY OBJECTIVE
+Redesign Slide 7 ONLY of my existing ClaimTrack presentation for the Cigna Aspire iTournament 2026 finals.
 
-The current Slide 7 is visually attractive but significantly too text-heavy. Its four cards contain excessive bullet points, small fonts, and too much information for an online executive presentation.
+The current slide is visually clean but too generic and sparse. The previous version contained too much text. Create a balanced, executive-quality version that communicates a sophisticated, credible AI strategy without overwhelming the audience.
 
-Reduce visible text by approximately 60–70%, substantially increase font sizes, and create a clean, memorable visual story.
+Do not modify Slides 1–6 or any other slides.
 
-This is a high-stakes innovation pitch with an AI sponsor in the audience. The slide should be understandable within five seconds.
+1. CORE MESSAGE
 
-KEEP THE TITLE
+ClaimTrack's Proactive PreClear capability will evolve from an illustrative, working machine-learning prototype into a production-oriented COB risk prediction capability through authorized claims data, multiple candidate algorithms, rigorous validation, and evidence-based model selection.
+
+We are not committed to one algorithm. We are committed to finding the approach that delivers measurable operational value.
+
+The audience includes senior business leaders, technical judges, and an AI sponsor.
+
+2. TITLE AND SUBTITLE
+
+Title:
 
 AI earns its place through measurable performance.
 
-Replace the subtitle with:
+Subtitle:
 
-From illustrative prototype to validated production intelligence.
+From a working synthetic-data prototype to evidence-driven COB risk prediction.
 
-REDESIGN THE FOUR STAGES
+Keep the existing title placement, navy typography, and visual hierarchy.
 
-Replace the four large, text-heavy cards with four compact, equally sized visual stages arranged horizontally.
+3. MAIN VISUAL — FOUR CONNECTED STAGES
 
-Each stage should contain one prominent icon, one short heading, and one concise supporting phrase.
+Preserve the current four-card horizontal progression, rounded corners, professional icons, subtle directional arrows, and Cigna-inspired blue/teal/green palette.
 
-01 — REAL DATA
-Pre-adjudication signals
+However, make the cards slightly taller or redistribute the space so that each contains meaningful information in large, readable typography.
 
-02 — TEST MODELS
-Rules • ML • Ensembles
+Each card must have:
 
-03 — VALIDATE
-Cross-validation • Holdout testing
+- One prominent icon
+- One numbered heading
+- Two short, informative lines
+- No dense paragraphs or tiny bullet lists
 
-04 — DEPLOY
-Only when value is proven
+Use the following exact content.
 
-Connect the four stages with subtle directional arrows.
+CARD 01 — COB SIGNALS
 
-Do not add explanatory bullets inside the stages. Make the icons and headings visually dominant.
+Heading: COB SIGNALS
 
-MAKE THE DEPLOYMENT GATE THE HERO
+Line 1: Coverage dates • Carrier details
 
-Retain the dark navy deployment-gate section but redesign it to occupy approximately the lower third of the slide.
+Line 2: COB readiness • Prior pend history
 
-Use large, high-contrast text.
+Visual: Database or connected-data icon.
 
-Small label:
+Purpose: Show that the future model will use relevant pre-adjudication information, including historical signals where applicable.
+
+Do not imply that prior pend history is required for first-time claims.
+
+CARD 02 — COMPETING MODELS
+
+Heading: COMPETING MODELS
+
+Line 1: Rules • Logistic regression
+
+Line 2: Random forests • Gradient boosting
+
+Visual: Connected neural-network nodes or model-comparison icon.
+
+Purpose: Demonstrate that multiple algorithms will be evaluated rather than assuming the prototype's logistic regression model is the final production choice.
+
+CARD 03 — PROVE PERFORMANCE
+
+Heading: PROVE PERFORMANCE
+
+Line 1: Cross-validation • Temporal holdout
+
+Line 2: First-time vs. repeat-pend evaluation
+
+Visual: Validation checkmark or performance chart.
+
+Purpose: Show rigorous model evaluation, including separate performance analysis for first-time and repeat COB pend scenarios.
+
+CARD 04 — HUMAN ACTION
+
+Heading: HUMAN ACTION
+
+Line 1: Prioritize actionable COB risks
+
+Line 2: Authorized review before adjudication
+
+Visual: Human-in-the-loop or shield/check icon.
+
+Purpose: Connect machine learning to an actual operational intervention rather than simply predicting claim outcomes.
+
+Do not suggest autonomous adjudication, automatic claim correction, or automatic member outreach.
+
+4. MAIN HERO ELEMENT — THE AI DEPLOYMENT GATE
+
+Retain the current dark navy deployment-gate panel below the four cards.
+
+It should be visually prominent but not so tall that it makes the four stages feel insignificant.
+
+Small heading:
 
 THE AI DEPLOYMENT GATE
 
-Main question:
+Large central question:
 
-Does AI outperform simple rules at the same review capacity?
+Does ML identify more actionable COB risks than rules at equal review capacity?
 
-Below the question, place two clearly differentiated outcomes side by side:
+Below this question, show two horizontally aligned outcomes:
 
-YES → Advance AI
+YES → Advance ML
 
 NO → Keep rules
 
-Use restrained green emphasis for YES and a neutral treatment for NO. Avoid oversized colored boxes or excessive decoration.
+Use green emphasis for YES and neutral white or light gray for NO.
 
-The deployment gate must be the most visually memorable part of the slide after the title.
+Do not use excessive colored boxes, complicated branching diagrams, or lengthy explanatory text.
 
-SIMPLIFY THE FOOTER
+The message should be immediately understandable: AI is deployed only when evidence justifies it.
 
-Replace the existing dense footnotes and safeguards with one compact, readable line:
+5. BOTTOM TRUST STATEMENT
 
-Synthetic prototype today  |  Production validation planned  |  Human oversight always
+Use one clean, centered line above the standard presentation footer:
 
-Do not include additional paragraphs or tiny disclaimer text.
+Working synthetic-data prototype today  |  Production model selection and validation planned
 
-MOVE TECHNICAL DETAILS TO SPEAKER NOTES
+Keep it readable. Do not use tiny disclaimer text.
 
-Preserve the following important information in speaker notes rather than displaying it on the slide:
+6. IMPORTANT TECHNICAL ACCURACY
 
-- Slide 6 demonstrates an illustrative working logistic regression classifier trained on synthetic data.
-- Logistic regression is not the predetermined production algorithm.
-- Production development will use authorized claims data and evaluate multiple approaches, including deterministic rules, logistic regression, random forests, gradient boosting, and other suitable models.
-- Candidate models will undergo appropriate cross-validation, temporal holdout evaluation, leakage checks, and separate analysis for first-time versus repeat COB pend risk.
-- Model selection will consider precision, recall, calibration, and actionable cases identified at equivalent review capacity.
-- AI will advance only if validated evidence demonstrates meaningful incremental operational value over simpler rules.
-- Human reviewers retain authority over interventions, and existing claims platforms remain authoritative for adjudication.
-- No production performance or prospective predictive capability has yet been established.
+The following distinctions must be preserved:
 
-STRICT DESIGN REQUIREMENTS
+Current prototype:
 
-1. Remove the existing detailed bullet lists from all four cards.
-2. Do not shrink text to fit. Reduce content instead.
-3. Use large, readable fonts suitable for Microsoft Teams screen sharing.
-4. Increase whitespace and improve visual hierarchy.
-5. Maintain strong contrast between text and backgrounds.
-6. Avoid clutter, tiny annotations, excessive borders, and decorative elements.
-7. Keep the slide sophisticated, minimalist, and enterprise-ready.
-8. Keep all PowerPoint elements editable.
-9. Do not invent performance metrics, model results, or production deployment claims.
-10. Modify Slide 7 only.
+- Uses synthetic claims and synthetic training data.
+- Contains a genuinely implemented logistic regression classifier.
+- Demonstrates a technical foundation for risk scoring.
+- Does not establish validated prospective prediction on real production claims.
+- Any LLM-style explanations shown in the prototype are illustrative, not live LLM inference.
 
-DESIRED AUDIENCE IMPRESSION
+Proposed production development:
 
-The judges should immediately understand:
+- Will use appropriately authorized historical claims and COB data.
+- Will reconstruct features as they existed before the adjudication attempt being predicted.
+- Will compare deterministic rules, logistic regression, random forests, gradient boosting, and other justified candidate approaches.
+- Will use appropriate cross-validation and later-period holdout testing.
+- Will evaluate first-time and repeat-pend scenarios separately.
+- Will assess precision, recall, calibration, and actionable risks identified at equivalent human-review capacity.
+- Will select a model only if validated results justify the additional complexity.
+- Will retain human oversight and existing adjudication authority.
 
-We will test multiple approaches, validate them rigorously, and deploy AI only when it proves better than simpler alternatives.
+Do not imply any of these future activities have already been completed.
 
-The final slide should feel like an executive AI strategy presented by a mature engineering team—not a technical document compressed into PowerPoint.
+Do not invent model accuracy, AUC, prevented-pend percentages, financial savings, or production results.
 
-Prioritize clarity, confidence, and visual impact over information density.
+7. SPEAKER NOTES — ADD THE TECHNICAL DETAIL HERE
+
+Add the following polished presenter notes to Slide 7:
+
+"What you saw in the previous slide is our starting point: a working logistic regression prototype using synthetic claims data.
+
+But we are not proposing to take that particular algorithm straight into production.
+
+Our next step is to work with authorized historical claims and COB data to build time-aligned datasets containing information available before adjudication.
+
+We will experiment with multiple approaches, from simple business rules and logistic regression to random forests and gradient-boosted models.
+
+Using cross-validation, temporal holdout testing, and separate evaluation of first-time and repeat-pend scenarios, we will determine which approach performs best.
+
+And performance means more than predictive accuracy. We want to know whether a model identifies more genuinely actionable COB risks at the same human-review capacity.
+
+If machine learning demonstrates meaningful incremental value, we advance it through the appropriate governance process. If not, we retain the simpler rules-based approach.
+
+The goal is not AI for its own sake. It is earlier, more effective intervention while keeping claims decisions in the hands of authorized systems and people."
+
+8. DESIGN AND READABILITY REQUIREMENTS
+
+This slide will be presented through Microsoft Teams screen sharing.
+
+- Use a clean 16:9 widescreen layout.
+- Preserve the current ClaimTrack design language and branding.
+- Maintain four horizontally aligned cards.
+- Increase card text size substantially compared with the earlier text-heavy version.
+- Prefer approximately 18–22 pt for card content where layout permits.
+- Use bold, prominent headings and high-contrast body text.
+- Preserve generous whitespace without making the cards appear empty.
+- Make all four cards visually balanced.
+- Keep icons consistent in style and size.
+- Keep the navy deployment gate visually dominant without overpowering the four stages.
+- Remove redundant explanations and excessive decorative elements.
+- Ensure all text is legible at typical laptop screen-sharing size.
+- Keep every element editable in PowerPoint.
+- Do not introduce stock photos, generic AI robot illustrations, or unnecessary graphics.
+
+9. WHAT NOT TO DO
+
+- Do not revert to the original twelve-bullet layout.
+- Do not produce four empty cards with only generic labels.
+- Do not shrink text to fit excessive content.
+- Do not present logistic regression as the predetermined final production model.
+- Do not claim production validation or performance results already exist.
+- Do not reintroduce the historical 1-in-5 versus 1-in-300 statistics.
+- Do not present Shared Resolution as predictive AI.
+- Do not change any other slide.
+
+10. FINAL QUALITY STANDARD
+
+The slide should deliver three messages within approximately ten seconds:
+
+1. Domain intelligence: We know which COB signals may help predict risk.
+
+2. Technical rigor: We will compare multiple algorithms and validate them properly.
+
+3. Business discipline: AI advances only when it delivers more actionable value than simpler rules.
+
+The result must feel like a polished, technically credible, executive-level AI innovation pitch—not a generic AI roadmap and not a dense engineering document.
+
+Target: A visually memorable, substantive, presentation-ready Slide 7 that balances technical sophistication with immediate clarity.
