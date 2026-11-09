@@ -1,1 +1,107 @@
+Refine Slide 7 ONLY of my existing ClaimTrack presentation. Preserve the current title, Cigna-inspired branding, navy/green color palette, and overall visual identity. Do not change any other slide.
 
+PRIMARY OBJECTIVE
+
+The current Slide 7 is visually attractive but significantly too text-heavy. Its four cards contain excessive bullet points, small fonts, and too much information for an online executive presentation.
+
+Reduce visible text by approximately 60–70%, substantially increase font sizes, and create a clean, memorable visual story.
+
+This is a high-stakes innovation pitch with an AI sponsor in the audience. The slide should be understandable within five seconds.
+
+KEEP THE TITLE
+
+AI earns its place through measurable performance.
+
+Replace the subtitle with:
+
+From illustrative prototype to validated production intelligence.
+
+REDESIGN THE FOUR STAGES
+
+Replace the four large, text-heavy cards with four compact, equally sized visual stages arranged horizontally.
+
+Each stage should contain one prominent icon, one short heading, and one concise supporting phrase.
+
+01 — REAL DATA
+Pre-adjudication signals
+
+02 — TEST MODELS
+Rules • ML • Ensembles
+
+03 — VALIDATE
+Cross-validation • Holdout testing
+
+04 — DEPLOY
+Only when value is proven
+
+Connect the four stages with subtle directional arrows.
+
+Do not add explanatory bullets inside the stages. Make the icons and headings visually dominant.
+
+MAKE THE DEPLOYMENT GATE THE HERO
+
+Retain the dark navy deployment-gate section but redesign it to occupy approximately the lower third of the slide.
+
+Use large, high-contrast text.
+
+Small label:
+
+THE AI DEPLOYMENT GATE
+
+Main question:
+
+Does AI outperform simple rules at the same review capacity?
+
+Below the question, place two clearly differentiated outcomes side by side:
+
+YES → Advance AI
+
+NO → Keep rules
+
+Use restrained green emphasis for YES and a neutral treatment for NO. Avoid oversized colored boxes or excessive decoration.
+
+The deployment gate must be the most visually memorable part of the slide after the title.
+
+SIMPLIFY THE FOOTER
+
+Replace the existing dense footnotes and safeguards with one compact, readable line:
+
+Synthetic prototype today  |  Production validation planned  |  Human oversight always
+
+Do not include additional paragraphs or tiny disclaimer text.
+
+MOVE TECHNICAL DETAILS TO SPEAKER NOTES
+
+Preserve the following important information in speaker notes rather than displaying it on the slide:
+
+- Slide 6 demonstrates an illustrative working logistic regression classifier trained on synthetic data.
+- Logistic regression is not the predetermined production algorithm.
+- Production development will use authorized claims data and evaluate multiple approaches, including deterministic rules, logistic regression, random forests, gradient boosting, and other suitable models.
+- Candidate models will undergo appropriate cross-validation, temporal holdout evaluation, leakage checks, and separate analysis for first-time versus repeat COB pend risk.
+- Model selection will consider precision, recall, calibration, and actionable cases identified at equivalent review capacity.
+- AI will advance only if validated evidence demonstrates meaningful incremental operational value over simpler rules.
+- Human reviewers retain authority over interventions, and existing claims platforms remain authoritative for adjudication.
+- No production performance or prospective predictive capability has yet been established.
+
+STRICT DESIGN REQUIREMENTS
+
+1. Remove the existing detailed bullet lists from all four cards.
+2. Do not shrink text to fit. Reduce content instead.
+3. Use large, readable fonts suitable for Microsoft Teams screen sharing.
+4. Increase whitespace and improve visual hierarchy.
+5. Maintain strong contrast between text and backgrounds.
+6. Avoid clutter, tiny annotations, excessive borders, and decorative elements.
+7. Keep the slide sophisticated, minimalist, and enterprise-ready.
+8. Keep all PowerPoint elements editable.
+9. Do not invent performance metrics, model results, or production deployment claims.
+10. Modify Slide 7 only.
+
+DESIRED AUDIENCE IMPRESSION
+
+The judges should immediately understand:
+
+We will test multiple approaches, validate them rigorously, and deploy AI only when it proves better than simpler alternatives.
+
+The final slide should feel like an executive AI strategy presented by a mature engineering team—not a technical document compressed into PowerPoint.
+
+Prioritize clarity, confidence, and visual impact over information density.
