@@ -1,78 +1,103 @@
-ClaimTrack — Slide 5 Final Polish (Three Targeted Refinements Only)
+Redesign Slide 7 ONLY of my existing ClaimTrack presentation for the Cigna Aspire iTournament 2026 finals. Preserve the presentation’s established visual identity, navy-and-white color palette, typography, and professional enterprise aesthetic. Do not modify any other slide.
 
-Act as a senior executive PowerPoint designer.
+SLIDE TITLE
 
-Refine Slide 5 only of the existing ClaimTrack presentation. The slide is already nearly finalized. Do not redesign it, change its structure, or modify any other slide.
+AI earns its place through measurable performance.
 
-Make exactly the following three improvements.
+SUBTITLE
 
-Refinement 1 — Shorten Proactive PreClear bullets
+Today's illustrative prototype proves the concept. Tomorrow's production capability will be built through rigorous model experimentation, validation, and evidence-based selection.
 
-In the left panel, replace the three existing bullets with:
+DESIGN DIRECTION
 
-1. Flag COB information-gap risks using authorized signals.
-2. Prioritize cases for human validation and potential correction.
-3. Support earlier intervention where feasible.
+Create a visually striking, executive-level slide that feels like a sophisticated AI product strategy—not a generic project roadmap or an academic machine-learning lecture.
 
-Preserve the heading “Proactive PreClear,” the label “BEFORE ADJUDICATION,” and the statement “Identify actionable information gaps earlier.”
+Use a clean, left-to-right progression with four prominent stages, connected by subtle arrows or a continuous visual flow. Use restrained Cigna-compatible accent colors, clear hierarchy, minimal text, elegant icons, and ample whitespace.
 
-Maintain the existing blue styling, icons, spacing, and panel dimensions.
+STAGE 1 — REAL-WORLD DATA
 
-Ensure all three bullets are visually balanced and readable during Microsoft Teams screen sharing.
+Build the foundation
 
-Refinement 2 — Clarify the four-milestone journey
+Use authorized historical claims and COB data to construct time-aligned, pre-adjudication feature snapshots.
 
-Retain the existing horizontal timeline with these exact milestones:
+Emphasize data quality, representative outcomes, and prevention of target leakage.
 
-1. Action identified
-2. Owner confirmed
-3. Information received
-4. Resolution confirmed
+STAGE 2 — MODEL EXPERIMENTATION
 
-Change the timeline section heading to:
+Let the evidence choose the algorithm
 
-“Shared Resolution | Illustrative verified journey”
+Evaluate multiple candidate approaches:
 
-This clarifies that the timeline illustrates the Shared Resolution capability rather than implying that both capabilities generate the same milestones.
+- Deterministic business rules
+- Logistic regression
+- Random forests
+- Gradient-boosted models
+- Other appropriate architectures as justified by the data
 
-Preserve all four circles, their connecting line, numbering, and existing teal styling.
+Make it visually clear that logistic regression is our current illustrative prototype, not a predetermined production choice.
 
-Do not add new milestones or redesign the timeline.
+STAGE 3 — RIGOROUS VALIDATION
 
-The journey must remain illustrative, not a promise that every claim follows an identical sequence.
+Prove performance beyond the demo
 
-Refinement 3 — Improve safeguard readability
+Use appropriate cross-validation, temporal holdout testing, and separate evaluation for first-time and repeat COB pend risk.
 
-Retain the exact safeguard text:
+Compare precision, recall, calibration, and actionable cases identified at equivalent human-review capacity.
 
-“Proclaim remains authoritative for adjudication. ClaimTrack does not independently approve, deny, or pay claims.”
+No fabricated performance statistics or unsupported accuracy claims.
 
-Increase its font size slightly for improved readability during online screen sharing.
+STAGE 4 — RESPONSIBLE DEPLOYMENT
 
-Remove the raised-box or shadow treatment surrounding the safeguard.
+Only deploy what delivers value
 
-Use a clean, flat presentation with subtle separation from the timeline.
+Select the approach that demonstrates meaningful incremental benefit over a simple rule, while considering interpretability, operational feasibility, and ongoing monitoring.
 
-Keep the text centered and visually subordinate to the main solution.
+Human reviewers retain authority over interventions. Existing claims platforms remain authoritative for adjudication.
 
-Ensure the safeguard does not overlap the corporate footer or slide number.
+PRIMARY VISUAL EMPHASIS
 
-Strict preservation requirements
+Below the four stages, create a bold, elegant horizontal decision gate:
 
-Do not change:
+THE AI DEPLOYMENT GATE
 
-- The main headline: “ClaimTrack prevents what it can and coordinates what remains.”
-- The subtitle.
-- The Shared Resolution panel's existing bullets.
-- The two-panel layout or dimensions.
-- The blue and teal capability colors.
-- The top navigation or highlighted Solution tab.
-- The corporate footer and slide number.
-- The overall visual identity, typography, and spacing, except where necessary for these three refinements.
-- Any other slide in the presentation.
+Does the model identify more actionable COB risks than a simple rule—at the same review capacity?
 
-Keep all elements editable PowerPoint objects.
+Show two clear possible outcomes:
 
-Do not introduce animations, additional text, new diagrams, or decorative elements.
+YES → Advance the validated model through governance and deployment readiness.
 
-Deliver the updated Slide 5 with only these three refinements.
+NO → Keep the simpler rules-based approach.
+
+This decision gate should be the slide's most memorable element after the title.
+
+BOTTOM TRUST STRIP
+
+Use a compact, sophisticated footer:
+
+Explainable risk signals  |  Human-validated action  |  No autonomous adjudication
+
+CRITICAL ACCURACY REQUIREMENTS
+
+1. Slide 6 is an illustrative prototype built using synthetic claims and training data, with a working logistic regression classifier. Do not imply that it was trained on real production claims.
+2. Future production development is a proposed plan, not completed work.
+3. Do not claim that any model already outperforms business rules.
+4. Do not imply that future COB pend prediction has already been validated prospectively.
+5. Do not invent AUC, accuracy, savings, prevented-pend rates, or other performance results.
+6. Any generative AI explanation capability remains prospective; the current prototype's LLM-style explanations are illustrative, not live LLM inference.
+7. Distinguish first-time COB pend prevention from repeat-pend prevention, while preserving a unified ClaimTrack strategy.
+8. Keep the scope focused on Proactive PreClear; Shared Resolution is a separate capability and should not be presented as predictive AI.
+9. Do not reuse the historical “1 in 5 versus 1 in 300” statistics from the previous version of Slide 7.
+
+PRESENTATION QUALITY
+
+This is a high-stakes innovation pitch with an AI sponsor in the audience. The slide must demonstrate technical maturity, intellectual honesty, responsible AI governance, and business pragmatism.
+
+Prioritize an immediately understandable visual narrative over dense technical text. Use concise on-slide language and place supporting technical detail in speaker notes where possible.
+
+The judges should understand the central message within five seconds:
+
+We are not betting on one algorithm. We are building an evidence-driven process to discover, validate, and deploy the approach that genuinely improves COB intervention.
+
+Keep all text, shapes, icons, and diagrams editable in PowerPoint. Avoid rasterized slide designs.
+
+Deliver a polished, presentation-ready Slide 7 that is visually consistent with the existing deck and suitable for online screen sharing.
