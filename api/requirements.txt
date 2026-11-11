@@ -1,162 +1,181 @@
+PowerPoint Copilot — Refine ClaimTrack Slide 6
 
-Refine Slide 4 only of the existing ClaimTrack presentation.
+Task: Update the existing Slide 6, titled “AI earns its place through measurable performance,” using the attached “1 in 5 versus 1 in 300” slide as a visual and content reference.
 
-This is a focused executive-presentation improvement, not a complete redesign. Preserve the existing professional Cigna-inspired visual identity, color scheme, and overall layout.
+IMPORTANT: Modify Slide 6 only. Do not replace the entire presentation, insert additional slides, or modify any other slide.
 
-Objective
+1. Design objective
 
-Transform Slide 4 into a memorable, visually balanced introduction to ClaimTrack's two complementary capabilities:
+Create a polished, evidence-led executive slide that explains why ClaimTrack is evaluating AI, how predictive ML will be compared with simpler alternatives, and why grounded GenAI must independently demonstrate value.
 
-1. Proactive PreClear: Identify actionable COB information gaps before adjudication and support earlier human-validated intervention.
-2. Shared Resolution: After a claim pends, make verified ownership, progress, and next steps visible.
+Use the attached reference slide's clean two-column composition, prominent statistics, and accessible executive storytelling.
 
-The slide must communicate both capabilities within 5–10 seconds while retaining technical accuracy.
+Preserve the current slide's disciplined approach to model validation, human oversight, and independent ML/GenAI evaluation.
 
-1. Replace the headline
+Do not attempt to combine every existing diagram, label, and box. Simplify aggressively while preserving the essential decision logic.
 
-Use:
+2. Headline and subtitle
 
-“Intervene earlier. Make resolution visible.”
+Replace the current headline with:
+
+“AI must outperform simpler alternatives.”
 
 Subtitle:
 
-“Two connected capabilities across the claims journey.”
+“Historical patterns establish a baseline. Validation determines whether AI adds value.”
 
-Preserve the existing large navy headline treatment and subtitle hierarchy.
+Retain the deck's existing navy typography, white background, green accents, and Solution navigation highlight.
 
-2. Refine the left capability card
+3. Main content — two-column layout
 
-Preserve the blue visual identity, rounded card, left accent bar, and existing icon.
+Create two balanced sections occupying the main body of the slide.
 
-Eyebrow:
+LEFT COLUMN — WHAT THE DATA ALREADY TELLS US
 
-BEFORE ADJUDICATION
-
-Capability name:
-
-Proactive PreClear
-
-Prominent value statement:
-
-“Identify actionable COB gaps earlier.”
-
-Replace the existing lengthy bullets with three concise, visually separated actions:
-
-- Detect information-gap risks
-- Prioritize human review
-- Enable earlier correction
-
-Bold the action verbs and keep the supporting phrases readable.
-
-These actions represent a proposed workflow, not proven autonomous capabilities. Avoid suggesting that ClaimTrack automatically corrects claims or guarantees prevention of pends.
-
-3. Refine the right capability card
-
-Preserve the teal visual identity, rounded card, left accent bar, and existing icon.
-
-Eyebrow:
-
-AFTER A CLAIM PENDS
-
-Capability name:
-
-Shared Resolution
-
-Prominent value statement:
-
-“Make verified progress visible.”
-
-Replace the existing lengthy bullets with:
-
-- Reconcile authorized records
-- Confirm ownership and milestones
-- Show progress and next steps
-
-Bold the action verbs.
-
-Ensure the wording communicates that milestones are based on authoritative records and validated events, not generated assumptions or predicted resolution dates.
-
-4. Improve the visual hierarchy
-
-Keep the existing side-by-side capability cards.
-
-Make the cards equal in height and visually balanced.
-
-Within each card, create a clear hierarchy:
-
-1. Stage label
-2. Capability name
-3. Value statement
-4. Three concise actions
-
-Increase whitespace between these elements.
-
-Use consistent font sizes, icon sizing, padding, and vertical alignment across both cards.
-
-Avoid excessive decorative graphics, gradients, shadows, or new illustrations.
-
-The result should feel more like an executive solution architecture overview and less like a document containing bullet points.
-
-5. Preserve and enhance the Shared Resolution timeline
-
-Retain the existing horizontal four-milestone timeline below the cards.
+Use a prominent dark navy evidence panel inspired by the attached reference slide.
 
 Section heading:
 
-“Shared Resolution | Illustrative verified journey”
+“What the data already tells us”
 
-Milestones:
+Supporting label:
 
-01 — Action identified
+“Observed next-quarter COB pend incidence”
 
-02 — Owner confirmed
+Display these statistics prominently:
 
-03 — Information received
+1 in 5
 
-04 — Resolution confirmed
+“Members with a COB pend in the previous quarter”
 
-Keep the teal horizontal connector and four circular milestones.
+1 in 300
 
-Improve the readability and spacing of the milestone labels, ensuring the fourth milestone is not cramped.
+“Members without a COB pend in the previous quarter”
 
-The timeline must be clearly presented as illustrative. Milestones should only appear in an actual implementation when supported by authoritative records or validated events. Information receipt must not imply verification or acceptance.
+Use green emphasis for “1 in 5” and white for “1 in 300,” consistent with the reference slide.
 
-Do not add a second timeline or additional workflow diagram.
+Separate the statistics with a subtle vertical divider.
 
-6. Preserve the governance statement
+Include a small, readable clarification:
 
-Keep the existing statement at the bottom:
+“Historical association—not model performance or proof of preventability.”
 
-“Existing claims platforms remain authoritative for adjudication. ClaimTrack does not independently approve, deny, or pay claims.”
+Do not label this comparison as predictive accuracy, model lift, causal impact, or proven avoidable pends.
 
-Make it readable but visually subordinate to the solution content.
+RIGHT COLUMN — HOW WE DECIDE
 
-7. Maintain consistency with the deck
+Use a clean three-step decision sequence with restrained numbered markers.
 
-- Preserve the existing white background, navy typography, blue and teal capability colors, and green accent.
-- Preserve the top navigation bar with Solution highlighted.
-- Retain the existing footer, company branding, and slide number.
-- Maintain a clean, spacious, executive-level aesthetic.
-- Keep all text, shapes, and diagrams editable in PowerPoint.
-- Do not introduce new metrics, performance claims, or unsupported AI capabilities.
-- Do not modify the presentation theme or slide dimensions.
+01 — Establish the rules baseline
 
-8. Strict editing boundary
+“Use known historical patterns as a simple benchmark.”
 
-Edit Slide 4 only.
+02 — Validate candidate models
 
-Do not modify, delete, reorder, recreate, or restyle any other slide.
+“Compare rules, reference classifiers, and candidate ML using time-aligned inputs, temporal holdouts, and operational yield.”
 
-Preserve the existing slide's recognizable composition. Prioritize content simplification, alignment, typography, and whitespace over cosmetic redesign.
+03 — Advance only demonstrated value
 
-Desired final impression
+“Adopt ML only if it delivers measurable improvement; otherwise retain the simpler approach.”
 
-The audience should immediately understand:
+Make the step headings visually prominent. Keep the descriptions compact and legible.
 
-Proactive PreClear = Identify actionable COB gaps before adjudication.
+Avoid implying that a historical association alone is a validated production prediction.
 
-Shared Resolution = Make verified progress visible after a claim pends.
+4. Bottom section — two independent AI value gates
 
-The two capabilities should feel complementary, practical, differentiated, and suitable for a controlled pilot.
+Below the main two-column section, create a visually distinct but compact horizontal section.
 
-Produce a polished, boardroom-ready solution slide that is visually engaging, technically defensible, and easy to explain in approximately 45–60 seconds.
+Heading:
+
+“Two independent AI decisions”
+
+Use two equally sized cards or panels.
+
+LEFT — PREDICTIVE ML
+
+Value gate:
+
+“Use ML only if it improves actionable detection over the rules baseline.”
+
+Decision outcomes:
+
+Validated improvement → Advance ML
+
+No incremental value → Keep rules
+
+RIGHT — GROUNDED GenAI
+
+Value gate:
+
+“Use GenAI only if grounded explanations outperform deterministic templates on accuracy, clarity, and safety.”
+
+Decision outcomes:
+
+Validated improvement → Advance GenAI
+
+No incremental value → Keep templates
+
+The two evaluations must remain independent. ML may advance without GenAI, GenAI may advance without ML, both may advance, or neither may advance.
+
+Do not imply that GenAI determines claim outcomes or invents explanations.
+
+5. Governance and prototype maturity
+
+Include a concise, readable footer:
+
+“Synthetic prototype today | Proposed production validation | Human oversight always”
+
+Preserve these principles in the content:
+
+- The current prototype uses synthetic data and does not establish production predictive performance.
+- Any production candidate must be validated using appropriately authorized, time-aligned historical data and prospective or temporal holdout evaluation.
+- Predictive ML produces risk signals for human review, not autonomous claim decisions.
+- Grounded GenAI may explain verified, supported factors but must not fabricate reasons, milestones, or outcomes.
+- Existing claims systems remain authoritative for adjudication.
+
+Do not introduce unsupported model accuracy, precision, recall, savings, automation, or ROI claims.
+
+6. Visual simplification
+
+Remove the current dense four-stage technical pipeline from the main slide.
+
+Do not retain the separate COB Signals, Model Competition, Grounded GenAI, and Human Review boxes in their existing large diagram format.
+
+Instead, preserve their essential concepts through the three-step validation sequence, independent value gates, and concise governance footer.
+
+Use the attached “1 in 5” slide as the primary reference for visual hierarchy, but do not blindly reproduce its bottom section.
+
+Specifically:
+
+- Do not label Shared Resolution as categorically “No AI.”
+- Do not merge predictive ML and grounded GenAI into one approval decision.
+- Do not add decorative icons to every statement.
+- Avoid dense paragraphs, excessive badges, gradients, or unnecessary shadows.
+- Keep all key text readable during screen sharing.
+- Use consistent spacing, alignment, and typography.
+- Keep every text element, shape, and statistic editable in PowerPoint.
+
+7. Strict slide-editing boundaries
+
+Modify Slide 6 only.
+
+Do not change the slide master, presentation theme, footer branding, navigation bar, slide dimensions, or any other slide.
+
+Do not insert the attached reference slide into the deck.
+
+Do not duplicate content from the reference slide unnecessarily.
+
+Desired result
+
+An executive-ready slide that communicates three memorable ideas:
+
+1. We already have a meaningful historical signal.
+
+2. Predictive ML must demonstrate incremental value over simpler rules.
+
+3. Grounded GenAI must independently demonstrate value over deterministic explanations.
+
+The slide should be understandable within 15 seconds and explainable in approximately 60 seconds.
+
+Prioritize clarity, credibility, and measurable innovation over technical complexity.
