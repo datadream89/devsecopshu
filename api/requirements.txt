@@ -1,211 +1,138 @@
-PowerPoint Copilot — Redesign Slide 6 Only
+PowerPoint Copilot — Slide 6 Final Readability Refinement
 
-Task: Refine the existing ClaimTrack Slide 6, titled “AI must outperform simpler alternatives.”
+Task: Refine Slide 6, titled “AI must outperform simpler alternatives.”
 
-This is a focused visual simplification and content refinement. Do not modify any other slide.
+This is a minor typography and content refinement, NOT a redesign.
 
-1. Design objective
+Modify Slide 6 only. Preserve the existing layout, visual hierarchy, statistics, colors, and overall composition.
 
-Transform the current cluttered slide into a clean, sophisticated executive presentation slide.
+1. Improve the validation approach section
 
-Use the visual language established by Slides 3 and 4: white background, generous whitespace, navy typography, restrained green and teal accents, minimal decoration, and strong alignment.
+In the upper-right section titled “02 | Validation approach,” retain the existing three-stage horizontal sequence.
 
-The slide should communicate three ideas:
+Replace the current stage labels and descriptions with:
 
-1. Historical data provides a meaningful baseline.
-2. Predictive ML must demonstrate measurable incremental value.
-3. Grounded GenAI must independently demonstrate value over deterministic alternatives.
+Stage 1
 
-Avoid the appearance of a technical dashboard or an infographic containing numerous boxes.
+Heading: Rules baseline
 
-2. Headline and subtitle
+Description: “Benchmark historical patterns”
 
-Retain the headline:
+Stage 2
 
-“AI must outperform simpler alternatives.”
+Heading: Test models
 
-Replace the subtitle with:
+Description: “Compare against temporal holdout”
 
-“Historical evidence informs the baseline. Validation determines what advances.”
+Stage 3
 
-Preserve the existing typography and navigation bar with Solution highlighted.
+Heading: Prove value
 
-3. Replace the dark statistics panel
+Description: “Advance only if better”
 
-Completely remove the large dark navy rounded rectangle currently containing the 1-in-5 and 1-in-300 statistics.
+Ensure all three headings fit on one line.
 
-Replace it with a clean, open, white-background evidence section.
+Increase the font size of the stage descriptions modestly so they are clearly readable during screen sharing.
 
-Section heading:
+Keep the three stages evenly spaced, consistently aligned, and connected by subtle horizontal lines.
 
-“01 | Historical signal”
+Preserve the existing methodological note beneath the sequence:
 
-Supporting label:
+“Authorized, time-aligned data | Temporal holdout | Operational yield, performance, and safety”
 
-“Observed next-quarter COB pend incidence”
+Ensure the note remains legible without becoming visually dominant.
 
-Display the two statistics horizontally:
+2. Improve readability of the independent AI value gates
 
-1 in 5
+Keep the existing two side-by-side panels under “03 | Independent AI value gates.”
 
-“Members with a COB pend in the previous quarter”
+Do not change their dimensions, colors, headings, or main statements.
 
-1 in 300
+Predictive ML panel
 
-“Members without a COB pend in the previous quarter”
-
-Use large navy numbers, with restrained green emphasis on “1 in 5.”
-
-Separate the figures using a thin vertical divider.
-
-Do not surround the statistics with a large colored box.
-
-Include a small, readable methodological note:
-
-“Historical association—not validated model performance or proof of preventability.”
-
-The statistics should be prominent without dominating the entire slide.
-
-4. Simplify the validation process
-
-Replace the existing right-hand three-step text-heavy section with a concise horizontal validation sequence.
-
-Section heading:
-
-“02 | Validation approach”
-
-Create three equally spaced stages:
-
-Rules baseline
-
-“Benchmark known historical patterns.”
-
-Temporal validation
-
-“Compare rules and ML on time-aligned data.”
-
-Advance on value
-
-“Retain ML only if incremental benefit is demonstrated.”
-
-Use subtle connecting lines or arrows if helpful.
-
-Do not use large numbered circles, heavy colored cards, or unnecessary icons.
-
-Maintain clear spacing between the three stages.
-
-Preserve the concept that validation must assess operational yield, safety, and performance on an appropriate temporal holdout. These details may be included in a concise note or speaker notes rather than cluttering the slide.
-
-5. Simplify the independent AI gates
-
-Section heading:
-
-“03 | Independent AI value gates”
-
-Create two balanced, understated panels side by side.
-
-Use a thin teal top accent for Predictive ML and a thin muted purple top accent for Grounded GenAI.
-
-Avoid dark backgrounds, colored decision buttons, excessive rounded rectangles, or decorative shadows.
-
-Predictive ML
-
-Main statement:
+Retain:
 
 “Outperform rules on actionable detection.”
 
-Decision:
+Make the following decision outcomes slightly larger and darker:
 
 “Improvement demonstrated → Advance ML”
 
 “Otherwise → Retain rules”
 
-Grounded GenAI
+Grounded GenAI panel
 
-Main statement:
+Retain:
 
 “Outperform deterministic templates on grounded explanation quality.”
 
-Decision:
+Make the following decision outcomes slightly larger and darker:
 
 “Improvement demonstrated → Advance GenAI”
 
 “Otherwise → Retain templates”
 
-The two gates must remain independent. Either, both, or neither capability may advance based on validation.
+Use consistent typography and spacing across both panels.
 
-Do not suggest that GenAI is required for predictive ML or that either technology independently adjudicates claims.
+The decision outcomes must remain visually subordinate to the main statements but comfortably readable.
 
-6. Replace the heavy navy footer banner
+Avoid colored buttons, badges, heavy backgrounds, or additional decorative elements.
 
-Remove the full-width dark navy banner currently displaying the prototype and governance statement.
+3. Preserve the historical evidence section
 
-Replace it with a single understated footer line:
+Do not modify the upper-left section titled “01 | Historical signal.”
+
+Preserve exactly:
+
+- 1 in 5
+- 1 in 300
+- The existing population descriptions
+- The methodological clarification about historical association
+
+Do not change the values, their interpretation, colors, or positioning.
+
+4. Preserve the headline and governance footer
+
+Keep the existing headline:
+
+“AI must outperform simpler alternatives.”
+
+Keep the subtitle:
+
+“Historical evidence informs the baseline. Validation determines what advances.”
+
+Preserve the existing governance line:
 
 “Synthetic prototype today | Proposed production validation | Human oversight always”
 
-Use readable, medium-gray text.
+Do not alter the top navigation bar, branding, footer, or slide number.
 
-Preserve the existing company branding, internal-use footer, and slide number separately.
+5. Visual constraints
 
-7. Visual hierarchy and spacing
+- Maintain the white background and restrained executive aesthetic.
+- Preserve the navy, green, teal, and muted purple palette.
+- Do not introduce new cards, icons, illustrations, or charts.
+- Do not add shadows, gradients, or decorative shapes.
+- Do not shrink any text to accommodate the changes.
+- Maintain generous whitespace and balanced alignment.
+- Keep all elements editable in PowerPoint.
 
-Organize the slide into three clear horizontal sections:
+6. Strict editing boundary
 
-Top — Historical signal
+Edit Slide 6 only.
 
-Middle — Validation approach
+Do not modify, reorder, delete, recreate, or restyle any other slide.
 
-Bottom — Independent AI value gates
-
-Use subtle separators only where necessary.
-
-Maintain generous whitespace and a consistent alignment grid.
-
-Prioritize large, readable statistics and short action-oriented statements.
-
-Ensure no text is excessively small or crowded.
-
-Avoid placing every section inside a colored rectangle.
-
-Do not add unnecessary icons, decorative shapes, gradients, shadows, or animations.
-
-Preserve the presentation's existing white, navy, green, teal, and restrained purple palette.
-
-All elements must remain editable PowerPoint objects.
-
-8. Technical and analytical safeguards
-
-Maintain the following distinctions:
-
-- The 1-in-5 and 1-in-300 figures describe historical member-level next-quarter COB pend incidence, not model accuracy or predictive lift.
-- The historical signal is not proof that a specific claim-level pend can be prevented before adjudication.
-- Predictive ML must be compared against an appropriate rules baseline using authorized, time-aligned data and a temporal holdout.
-- Grounded GenAI must be evaluated separately against deterministic explanations for factual accuracy, clarity, and safety.
-- Human review remains responsible for intervention decisions.
-- Existing claims systems remain authoritative for adjudication.
-- The synthetic prototype does not establish production effectiveness.
-
-Do not invent performance metrics, financial benefits, model validation results, or production capabilities.
-
-9. Strict editing boundaries
-
-Modify Slide 6 only.
-
-Do not change any other slide, the slide master, presentation theme, navigation bar, footer branding, or slide dimensions.
-
-Do not insert additional slides.
-
-Do not modify the original historical statistics.
+Do not change the slide master, presentation theme, or slide dimensions.
 
 Desired result
 
-A visually restrained, executive-ready slide that feels consistent with the polished ClaimTrack solution slides.
+A polished executive slide with:
 
-The audience should understand the central message in approximately 10 seconds:
+1. Prominent, easy-to-understand historical evidence.
+2. A clearly readable three-stage model-validation sequence.
+3. Two independent AI value gates with legible decision outcomes.
 
-“We have a meaningful historical signal, but AI must prove incremental value before adoption.”
+The goal is better readability, not more content or a new design.
 
-The design should be clean enough to present comfortably in approximately 45–60 seconds.
-
-Prioritize simplicity and visual elegance over information density.
+Preserve everything that already works and make only the specified refinements.
