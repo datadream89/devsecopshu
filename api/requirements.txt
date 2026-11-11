@@ -1,60 +1,79 @@
+Refine Slide 3 only of the existing ClaimTrack presentation. This is a precision-editing task, NOT a redesign.
 
-Refine Slide 2 only of the ClaimTrack presentation. Do not modify any other slide.
+Objective: Create an executive-level, evidence-driven slide that demonstrates how deadline-driven billing-and-COB pend closures are associated with substantially higher initial denial rates. The slide should feel urgent, credible, visually clean, and persuasive to senior healthcare insurance leaders.
 
-Objective
+1. Headline and subtitle
 
-Make the member's frustration more emotionally compelling to an executive judging panel without sacrificing factual accuracy or the existing professional design.
+Replace the existing headline with:
 
-1. Preserve all existing content except the bottom takeaway
+“Near the response deadline, initial denial rates are markedly higher.”
 
-Keep the following elements exactly as they are:
+Replace the subtitle with:
 
-- Headline: “Members see what's wrong, not how it gets resolved.”
-- Existing subtitle about calling to provide COB information and the Pending-to-Processing transition.
-- Original de-identified myCigna claim screenshot.
-- All three numbered questions and their supporting descriptions.
-- Existing annotations, branding, colors, typography, and footer.
+“Deadline-driven billing-and-COB pend closures reveal an opportunity for earlier intervention.”
 
-2. Replace the bottom navy takeaway
+Maintain the existing headline typography, dark navy color, alignment, and overall hierarchy. Ensure the headline remains prominent and readable during a presentation.
 
-Current text:
-“I'm told my claim is processing. But what does that actually mean for me?”
+2. Preserve and refine the existing chart
 
-Replace with:
-“I did what was asked. Now how do I know my claim is moving forward?”
+Keep the existing two-bar chart, its colors, proportions, and general layout.
 
-3. Emphasize the member's frustration
+Change the chart heading to:
 
-The new takeaway should feel like a genuine member expressing uncertainty after taking the required action.
+“Initial denial rate by pend-closure timing”
 
-- Preserve the first-person perspective.
-- Emphasize that the member has already made the effort to respond.
-- Convey uncertainty without sounding overly dramatic or accusatory.
-- Avoid suggesting that the claim is permanently stuck or that no status updates occur.
+Preserve these exact values:
 
-4. Visual requirements
+- Before day 55: 12.4%
+- Days 55–59: 54.6%
 
-- Keep the existing dark navy rounded rectangle in the lower-right section.
-- Center the replacement statement horizontally and vertically.
-- Use white, high-contrast text.
-- Ensure the statement is readable during screen sharing, ideally across no more than two lines.
-- Do not change the dimensions or position of the rectangle unless necessary to prevent text clipping.
-- Preserve the slide's existing two-column layout and visual hierarchy.
+Use navy for the earlier-closing group and orange for the deadline-window group.
 
-5. Strict editing constraints
+Keep both percentages prominently displayed. Make the category labels comfortably readable from a distance.
 
-- Modify Slide 2 only.
-- Do not redesign the slide.
-- Do not add graphics, statistics, icons, or additional text.
-- Do not alter the myCigna screenshot.
-- Keep all existing editable PowerPoint elements editable.
+Do not alter, recalculate, or invent any statistics.
 
-Desired result
+3. Refine the three right-hand metrics
 
-The audience should recognize that the member has done what Cigna requested but still lacks clarity about what happens next.
+Preserve the existing large-number visual treatment and arrangement.
 
-The emotional takeaway should be:
+~60 days
 
-“I did my part. Why am I still left wondering?”
+“Response window”
 
-Use the exact replacement statement specified in Section 2 on the slide. The final sentence above describes the intended emotional effect, not additional slide text.
+64%
+
+“Of 567,543 distinct billing-and-COB claims had pends closing during days 55–59”
+
+4.4×
+
+“Higher observed initial denial rate in the deadline window”
+
+Make the metric descriptions concise and legible. Preserve generous spacing and clear visual hierarchy.
+
+4. Correct the methodological footnote
+
+Replace the existing footnote with:
+
+“Observed association, not causation. A controlled pilot will evaluate intervention impact.”
+
+Use a small but comfortably readable font, maintaining the existing restrained footnote styling.
+
+5. Preserve the visual identity
+
+- Retain the existing white background, navy-and-orange color scheme, and executive presentation aesthetic.
+- Preserve the top navigation bar with Problem highlighted.
+- Maintain the two-column composition: chart on the left, three supporting metrics on the right.
+- Preserve alignment, whitespace, and visual balance.
+- Avoid decorative graphics, new icons, unnecessary callout boxes, or additional charts.
+- Do not add the 23% denied-then-paid statistic or payment-timing figures to this slide.
+- Do not suggest that all late-closing claims are avoidable or that earlier intervention has already been proven to prevent denials.
+- Ensure every text element remains editable in PowerPoint.
+
+6. Strict editing boundaries
+
+Modify Slide 3 only. Do not change, recreate, reorder, delete, or restyle any other slide. Do not change the presentation theme, slide dimensions, or master layouts.
+
+Retain the current visual structure and make only the specific content and readability refinements requested above.
+
+Desired result: A polished, boardroom-ready evidence slide that immediately communicates three facts: the approximately 60-day deadline, the concentration of pend closures near that deadline, and the 4.4× difference in observed initial denial rates—without implying causation.
