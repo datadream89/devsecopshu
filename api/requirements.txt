@@ -1,149 +1,142 @@
-PowerPoint Copilot — Slide 6 Final Polish
+Redesign Slide 7 — ClaimTrack | Value Creation
 
-Task: Make a final, targeted refinement to Slide 6 of the ClaimTrack presentation.
+Completely redesign Slide 7 ONLY into a visually striking, executive-quality Value Creation slide for the ClaimTrack innovation tournament finals.
 
-IMPORTANT: Modify Slide 6 only. This is a typography and readability refinement, NOT a redesign.
+This must be a substantial redesign, not a minor formatting adjustment.
 
-1. Update the headline
+STRICT SCOPE: Modify only Slide 7. Preserve all other slides, existing slide master, theme, navigation, footer, and presentation structure. Retain editable PowerPoint text, icons, shapes, and connectors.
 
-Replace:
+1. Headline and message
 
-“AI must outperform simpler alternatives.”
+Title:
+"Turn early signals into action. Turn uncertainty into clarity."
 
-With:
+Subtitle:
+"Two connected capabilities. Existing workflows. Measurable outcomes."
 
-“AI must earn its place through measurable value.”
+The slide should communicate the value of both Proactive PreClear and Shared Resolution without repeating the technical details already covered on Slides 4–6.
 
-Retain the existing subtitle exactly:
+2. Main visual — From intelligence to action and visibility
 
-“Historical evidence informs the baseline. Validation determines what advances.”
+Replace the existing four-column text-heavy layout with a clean, horizontally organized visual containing three stages.
 
-Preserve the current headline font family, navy color, weight, alignment, and approximate size.
+DETECT
 
-Ensure the new headline fits comfortably on one line without reducing the font size.
+Spot potential gaps earlier
 
-2. Improve the readability of the independent AI value gates
+Use a simple magnifying-glass or risk-detection icon.
 
-In the bottom section titled “03 | Independent AI value gates,” retain the two existing panels.
+Represents Proactive PreClear identifying potentially actionable information gaps using authorized pre-adjudication signals.
 
-Predictive ML
+ACT
 
-Preserve the main statement:
+Route evidence-backed review tickets
 
-“Outperform rules on actionable detection.”
+Use a ticket/workflow icon.
 
-Make these decision outcomes slightly darker and more readable:
+This is the most important operational differentiator.
 
-- “Improvement demonstrated → Advance ML”
-- “Otherwise → Retain rules”
+Show that an automated agent creates a review ticket containing supporting evidence and routes it into the existing claims processor work queue.
 
-Grounded GenAI
+Use a small supporting label:
 
-Preserve the main statement:
+"Existing queue · Human decision"
 
-“Outperform deterministic templates on grounded explanation quality.”
+Make ACT visually prominent with a restrained green accent.
 
-Make these decision outcomes slightly darker and more readable:
+Do not imply autonomous claim adjudication, payment, denial, or correction. Claims processors retain decision-making authority.
 
-- “Improvement demonstrated → Advance GenAI”
-- “Otherwise → Retain templates”
+INFORM
 
-Increase the decision-text font size modestly, approximately 1–2 points if space permits.
+Make verified progress visible
 
-Use a medium-dark gray rather than the current faint gray.
+Use a progress timeline or status icon.
 
-Maintain consistent font sizes, spacing, and alignment across both panels.
+Represents Shared Resolution communicating verified ownership, documentation receipt, milestones, and next steps.
 
-Do not introduce colored buttons, badges, or additional icons.
+Use subtle connectors between the stages for narrative flow, but do not suggest that every claim must follow this exact sequence. Shared Resolution can operate independently on already-pended claims.
 
-3. Improve small methodological text
+3. Secondary visual — Four stakeholders, four outcomes
 
-Slightly increase the contrast of the following existing notes:
+Below the main workflow, create a single elegant horizontal row of four compact stakeholder benefit groups.
 
-Historical signal disclaimer:
+Each group must have one small consistent icon, a bold stakeholder name, and one concise benefit statement.
 
-“Historical association—not validated model performance or proof of preventability.”
+MEMBERS
+"Less uncertainty"
 
-Validation methodology:
+PROVIDERS
+"Fewer status chases"
 
-“Authorized, time-aligned data | Temporal holdout | Operational yield, performance, and safety”
+CLAIMS OPERATIONS
+"Less duplicate work"
 
-Independent AI decisions:
+THE CIGNA GROUP
+"Lower contact demand"
 
-“Either, both, or neither may advance.”
+Use ample whitespace and minimal text.
 
-Use a readable medium-gray color.
+These are potential outcomes to validate, not demonstrated production results.
 
-Increase font sizes only where the available space permits without crowding.
+Do not add bullet lists or supporting paragraphs to these stakeholder groups.
 
-Do not turn these notes into prominent callouts.
+4. Bottom takeaway
 
-4. Preserve the historical evidence
+Add one short, high-impact concluding statement across the bottom of the content area:
 
-Do not change:
+"Earlier intervention. Clearer accountability. Less avoidable friction."
 
-- The “1 in 5” statistic.
-- The “1 in 300” statistic.
-- Their corresponding member-population descriptions.
-- The green and navy number colors.
-- The thin vertical divider.
-- The existing open, white-background layout.
+Use navy typography with a subtle green accent.
 
-Keep the historical evidence exactly as currently presented.
+Do not add a second explanatory paragraph.
 
-5. Preserve the validation approach
+If necessary for claim accuracy, include a small unobtrusive qualifier:
 
-Retain the existing three-stage sequence:
+"Potential benefits subject to controlled pilot validation."
 
-Rules baseline
+5. Critical content restrictions
 
-“Benchmark historical patterns”
+- Do NOT show $6.7M, $335K, $1M, 3.7%, or any financial figures. Slide 8 covers financial value.
+- Do NOT repeat the historical evidence from Slide 3.
+- Do NOT reproduce the AI validation framework from Slide 6.
+- Do NOT add detailed agent architecture, model names, API diagrams, or ticket field specifications.
+- Do NOT introduce unsupported claims of realized savings, reduced denial rates, faster payment, or proven operational efficiency.
+- Do NOT imply the proposed existing-queue integration is already deployed.
+- Do NOT present the agent as independently deciding claim outcomes.
+- Do NOT create another dense four-column bullet-list slide.
 
-Test models
+6. Visual design requirements
 
-“Compare against temporal holdout”
+Maintain the presentation's established Cigna-inspired executive design language:
 
-Prove value
+- White background
+- Deep navy primary typography
+- Restrained green accents
+- Minimal, consistent line icons
+- Generous whitespace
+- Strong alignment and balanced proportions
+- Large, readable typography suitable for projection
+- No decorative illustrations, excessive shadows, gradients, or dense cards
+- No unnecessary explanatory sentences
 
-“Advance only if better”
+Use the upper portion of the slide for the three-stage workflow and the lower portion for the four stakeholder outcomes.
 
-Preserve the existing alignment, spacing, and subtle connecting lines.
+Give the ACT stage slightly more visual emphasis, but maintain balance across the three stages.
 
-Do not reintroduce the older, longer wording.
+Preserve the existing top navigation with Value highlighted, the Cigna Group footer, and the "ClaimTrack | Internal use only" designation.
 
-6. Preserve governance and visual design
+7. Executive presentation quality check
 
-Keep the existing governance statement:
+Before finalizing, verify that:
 
-“Synthetic prototype today | Proposed production validation | Human oversight always”
+1. The slide can be understood within five seconds.
+2. The automated review-ticket workflow is immediately recognizable.
+3. Human processor oversight is explicit.
+4. Both ClaimTrack capabilities are represented accurately.
+5. All four stakeholder benefits are visible without reading paragraphs.
+6. The slide contains no financial duplication with Slide 8.
+7. The layout feels polished, intentional, and suitable for a Fortune 100 innovation competition.
 
-Preserve the existing:
+Final objective: Create a memorable Value Creation slide that demonstrates how ClaimTrack connects early detection, human-reviewed operational action, and transparent claim progress to potential stakeholder benefits.
 
-- White background and generous whitespace.
-- Navy headings and restrained green, teal, and purple accents.
-- Solution navigation highlight.
-- Company branding, internal-use footer, and slide number.
-- Two independent AI value gates.
-- Editable PowerPoint text and shapes.
-
-Do not add charts, decorative icons, gradients, shadows, new panels, or animations.
-
-7. Strict editing boundaries
-
-Edit Slide 6 only.
-
-Do not modify, reorder, delete, or recreate any other slide.
-
-Do not change the presentation theme, slide master, or slide dimensions.
-
-Do not add or remove slides.
-
-Desired result
-
-An executive-ready slide that clearly communicates:
-
-Historical evidence → Rigorous validation → Measurable AI value
-
-The slide should feel visually consistent with Slides 3 and 4, remain easy to read during screen sharing, and support a 45–60-second executive explanation.
-
-Make only the specified changes. Preserve everything else.
+Prioritize visual storytelling, clarity, and credibility over the amount of information displayed.
