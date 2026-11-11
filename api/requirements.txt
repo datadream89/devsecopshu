@@ -1,138 +1,149 @@
-PowerPoint Copilot — Slide 6 Final Readability Refinement
+PowerPoint Copilot — Slide 6 Final Polish
 
-Task: Refine Slide 6, titled “AI must outperform simpler alternatives.”
+Task: Make a final, targeted refinement to Slide 6 of the ClaimTrack presentation.
 
-This is a minor typography and content refinement, NOT a redesign.
+IMPORTANT: Modify Slide 6 only. This is a typography and readability refinement, NOT a redesign.
 
-Modify Slide 6 only. Preserve the existing layout, visual hierarchy, statistics, colors, and overall composition.
+1. Update the headline
 
-1. Improve the validation approach section
-
-In the upper-right section titled “02 | Validation approach,” retain the existing three-stage horizontal sequence.
-
-Replace the current stage labels and descriptions with:
-
-Stage 1
-
-Heading: Rules baseline
-
-Description: “Benchmark historical patterns”
-
-Stage 2
-
-Heading: Test models
-
-Description: “Compare against temporal holdout”
-
-Stage 3
-
-Heading: Prove value
-
-Description: “Advance only if better”
-
-Ensure all three headings fit on one line.
-
-Increase the font size of the stage descriptions modestly so they are clearly readable during screen sharing.
-
-Keep the three stages evenly spaced, consistently aligned, and connected by subtle horizontal lines.
-
-Preserve the existing methodological note beneath the sequence:
-
-“Authorized, time-aligned data | Temporal holdout | Operational yield, performance, and safety”
-
-Ensure the note remains legible without becoming visually dominant.
-
-2. Improve readability of the independent AI value gates
-
-Keep the existing two side-by-side panels under “03 | Independent AI value gates.”
-
-Do not change their dimensions, colors, headings, or main statements.
-
-Predictive ML panel
-
-Retain:
-
-“Outperform rules on actionable detection.”
-
-Make the following decision outcomes slightly larger and darker:
-
-“Improvement demonstrated → Advance ML”
-
-“Otherwise → Retain rules”
-
-Grounded GenAI panel
-
-Retain:
-
-“Outperform deterministic templates on grounded explanation quality.”
-
-Make the following decision outcomes slightly larger and darker:
-
-“Improvement demonstrated → Advance GenAI”
-
-“Otherwise → Retain templates”
-
-Use consistent typography and spacing across both panels.
-
-The decision outcomes must remain visually subordinate to the main statements but comfortably readable.
-
-Avoid colored buttons, badges, heavy backgrounds, or additional decorative elements.
-
-3. Preserve the historical evidence section
-
-Do not modify the upper-left section titled “01 | Historical signal.”
-
-Preserve exactly:
-
-- 1 in 5
-- 1 in 300
-- The existing population descriptions
-- The methodological clarification about historical association
-
-Do not change the values, their interpretation, colors, or positioning.
-
-4. Preserve the headline and governance footer
-
-Keep the existing headline:
+Replace:
 
 “AI must outperform simpler alternatives.”
 
-Keep the subtitle:
+With:
+
+“AI must earn its place through measurable value.”
+
+Retain the existing subtitle exactly:
 
 “Historical evidence informs the baseline. Validation determines what advances.”
 
-Preserve the existing governance line:
+Preserve the current headline font family, navy color, weight, alignment, and approximate size.
+
+Ensure the new headline fits comfortably on one line without reducing the font size.
+
+2. Improve the readability of the independent AI value gates
+
+In the bottom section titled “03 | Independent AI value gates,” retain the two existing panels.
+
+Predictive ML
+
+Preserve the main statement:
+
+“Outperform rules on actionable detection.”
+
+Make these decision outcomes slightly darker and more readable:
+
+- “Improvement demonstrated → Advance ML”
+- “Otherwise → Retain rules”
+
+Grounded GenAI
+
+Preserve the main statement:
+
+“Outperform deterministic templates on grounded explanation quality.”
+
+Make these decision outcomes slightly darker and more readable:
+
+- “Improvement demonstrated → Advance GenAI”
+- “Otherwise → Retain templates”
+
+Increase the decision-text font size modestly, approximately 1–2 points if space permits.
+
+Use a medium-dark gray rather than the current faint gray.
+
+Maintain consistent font sizes, spacing, and alignment across both panels.
+
+Do not introduce colored buttons, badges, or additional icons.
+
+3. Improve small methodological text
+
+Slightly increase the contrast of the following existing notes:
+
+Historical signal disclaimer:
+
+“Historical association—not validated model performance or proof of preventability.”
+
+Validation methodology:
+
+“Authorized, time-aligned data | Temporal holdout | Operational yield, performance, and safety”
+
+Independent AI decisions:
+
+“Either, both, or neither may advance.”
+
+Use a readable medium-gray color.
+
+Increase font sizes only where the available space permits without crowding.
+
+Do not turn these notes into prominent callouts.
+
+4. Preserve the historical evidence
+
+Do not change:
+
+- The “1 in 5” statistic.
+- The “1 in 300” statistic.
+- Their corresponding member-population descriptions.
+- The green and navy number colors.
+- The thin vertical divider.
+- The existing open, white-background layout.
+
+Keep the historical evidence exactly as currently presented.
+
+5. Preserve the validation approach
+
+Retain the existing three-stage sequence:
+
+Rules baseline
+
+“Benchmark historical patterns”
+
+Test models
+
+“Compare against temporal holdout”
+
+Prove value
+
+“Advance only if better”
+
+Preserve the existing alignment, spacing, and subtle connecting lines.
+
+Do not reintroduce the older, longer wording.
+
+6. Preserve governance and visual design
+
+Keep the existing governance statement:
 
 “Synthetic prototype today | Proposed production validation | Human oversight always”
 
-Do not alter the top navigation bar, branding, footer, or slide number.
+Preserve the existing:
 
-5. Visual constraints
+- White background and generous whitespace.
+- Navy headings and restrained green, teal, and purple accents.
+- Solution navigation highlight.
+- Company branding, internal-use footer, and slide number.
+- Two independent AI value gates.
+- Editable PowerPoint text and shapes.
 
-- Maintain the white background and restrained executive aesthetic.
-- Preserve the navy, green, teal, and muted purple palette.
-- Do not introduce new cards, icons, illustrations, or charts.
-- Do not add shadows, gradients, or decorative shapes.
-- Do not shrink any text to accommodate the changes.
-- Maintain generous whitespace and balanced alignment.
-- Keep all elements editable in PowerPoint.
+Do not add charts, decorative icons, gradients, shadows, new panels, or animations.
 
-6. Strict editing boundary
+7. Strict editing boundaries
 
 Edit Slide 6 only.
 
-Do not modify, reorder, delete, recreate, or restyle any other slide.
+Do not modify, reorder, delete, or recreate any other slide.
 
-Do not change the slide master, presentation theme, or slide dimensions.
+Do not change the presentation theme, slide master, or slide dimensions.
+
+Do not add or remove slides.
 
 Desired result
 
-A polished executive slide with:
+An executive-ready slide that clearly communicates:
 
-1. Prominent, easy-to-understand historical evidence.
-2. A clearly readable three-stage model-validation sequence.
-3. Two independent AI value gates with legible decision outcomes.
+Historical evidence → Rigorous validation → Measurable AI value
 
-The goal is better readability, not more content or a new design.
+The slide should feel visually consistent with Slides 3 and 4, remain easy to read during screen sharing, and support a 45–60-second executive explanation.
 
-Preserve everything that already works and make only the specified refinements.
+Make only the specified changes. Preserve everything else.
