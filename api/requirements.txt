@@ -1,1 +1,74 @@
 
+Refine Slide 2 only of the ClaimTrack presentation. Do not modify any other slide.
+
+Objective: Make the member's frustration and lack of resolution transparency immediately apparent to an executive judging panel. Preserve the professional Cigna-inspired visual design and existing two-column layout.
+
+1. Preserve the headline exactly
+
+Members see what's wrong, not how it gets resolved.
+
+Keep its current position, font treatment, navy color, and prominence.
+
+2. Replace the subtitle
+
+Use:
+
+“A member calls to provide COB information. The claim may move from Pending to Processing—but what happens next remains unclear.”
+
+This must communicate that the member currently needs to call to provide COB information because the portal does not offer a direct way to answer the COB questions.
+
+Keep the subtitle concise and readable.
+
+3. Preserve the myCigna screenshot
+
+- Retain the existing de-identified myCigna screenshot on the left.
+- Preserve the claim amount, Pending status, COB instructions, and screenshot legibility.
+- Do not recreate, fabricate, or alter the underlying claim information.
+- Keep the existing numbered markers if they continue to align with the right-side questions.
+
+4. Refine the three questions on the right
+
+Keep the heading “What remains unclear” and the existing three-question structure.
+
+Replace the questions with:
+
+1. Who is handling my claim now?
+
+Supporting text: “No clear visibility into who owns the next step.”
+
+2. Was my COB information received and verified?
+
+Supporting text: “A status change does not explain what was received or verified.”
+
+3. What happens next, and how will I know?
+
+Supporting text: “No clear view of the next verified milestone or resolution path.”
+
+Maintain the existing numbered orange circles, navy headings, and compact supporting descriptions.
+
+5. Replace the bottom navy takeaway
+
+Use:
+
+“I'm told my claim is processing. But what does that actually mean for me?”
+
+Keep this statement prominent, centered, and readable during screen sharing.
+
+6. Important factual safeguards
+
+- Acknowledge that myCigna can change a claim's status from Pending to Processing after COB information becomes available.
+- Do not claim that the portal never updates.
+- Do not imply that the member receives no communication whatsoever.
+- Do not promise a specific claim resolution date.
+- Focus on the difference between a broad claim status and verified resolution progress.
+- Do not introduce additional statistics or new functionality.
+
+7. Visual constraints
+
+- Preserve the existing white background, navy headings, green accents, orange numbered markers, and footer.
+- Maintain the current two-column composition.
+- Ensure the revised text fits without shrinking fonts excessively.
+- Keep all text and elements editable in PowerPoint.
+- Avoid additional icons, diagrams, decorative elements, or unnecessary text.
+
+Desired result: An executive should understand within five seconds that the member has already taken action by calling, yet still lacks a clear understanding of what happens next. The slide should create empathy and establish the need for ClaimTrack's Shared Resolution capability without overstating the limitations of myCigna.
