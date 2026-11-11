@@ -1,194 +1,207 @@
-ClaimTrack — Slide 8: Financial Value Final Refinement
+ClaimTrack — Slide 9: Final Pilot Strategy Refinement
 
-Task: Refine Slide 8 ONLY of the existing ClaimTrack presentation.
+Task: Update Slide 9 ONLY.
 
-Slide 8 currently presents a $6.7M COB call-cost baseline, a ~$335K COB scenario, a ~$1.0M broader billing-and-COB scenario, a provider/member call breakdown, and additional operational opportunities.
+Slide 9 is titled:
 
-The objective is to make this slide financially rigorous, visually compelling, concise, and suitable for the Cigna Aspire iTournament finals.
+"A focused six-month pilot. A clear go / no-go decision."
 
-IMPORTANT: Preserve the existing financial storytelling and overall visual design. Make targeted improvements rather than redesigning the slide from scratch.
+The current design is approved. Preserve its six-month timeline, three-panel layout, navy-and-green theme, typography, icons, and overall visual structure.
 
-1. Replace the headline
+Make the following targeted content refinements without redesigning the slide.
 
-Current:
-"A $6.7M baseline means small gains pay for the pilot."
+1. Preserve the headline and subtitle
 
-Replace with:
+Title:
+"A focused six-month pilot. A clear go / no-go decision."
 
-"A $6.7M annualized COB call-cost pool creates a measurable opportunity."
+Subtitle:
+"Start with PPO OAP1 / Proclaim COB. Validate both capabilities before scaling."
 
-This avoids claiming that the pilot has already demonstrated financial break-even.
+Do not modify either.
 
-2. Replace the subtitle
+2. Clarify the Pilot Scope panel
 
-Use:
+Keep the heading:
 
-"September 2026 volumes annualized. Illustrative capacity value—not projected cash savings."
+PILOT SCOPE
 
-Keep the subtitle concise, readable, and visually subordinate to the headline.
+Keep:
 
-3. Financial panel 1 — COB baseline
+PPO OAP1 / Proclaim COB
 
-Preserve the prominent dark navy panel with the green $6.7M figure.
+Controlled pilot cohorts
 
-Display:
+Retain the prominent:
 
-$6.7M
+~34%
 
-Annualized COB call-cost pool
+Replace its accompanying description with:
 
-Supporting calculation:
+"of 1.78M annual Facets + Proclaim pends"
 
-"46,757 calls/month × 12 months × $12/call"
+Add a small clarification where space permits:
 
-Small source label:
-
-"September 2026 internal contact-center volume"
-
-This is an annualized estimate based on one observed month, not an actual 12-month total.
-
-4. Financial panel 2 — COB-only scenario
-
-Replace ~$335K with the more precise rounded figure:
-
-~$337K
-
-Label:
-
-Illustrative annual COB capacity value
-
-Supporting text:
-
-"5% fewer COB calls ≈ 28,054 calls/year"
-
-The underlying calculation is:
-
-46,757 × 12 × 5% × $12 = $336,650 annually.
-
-Do not describe this as realized savings, guaranteed savings, or six-month pilot break-even.
-
-5. Financial panel 3 — Broader billing + COB scenario
+"PPO OAP1 / Proclaim COB share"
 
 Preserve:
 
-~$1.0M
+"Historical volume frames the opportunity. Pilot exposure remains controlled."
+
+The ~34% figure describes the historical PPO OAP1 / Proclaim COB share of total Facets + Proclaim pend volume, not the number of cases exposed during the pilot.
+
+3. Refine the "Why COB First?" panel
+
+Keep the existing three-row structure.
+
+ROW 1 — SCALE
+
+Prominent number:
+~600K
 
 Label:
+"Annual PPO OAP1 / Proclaim COB pends"
 
-Illustrative annual broader capacity value
+ROW 2 — CONCENTRATION
 
-Supporting text:
+Prominent number:
+~85%
 
-"5% fewer billing + COB calls (~1.67M annualized)"
+Label:
+"Carry Remark 407"
 
-Important assumptions:
+This statistic refers specifically to PPO OAP1 / Proclaim COB pends. Do not generalize it to all COB claims.
 
-- Billing and COB contact categories are mutually exclusive.
-- The ~1.67M annual volume is extrapolated from September 2026.
-- The calculation assumes a $12 fully loaded cost per call applies to both categories.
-- The broader ~$1.0M scenario INCLUDES the COB opportunity and must not be added to the ~$337K scenario.
-- This is a hypothetical scenario, not a forecast or demonstrated result.
+ROW 3 — FOCUSED SCOPE
 
-6. Preserve the provider/member breakdown
+Remove:
+"~60 days"
 
-Retain the existing horizontal bar chart showing the components of the COB call-cost pool:
+Remove:
+"TIME SENSITIVITY"
 
-Provider calls: ~$3.76M
+Remove:
+"Response window"
 
-Member calls: ~$2.94M
+Replace with:
 
-Label the chart:
+FOCUSED SCOPE
 
-"Components of the annualized COB call-cost pool"
+"Defined product, platform, and COB issue population"
 
-Preserve the current blue/navy visual treatment.
+Use a simple target or scope icon in place of the numeric statistic.
 
-Ensure the chart is easy to read and does not imply these are independently measured annual expenditures.
+Do not invent a new percentage or quantitative claim.
 
-7. Simplify the additional operational value section
+Keep the first two rows numerically prominent and use the third row to communicate implementation feasibility.
 
-Replace the current four-bullet "Upside not yet monetized" section with:
+Replace the bottom takeaway:
 
-ADDITIONAL VALUE TO VALIDATE
+"High-volume, concentrated, time-sensitive."
 
-- Reduced denied-then-paid rework
-- Fewer repeat pends and duplicate touches
-- Clearer resolution and less follow-up
+With:
 
-Do not attach unvalidated financial values to these outcomes.
+"High-volume. Concentrated. Controlled."
 
-Remove the current "up to 21% fewer calls" adjacent-evidence statement unless it has been independently verified and appropriately sourced.
+4. Preserve the six-month timeline
 
-Move detailed 23%, 11.7%, and 5.3% statistics to backup material rather than crowding this slide.
+Retain the existing stages:
 
-8. Add a concise financial qualification
+- Month 1 — Define + Design
+- Month 2 — Connect + Instrument
+- Month 3 — Shadow Validation
+- Months 4–5 — Controlled Exposure
+- Month 6 — Measure + Decide
+- Final Gate — Go / No-Go
 
-At the bottom of the slide, above the existing footer, include:
+Add a small, readable readiness checkpoint between Month 3 and Months 4–5:
 
-"Illustrative annual capacity equivalents before implementation costs and incremental processor review effort. Actual value requires controlled pilot validation."
+"Safety + operational approval required"
 
-If space permits, add a second concise source note:
+This should appear as a subtle annotation beneath the timeline or near the transition to controlled exposure.
 
-"Source: September 2026 internal contact-center volumes, annualized; billing and COB categories mutually exclusive; assumed $12 fully loaded cost per call."
+Do not add another full timeline stage or disturb the existing alignment.
 
-Use readable, understated gray typography.
+Controlled exposure must begin only after required operational and governance approvals.
 
-9. Visual design requirements
+5. Strengthen the final decision panel
 
-Maintain the established presentation style:
+Preserve the dark navy panel and its heading:
 
-- White background
-- Navy typography
-- Green emphasis for the $6.7M baseline
-- Three prominent financial panels across the top
-- Provider/member bar chart below the baseline
-- Concise additional-value section below the scenarios
-- Generous whitespace and consistent alignment
-- Minimal visual clutter
-- No excessive borders, shadows, or decorative graphics
+SCALE ONLY IF VALUE + SAFETY ARE PROVEN
 
-Ensure all numbers, labels, and calculations are clearly readable during a live presentation.
+Replace the existing five checklist items with:
 
-Avoid overly small footnotes. If space is limited, prioritize the three financial figures, their assumptions, and the source qualification over secondary explanatory text.
+1. Milestone integrity
+2. Actionable review yield
+3. Pend + contact outcomes
+4. Net processor workload
+5. Safety + governance
 
-10. Accuracy safeguards
+These criteria must assess both the potential benefits and the additional operational burden created by agent-generated review tickets.
 
-Do not:
+Use the existing green checklist icons.
 
-- Claim the $250K pilot investment is already justified or recovered.
-- Present annual scenario values as six-month pilot benefits.
-- Describe capacity-equivalent value as realized cash savings.
-- Add the ~$337K and ~$1.0M scenarios together.
-- Assume all billing or COB calls are avoidable.
-- Imply the hypothetical 5% reduction has been achieved.
-- Present the annualized figures as actual full-year observations.
-- Introduce new unsupported statistics.
+Preserve the bottom decision strip:
 
-The slide should communicate the scale of the measurable opportunity, not guarantee a financial return.
+ADVANCE BOTH | ADVANCE ONE | REFINE | STOP
 
-11. Preserve everything else
+This is important because Proactive PreClear and Shared Resolution may demonstrate different levels of value and should be evaluated independently.
 
-- Modify Slide 8 ONLY.
-- Preserve all other slides exactly as they are.
-- Preserve the slide master, theme, fonts, and navigation.
-- Keep "Value" highlighted.
-- Preserve The Cigna Group footer and "ClaimTrack | Internal use only."
-- Keep all charts, text, and shapes editable.
+6. Accuracy requirements
 
-12. Final quality check
+Do not imply that:
+
+- All 600K annual pends will receive interventions.
+- All Remark 407 cases are avoidable.
+- The ~34% figure represents the pilot cohort size.
+- AI-generated tickets automatically change claim decisions.
+- Pend or contact reductions have already been achieved.
+- Both capabilities must advance together.
+
+Claims processors retain decision-making authority, and existing claims systems remain authoritative.
+
+The pilot must compare intervention and control cohorts using appropriately defined outcome measures.
+
+7. Visual quality requirements
+
+Maintain a clean executive presentation style.
+
+- Preserve the existing timeline and three-panel composition.
+- Keep the left and center panels light and the right decision panel dark navy.
+- Use large, readable figures for ~34%, ~600K, and ~85%.
+- Keep the readiness checkpoint visible but understated.
+- Maintain consistent spacing and alignment.
+- Avoid adding dense explanatory paragraphs.
+- Do not shrink important text to accommodate changes.
+- Keep all objects editable.
+
+8. Preserve all other slides
+
+Modify Slide 9 ONLY.
+
+Do not change:
+
+- Slides 1–8 or subsequent slides.
+- The slide master or theme.
+- The top navigation, with "Pilot" highlighted.
+- The Cigna Group footer.
+- "ClaimTrack | Internal use only."
+- Slide numbering.
+
+9. Final verification
 
 Confirm that:
 
-1. The $6.7M baseline is prominently displayed and accurately labeled.
-2. The ~$337K and ~$1.0M scenarios are clearly identified as illustrative annual capacity values.
-3. The broader scenario includes, rather than adds to, the COB-only scenario.
-4. All annualized figures are explicitly tied to September 2026.
-5. The additional operational value section is concise.
-6. Financial assumptions and limitations are visible.
-7. The slide remains visually balanced and readable.
-8. No unsupported break-even or realized-savings claims remain.
-9. Slide 8 complements Slide 7 without repeating its stakeholder-value narrative.
+1. The pilot scope is explicitly PPO OAP1 / Proclaim COB.
+2. The ~34% statistic describes the historical share of total pends.
+3. The ~600K and ~85% statistics refer to the same PPO OAP1 / Proclaim COB population.
+4. The generic 60-day response-window statistic has been removed.
+5. The three reasons for selecting COB are scale, concentration, and focused scope.
+6. Month 3 includes an operational readiness checkpoint before controlled exposure.
+7. The final gate evaluates measurable value, review workload, and safety.
+8. The slide remains balanced, uncluttered, and readable.
 
-Final objective: Produce an executive-ready financial opportunity slide that demonstrates ClaimTrack's potential economic significance while remaining transparent about assumptions, implementation costs, and the need for controlled validation.
+Final objective: Produce an executive-ready pilot strategy slide demonstrating why PPO OAP1 / Proclaim COB is a practical starting population, how ClaimTrack can be tested safely over six months, and what evidence will determine whether either capability should advance.
 
-Make targeted improvements to Slide 8 only. Do not redesign the entire presentation.
+Make only these targeted refinements. Do not redesign the slide.
