@@ -1,142 +1,159 @@
-Redesign Slide 7 — ClaimTrack | Value Creation
+ClaimTrack — Redesign Slide 7: Stakeholder Value
 
-Completely redesign Slide 7 ONLY into a visually striking, executive-quality Value Creation slide for the ClaimTrack innovation tournament finals.
+Completely redesign Slide 7 ONLY of the existing ClaimTrack presentation.
 
-This must be a substantial redesign, not a minor formatting adjustment.
+Objective: Transform Slide 7 from a technical workflow explanation into a compelling, visually elegant, executive-level business value slide suitable for the Cigna Aspire iTournament finals.
 
-STRICT SCOPE: Modify only Slide 7. Preserve all other slides, existing slide master, theme, navigation, footer, and presentation structure. Retain editable PowerPoint text, icons, shapes, and connectors.
+This slide must answer one question:
 
-1. Headline and message
+"What becomes better for the people and teams involved in the claims journey?"
+
+1. Strict scope
+
+- Modify ONLY Slide 7.
+- Preserve Slides 1–6 and all subsequent slides without modification.
+- Preserve the existing slide master, white background, navy-and-green design language, navigation bar with "Value" highlighted, and Cigna Group footer.
+- Keep all text, icons, and shapes editable.
+- Do not introduce unsupported statistics or claims.
+
+2. Replace the title and subtitle
 
 Title:
-"Turn early signals into action. Turn uncertainty into clarity."
+"Better experiences. Less operational friction."
 
 Subtitle:
-"Two connected capabilities. Existing workflows. Measurable outcomes."
+"Four stakeholders. Four potential improvements across the claims journey."
 
-The slide should communicate the value of both Proactive PreClear and Shared Resolution without repeating the technical details already covered on Slides 4–6.
+Use a strong, concise navy headline and a smaller, understated subtitle.
 
-2. Main visual — From intelligence to action and visibility
+3. Remove the current technical workflow
 
-Replace the existing four-column text-heavy layout with a clean, horizontally organized visual containing three stages.
+Completely remove:
 
-DETECT
+- Detect → Act → Inform
+- The three large workflow panels and connecting arrows
+- Technical explanations of risk detection, AI agents, and ticket orchestration
+- The large bottom takeaway statement
 
-Spot potential gaps earlier
+These concepts are already covered by the solution, prototype, and AI validation slides.
 
-Use a simple magnifying-glass or risk-detection icon.
+Do not repeat them.
 
-Represents Proactive PreClear identifying potentially actionable information gaps using authorized pre-adjudication signals.
+4. Create a premium 2×2 stakeholder value layout
 
-ACT
+Use four spacious, equally sized areas arranged in a balanced 2×2 grid.
 
-Route evidence-backed review tickets
+Avoid dense cards or large shaded rectangles. Prefer clean white space, subtle dividers, simple line icons, and restrained accent colors.
 
-Use a ticket/workflow icon.
+Each stakeholder area should contain exactly four elements: one icon, a small stakeholder label, a prominent benefit headline, and one short supporting statement.
 
-This is the most important operational differentiator.
+TOP LEFT — MEMBERS
 
-Show that an automated agent creates a review ticket containing supporting evidence and routes it into the existing claims processor work queue.
+Icon: Person or heart
 
-Use a small supporting label:
+Stakeholder: MEMBERS
 
-"Existing queue · Human decision"
+Benefit headline:
+Less uncertainty
 
-Make ACT visually prominent with a restrained green accent.
+Supporting statement:
+"Know who owns the next step."
 
-Do not imply autonomous claim adjudication, payment, denial, or correction. Claims processors retain decision-making authority.
+TOP RIGHT — PROVIDERS
 
-INFORM
+Icon: Medical provider or document
 
-Make verified progress visible
+Stakeholder: PROVIDERS
 
-Use a progress timeline or status icon.
+Benefit headline:
+Less follow-up
 
-Represents Shared Resolution communicating verified ownership, documentation receipt, milestones, and next steps.
+Supporting statement:
+"See confirmed information receipt."
 
-Use subtle connectors between the stages for narrative flow, but do not suggest that every claim must follow this exact sequence. Shared Resolution can operate independently on already-pended claims.
+BOTTOM LEFT — CLAIMS OPERATIONS
 
-3. Secondary visual — Four stakeholders, four outcomes
+Icon: Clipboard or checklist
 
-Below the main workflow, create a single elegant horizontal row of four compact stakeholder benefit groups.
+Stakeholder: CLAIMS OPERATIONS
 
-Each group must have one small consistent icon, a bold stakeholder name, and one concise benefit statement.
+Benefit headline:
+More focused work
 
-MEMBERS
-"Less uncertainty"
+Supporting statement:
+"Review prioritized cases in existing queues."
 
-PROVIDERS
-"Fewer status chases"
+BOTTOM RIGHT — THE CIGNA GROUP
 
-CLAIMS OPERATIONS
-"Less duplicate work"
+Icon: Business performance or efficiency
 
-THE CIGNA GROUP
-"Lower contact demand"
+Stakeholder: THE CIGNA GROUP
 
-Use ample whitespace and minimal text.
+Benefit headline:
+Measurable efficiency
 
-These are potential outcomes to validate, not demonstrated production results.
+Supporting statement:
+"Test reductions in contacts and rework."
 
-Do not add bullet lists or supporting paragraphs to these stakeholder groups.
+Use navy for the primary benefit headlines and a restrained green accent for The Cigna Group.
 
-4. Bottom takeaway
+Make the benefit headlines visually dominant, not the stakeholder labels.
 
-Add one short, high-impact concluding statement across the bottom of the content area:
+5. Add one discreet validation note
 
-"Earlier intervention. Clearer accountability. Less avoidable friction."
+Near the bottom of the slide, above the existing footer, include:
 
-Use navy typography with a subtle green accent.
+"Potential benefits to be evaluated through a controlled pilot."
 
-Do not add a second explanatory paragraph.
+Use small but presentation-readable gray text.
 
-If necessary for claim accuracy, include a small unobtrusive qualifier:
+Do not add any other disclaimers, footnotes, or takeaway banners.
 
-"Potential benefits subject to controlled pilot validation."
+6. Critical content boundaries
 
-5. Critical content restrictions
+- Do not mention the $6.7M cost pool, $335K, $1M, or financial scenarios. These belong on Slide 8.
+- Do not repeat Proactive PreClear and Shared Resolution technical descriptions.
+- Do not include AI model details, rules, GenAI, agent architecture, or ticket-creation diagrams.
+- Do not imply that operational improvements have already been demonstrated.
+- Do not promise faster claim payments, fewer denials, or guaranteed savings.
+- Do not imply that automated tickets replace human processor judgment.
+- Do not add additional stakeholder categories or paragraphs.
 
-- Do NOT show $6.7M, $335K, $1M, 3.7%, or any financial figures. Slide 8 covers financial value.
-- Do NOT repeat the historical evidence from Slide 3.
-- Do NOT reproduce the AI validation framework from Slide 6.
-- Do NOT add detailed agent architecture, model names, API diagrams, or ticket field specifications.
-- Do NOT introduce unsupported claims of realized savings, reduced denial rates, faster payment, or proven operational efficiency.
-- Do NOT imply the proposed existing-queue integration is already deployed.
-- Do NOT present the agent as independently deciding claim outcomes.
-- Do NOT create another dense four-column bullet-list slide.
+7. Design direction
 
-6. Visual design requirements
+The slide should feel like a premium Fortune 100 executive strategy presentation, not a technical architecture diagram.
 
-Maintain the presentation's established Cigna-inspired executive design language:
+Prioritize:
 
-- White background
-- Deep navy primary typography
-- Restrained green accents
-- Minimal, consistent line icons
 - Generous whitespace
-- Strong alignment and balanced proportions
-- Large, readable typography suitable for projection
-- No decorative illustrations, excessive shadows, gradients, or dense cards
-- No unnecessary explanatory sentences
+- Four large, instantly understandable benefit statements
+- Consistent iconography
+- Strong typographic hierarchy
+- Precise alignment and equal spacing
+- Minimal visual clutter
+- Readability from the back of a conference room
+- Restrained navy, white, and green palette
 
-Use the upper portion of the slide for the three-stage workflow and the lower portion for the four stakeholder outcomes.
+Avoid:
 
-Give the ACT stage slightly more visual emphasis, but maintain balance across the three stages.
+- Dense bullet lists
+- Heavy borders or shadows
+- Excessive text
+- Decorative illustrations
+- Complex diagrams
+- Repetitive callout boxes
+- Small, difficult-to-read descriptions
 
-Preserve the existing top navigation with Value highlighted, the Cigna Group footer, and the "ClaimTrack | Internal use only" designation.
-
-7. Executive presentation quality check
+8. Final quality requirements
 
 Before finalizing, verify that:
 
-1. The slide can be understood within five seconds.
-2. The automated review-ticket workflow is immediately recognizable.
-3. Human processor oversight is explicit.
-4. Both ClaimTrack capabilities are represented accurately.
-5. All four stakeholder benefits are visible without reading paragraphs.
-6. The slide contains no financial duplication with Slide 8.
-7. The layout feels polished, intentional, and suitable for a Fortune 100 innovation competition.
+1. The slide is understandable within five seconds.
+2. The four stakeholder benefits are visually distinct.
+3. The slide does not repeat the technical content of Slides 4–6.
+4. The language describes potential value, not proven outcomes.
+5. No financial figures duplicate Slide 8.
+6. The slide remains visually consistent with the rest of the presentation.
+7. All four benefit headlines are large and immediately readable.
 
-Final objective: Create a memorable Value Creation slide that demonstrates how ClaimTrack connects early detection, human-reviewed operational action, and transparent claim progress to potential stakeholder benefits.
-
-Prioritize visual storytelling, clarity, and credibility over the amount of information displayed.
+Final instruction: Deliver a substantial redesign of Slide 7, emphasizing business impact and stakeholder outcomes rather than technology. Make it visually memorable, concise, credible, and presentation-ready.
