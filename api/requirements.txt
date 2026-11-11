@@ -1,1 +1,60 @@
 
+Refine Slide 2 only of the ClaimTrack presentation. Do not modify any other slide.
+
+Objective
+
+Make the member's frustration more emotionally compelling to an executive judging panel without sacrificing factual accuracy or the existing professional design.
+
+1. Preserve all existing content except the bottom takeaway
+
+Keep the following elements exactly as they are:
+
+- Headline: “Members see what's wrong, not how it gets resolved.”
+- Existing subtitle about calling to provide COB information and the Pending-to-Processing transition.
+- Original de-identified myCigna claim screenshot.
+- All three numbered questions and their supporting descriptions.
+- Existing annotations, branding, colors, typography, and footer.
+
+2. Replace the bottom navy takeaway
+
+Current text:
+“I'm told my claim is processing. But what does that actually mean for me?”
+
+Replace with:
+“I did what was asked. Now how do I know my claim is moving forward?”
+
+3. Emphasize the member's frustration
+
+The new takeaway should feel like a genuine member expressing uncertainty after taking the required action.
+
+- Preserve the first-person perspective.
+- Emphasize that the member has already made the effort to respond.
+- Convey uncertainty without sounding overly dramatic or accusatory.
+- Avoid suggesting that the claim is permanently stuck or that no status updates occur.
+
+4. Visual requirements
+
+- Keep the existing dark navy rounded rectangle in the lower-right section.
+- Center the replacement statement horizontally and vertically.
+- Use white, high-contrast text.
+- Ensure the statement is readable during screen sharing, ideally across no more than two lines.
+- Do not change the dimensions or position of the rectangle unless necessary to prevent text clipping.
+- Preserve the slide's existing two-column layout and visual hierarchy.
+
+5. Strict editing constraints
+
+- Modify Slide 2 only.
+- Do not redesign the slide.
+- Do not add graphics, statistics, icons, or additional text.
+- Do not alter the myCigna screenshot.
+- Keep all existing editable PowerPoint elements editable.
+
+Desired result
+
+The audience should recognize that the member has done what Cigna requested but still lacks clarity about what happens next.
+
+The emotional takeaway should be:
+
+“I did my part. Why am I still left wondering?”
+
+Use the exact replacement statement specified in Section 2 on the slide. The final sentence above describes the intended emotional effect, not additional slide text.
