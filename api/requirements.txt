@@ -1,1 +1,175 @@
+ClaimTrack — Slide 7: Value Creation
 
+Task: Completely redesign Slide 7 ONLY.
+
+The current slide is titled "Better experiences. Less operational friction." and uses four sparse stakeholder quadrants.
+
+Replace that design with a compelling, executive-level Value Creation slide for the Cigna Aspire iTournament finals.
+
+The slide must demonstrate not just what ClaimTrack does, but why its potential outcomes matter to members, providers, claims operations, and the business.
+
+1. Headline
+
+Title:
+"Less chasing. Less rework. More capacity for care."
+
+Subtitle:
+"Three value drivers. Measurable outcomes. Human oversight."
+
+Use a prominent navy headline and a restrained gray subtitle.
+
+The title represents intended benefits, not achieved results.
+
+2. Main visual — Three business value drivers
+
+Replace the four-quadrant layout with three substantial horizontal sections, stacked vertically.
+
+Each section should have:
+
+- A simple, distinctive line icon.
+- A small uppercase value category.
+- One large, memorable benefit statement.
+- One concise explanation of the business significance.
+
+Use strong typographic hierarchy and balanced spacing.
+
+01 — EXPERIENCE VALUE
+
+Reduce the need to chase answers
+
+Verified claim status, ownership, and next steps may reduce member and provider follow-up.
+
+Business significance:
+Less uncertainty and fewer repetitive status inquiries.
+
+Icon: Member/provider communication or verified status.
+
+02 — OPERATIONAL VALUE
+
+Prevent avoidable downstream work
+
+Earlier, prioritized processor review may reduce repeat pends, duplicate touches, and reprocessing.
+
+Business significance:
+More focused processor effort and potentially less rework.
+
+Icon: Claims checklist or workflow improvement.
+
+03 — ECONOMIC VALUE
+
+Release capacity for higher-value work
+
+Measure reductions in contact demand and rework against the additional effort required for proactive reviews.
+
+Business significance:
+Net operational value, not just gross activity reduction.
+
+Icon: Efficiency, capacity, or performance.
+
+3. Add a concise measurement strip
+
+Below the three value drivers, include one clean, horizontally organized measurement strip.
+
+Heading:
+
+HOW WE WILL MEASURE VALUE
+
+Display four short indicators with small icons or separators:
+
+Repeat contacts | Repeat pends | Processor effort | Verified interventions
+
+These are proposed pilot measures, not demonstrated improvements.
+
+The measurement strip should be visually distinct but understated.
+
+4. Design direction
+
+Create a polished Fortune 100 executive presentation slide.
+
+Use:
+
+- White background.
+- Deep navy headings.
+- Restrained green accents.
+- Three substantial horizontal value sections.
+- Consistent, minimalist line icons.
+- Generous but purposeful whitespace.
+- Large, presentation-readable typography.
+- Subtle separators rather than heavy boxes.
+- A clean measurement strip at the bottom.
+
+Make the slide visually engaging without overcrowding it.
+
+The three value sections should occupy most of the available content area.
+
+Avoid creating another sparse slide with excessive empty space.
+
+5. Content accuracy
+
+All value claims must be framed as potential outcomes to be tested.
+
+Do not claim that ClaimTrack has already:
+
+- Reduced contacts.
+- Prevented pends.
+- Reduced rework.
+- Released operational capacity.
+- Generated savings.
+
+The economic value must account for the incremental cost of human review and any additional operational workload.
+
+Do not suggest that AI independently adjudicates claims or authorizes corrective action.
+
+Add one small, readable qualifier:
+
+"Expected benefits subject to controlled pilot validation."
+
+6. Avoid duplication
+
+Slide 4 explains the two solution capabilities.
+
+Slide 5 demonstrates the prototype, including proposed agent-created review tickets.
+
+Slide 6 explains AI validation.
+
+Slide 8 presents the financial opportunity and illustrative savings scenarios.
+
+Therefore, Slide 7 must focus on value drivers and measurable business outcomes, not technology or financial calculations.
+
+Do not include:
+
+- Detect → Act → Inform workflows.
+- AI model architecture.
+- Detailed agent or ticket-routing diagrams.
+- Technical descriptions of Proactive PreClear or Shared Resolution.
+- The $6.7M cost pool.
+- The $335K or $1M financial scenarios.
+- The $250K pilot investment.
+- Dense bullet lists or lengthy paragraphs.
+
+7. Preserve presentation identity
+
+- Modify Slide 7 ONLY.
+- Preserve all other slides exactly as they are.
+- Preserve the existing slide master, fonts, theme, navigation, and footer.
+- Keep "Value" highlighted in the navigation.
+- Retain "The Cigna Group" and "ClaimTrack | Internal use only" in the footer.
+- Keep all text, icons, shapes, and layout elements editable.
+
+8. Final quality check
+
+Before finalizing, confirm that:
+
+1. The slide communicates three distinct sources of business value.
+2. Each value driver has a clear operational or customer significance.
+3. The slide explains why ClaimTrack could matter beyond its technical capabilities.
+4. The four pilot measures are immediately visible.
+5. The slide is substantial but not cluttered.
+6. The content is understandable within 5–7 seconds.
+7. There is no unnecessary repetition with Slides 4–6 or Slide 8.
+8. No unsupported benefits are presented as proven results.
+9. All text is readable during a live presentation.
+
+Final objective: Make Slide 7 one of the strongest business-impact slides in the presentation. Judges should immediately understand that ClaimTrack aims to reduce unnecessary follow-up, prevent downstream operational rework, and generate measurable net value—not merely introduce another AI tool.
+
+Deliver a substantially redesigned, presentation-ready Slide 7.
