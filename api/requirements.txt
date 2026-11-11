@@ -1,48 +1,50 @@
-PowerPoint Copilot — Refine ClaimTrack Slide 6
+PowerPoint Copilot — Redesign Slide 6 Only
 
-Task: Update the existing Slide 6, titled “AI earns its place through measurable performance,” using the attached “1 in 5 versus 1 in 300” slide as a visual and content reference.
+Task: Refine the existing ClaimTrack Slide 6, titled “AI must outperform simpler alternatives.”
 
-IMPORTANT: Modify Slide 6 only. Do not replace the entire presentation, insert additional slides, or modify any other slide.
+This is a focused visual simplification and content refinement. Do not modify any other slide.
 
 1. Design objective
 
-Create a polished, evidence-led executive slide that explains why ClaimTrack is evaluating AI, how predictive ML will be compared with simpler alternatives, and why grounded GenAI must independently demonstrate value.
+Transform the current cluttered slide into a clean, sophisticated executive presentation slide.
 
-Use the attached reference slide's clean two-column composition, prominent statistics, and accessible executive storytelling.
+Use the visual language established by Slides 3 and 4: white background, generous whitespace, navy typography, restrained green and teal accents, minimal decoration, and strong alignment.
 
-Preserve the current slide's disciplined approach to model validation, human oversight, and independent ML/GenAI evaluation.
+The slide should communicate three ideas:
 
-Do not attempt to combine every existing diagram, label, and box. Simplify aggressively while preserving the essential decision logic.
+1. Historical data provides a meaningful baseline.
+2. Predictive ML must demonstrate measurable incremental value.
+3. Grounded GenAI must independently demonstrate value over deterministic alternatives.
+
+Avoid the appearance of a technical dashboard or an infographic containing numerous boxes.
 
 2. Headline and subtitle
 
-Replace the current headline with:
+Retain the headline:
 
 “AI must outperform simpler alternatives.”
 
-Subtitle:
+Replace the subtitle with:
 
-“Historical patterns establish a baseline. Validation determines whether AI adds value.”
+“Historical evidence informs the baseline. Validation determines what advances.”
 
-Retain the deck's existing navy typography, white background, green accents, and Solution navigation highlight.
+Preserve the existing typography and navigation bar with Solution highlighted.
 
-3. Main content — two-column layout
+3. Replace the dark statistics panel
 
-Create two balanced sections occupying the main body of the slide.
+Completely remove the large dark navy rounded rectangle currently containing the 1-in-5 and 1-in-300 statistics.
 
-LEFT COLUMN — WHAT THE DATA ALREADY TELLS US
-
-Use a prominent dark navy evidence panel inspired by the attached reference slide.
+Replace it with a clean, open, white-background evidence section.
 
 Section heading:
 
-“What the data already tells us”
+“01 | Historical signal”
 
 Supporting label:
 
 “Observed next-quarter COB pend incidence”
 
-Display these statistics prominently:
+Display the two statistics horizontally:
 
 1 in 5
 
@@ -52,130 +54,158 @@ Display these statistics prominently:
 
 “Members without a COB pend in the previous quarter”
 
-Use green emphasis for “1 in 5” and white for “1 in 300,” consistent with the reference slide.
+Use large navy numbers, with restrained green emphasis on “1 in 5.”
 
-Separate the statistics with a subtle vertical divider.
+Separate the figures using a thin vertical divider.
 
-Include a small, readable clarification:
+Do not surround the statistics with a large colored box.
 
-“Historical association—not model performance or proof of preventability.”
+Include a small, readable methodological note:
 
-Do not label this comparison as predictive accuracy, model lift, causal impact, or proven avoidable pends.
+“Historical association—not validated model performance or proof of preventability.”
 
-RIGHT COLUMN — HOW WE DECIDE
+The statistics should be prominent without dominating the entire slide.
 
-Use a clean three-step decision sequence with restrained numbered markers.
+4. Simplify the validation process
 
-01 — Establish the rules baseline
+Replace the existing right-hand three-step text-heavy section with a concise horizontal validation sequence.
 
-“Use known historical patterns as a simple benchmark.”
+Section heading:
 
-02 — Validate candidate models
+“02 | Validation approach”
 
-“Compare rules, reference classifiers, and candidate ML using time-aligned inputs, temporal holdouts, and operational yield.”
+Create three equally spaced stages:
 
-03 — Advance only demonstrated value
+Rules baseline
 
-“Adopt ML only if it delivers measurable improvement; otherwise retain the simpler approach.”
+“Benchmark known historical patterns.”
 
-Make the step headings visually prominent. Keep the descriptions compact and legible.
+Temporal validation
 
-Avoid implying that a historical association alone is a validated production prediction.
+“Compare rules and ML on time-aligned data.”
 
-4. Bottom section — two independent AI value gates
+Advance on value
 
-Below the main two-column section, create a visually distinct but compact horizontal section.
+“Retain ML only if incremental benefit is demonstrated.”
 
-Heading:
+Use subtle connecting lines or arrows if helpful.
 
-“Two independent AI decisions”
+Do not use large numbered circles, heavy colored cards, or unnecessary icons.
 
-Use two equally sized cards or panels.
+Maintain clear spacing between the three stages.
 
-LEFT — PREDICTIVE ML
+Preserve the concept that validation must assess operational yield, safety, and performance on an appropriate temporal holdout. These details may be included in a concise note or speaker notes rather than cluttering the slide.
 
-Value gate:
+5. Simplify the independent AI gates
 
-“Use ML only if it improves actionable detection over the rules baseline.”
+Section heading:
 
-Decision outcomes:
+“03 | Independent AI value gates”
 
-Validated improvement → Advance ML
+Create two balanced, understated panels side by side.
 
-No incremental value → Keep rules
+Use a thin teal top accent for Predictive ML and a thin muted purple top accent for Grounded GenAI.
 
-RIGHT — GROUNDED GenAI
+Avoid dark backgrounds, colored decision buttons, excessive rounded rectangles, or decorative shadows.
 
-Value gate:
+Predictive ML
 
-“Use GenAI only if grounded explanations outperform deterministic templates on accuracy, clarity, and safety.”
+Main statement:
 
-Decision outcomes:
+“Outperform rules on actionable detection.”
 
-Validated improvement → Advance GenAI
+Decision:
 
-No incremental value → Keep templates
+“Improvement demonstrated → Advance ML”
 
-The two evaluations must remain independent. ML may advance without GenAI, GenAI may advance without ML, both may advance, or neither may advance.
+“Otherwise → Retain rules”
 
-Do not imply that GenAI determines claim outcomes or invents explanations.
+Grounded GenAI
 
-5. Governance and prototype maturity
+Main statement:
 
-Include a concise, readable footer:
+“Outperform deterministic templates on grounded explanation quality.”
+
+Decision:
+
+“Improvement demonstrated → Advance GenAI”
+
+“Otherwise → Retain templates”
+
+The two gates must remain independent. Either, both, or neither capability may advance based on validation.
+
+Do not suggest that GenAI is required for predictive ML or that either technology independently adjudicates claims.
+
+6. Replace the heavy navy footer banner
+
+Remove the full-width dark navy banner currently displaying the prototype and governance statement.
+
+Replace it with a single understated footer line:
 
 “Synthetic prototype today | Proposed production validation | Human oversight always”
 
-Preserve these principles in the content:
+Use readable, medium-gray text.
 
-- The current prototype uses synthetic data and does not establish production predictive performance.
-- Any production candidate must be validated using appropriately authorized, time-aligned historical data and prospective or temporal holdout evaluation.
-- Predictive ML produces risk signals for human review, not autonomous claim decisions.
-- Grounded GenAI may explain verified, supported factors but must not fabricate reasons, milestones, or outcomes.
+Preserve the existing company branding, internal-use footer, and slide number separately.
+
+7. Visual hierarchy and spacing
+
+Organize the slide into three clear horizontal sections:
+
+Top — Historical signal
+
+Middle — Validation approach
+
+Bottom — Independent AI value gates
+
+Use subtle separators only where necessary.
+
+Maintain generous whitespace and a consistent alignment grid.
+
+Prioritize large, readable statistics and short action-oriented statements.
+
+Ensure no text is excessively small or crowded.
+
+Avoid placing every section inside a colored rectangle.
+
+Do not add unnecessary icons, decorative shapes, gradients, shadows, or animations.
+
+Preserve the presentation's existing white, navy, green, teal, and restrained purple palette.
+
+All elements must remain editable PowerPoint objects.
+
+8. Technical and analytical safeguards
+
+Maintain the following distinctions:
+
+- The 1-in-5 and 1-in-300 figures describe historical member-level next-quarter COB pend incidence, not model accuracy or predictive lift.
+- The historical signal is not proof that a specific claim-level pend can be prevented before adjudication.
+- Predictive ML must be compared against an appropriate rules baseline using authorized, time-aligned data and a temporal holdout.
+- Grounded GenAI must be evaluated separately against deterministic explanations for factual accuracy, clarity, and safety.
+- Human review remains responsible for intervention decisions.
 - Existing claims systems remain authoritative for adjudication.
+- The synthetic prototype does not establish production effectiveness.
 
-Do not introduce unsupported model accuracy, precision, recall, savings, automation, or ROI claims.
+Do not invent performance metrics, financial benefits, model validation results, or production capabilities.
 
-6. Visual simplification
-
-Remove the current dense four-stage technical pipeline from the main slide.
-
-Do not retain the separate COB Signals, Model Competition, Grounded GenAI, and Human Review boxes in their existing large diagram format.
-
-Instead, preserve their essential concepts through the three-step validation sequence, independent value gates, and concise governance footer.
-
-Use the attached “1 in 5” slide as the primary reference for visual hierarchy, but do not blindly reproduce its bottom section.
-
-Specifically:
-
-- Do not label Shared Resolution as categorically “No AI.”
-- Do not merge predictive ML and grounded GenAI into one approval decision.
-- Do not add decorative icons to every statement.
-- Avoid dense paragraphs, excessive badges, gradients, or unnecessary shadows.
-- Keep all key text readable during screen sharing.
-- Use consistent spacing, alignment, and typography.
-- Keep every text element, shape, and statistic editable in PowerPoint.
-
-7. Strict slide-editing boundaries
+9. Strict editing boundaries
 
 Modify Slide 6 only.
 
-Do not change the slide master, presentation theme, footer branding, navigation bar, slide dimensions, or any other slide.
+Do not change any other slide, the slide master, presentation theme, navigation bar, footer branding, or slide dimensions.
 
-Do not insert the attached reference slide into the deck.
+Do not insert additional slides.
 
-Do not duplicate content from the reference slide unnecessarily.
+Do not modify the original historical statistics.
 
 Desired result
 
-An executive-ready slide that communicates three memorable ideas:
+A visually restrained, executive-ready slide that feels consistent with the polished ClaimTrack solution slides.
 
-1. We already have a meaningful historical signal.
+The audience should understand the central message in approximately 10 seconds:
 
-2. Predictive ML must demonstrate incremental value over simpler rules.
+“We have a meaningful historical signal, but AI must prove incremental value before adoption.”
 
-3. Grounded GenAI must independently demonstrate value over deterministic explanations.
+The design should be clean enough to present comfortably in approximately 45–60 seconds.
 
-The slide should be understandable within 15 seconds and explainable in approximately 60 seconds.
-
-Prioritize clarity, credibility, and measurable innovation over technical complexity.
+Prioritize simplicity and visual elegance over information density.
