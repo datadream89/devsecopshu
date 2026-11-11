@@ -1,1 +1,162 @@
 
+Refine Slide 4 only of the existing ClaimTrack presentation.
+
+This is a focused executive-presentation improvement, not a complete redesign. Preserve the existing professional Cigna-inspired visual identity, color scheme, and overall layout.
+
+Objective
+
+Transform Slide 4 into a memorable, visually balanced introduction to ClaimTrack's two complementary capabilities:
+
+1. Proactive PreClear: Identify actionable COB information gaps before adjudication and support earlier human-validated intervention.
+2. Shared Resolution: After a claim pends, make verified ownership, progress, and next steps visible.
+
+The slide must communicate both capabilities within 5–10 seconds while retaining technical accuracy.
+
+1. Replace the headline
+
+Use:
+
+“Intervene earlier. Make resolution visible.”
+
+Subtitle:
+
+“Two connected capabilities across the claims journey.”
+
+Preserve the existing large navy headline treatment and subtitle hierarchy.
+
+2. Refine the left capability card
+
+Preserve the blue visual identity, rounded card, left accent bar, and existing icon.
+
+Eyebrow:
+
+BEFORE ADJUDICATION
+
+Capability name:
+
+Proactive PreClear
+
+Prominent value statement:
+
+“Identify actionable COB gaps earlier.”
+
+Replace the existing lengthy bullets with three concise, visually separated actions:
+
+- Detect information-gap risks
+- Prioritize human review
+- Enable earlier correction
+
+Bold the action verbs and keep the supporting phrases readable.
+
+These actions represent a proposed workflow, not proven autonomous capabilities. Avoid suggesting that ClaimTrack automatically corrects claims or guarantees prevention of pends.
+
+3. Refine the right capability card
+
+Preserve the teal visual identity, rounded card, left accent bar, and existing icon.
+
+Eyebrow:
+
+AFTER A CLAIM PENDS
+
+Capability name:
+
+Shared Resolution
+
+Prominent value statement:
+
+“Make verified progress visible.”
+
+Replace the existing lengthy bullets with:
+
+- Reconcile authorized records
+- Confirm ownership and milestones
+- Show progress and next steps
+
+Bold the action verbs.
+
+Ensure the wording communicates that milestones are based on authoritative records and validated events, not generated assumptions or predicted resolution dates.
+
+4. Improve the visual hierarchy
+
+Keep the existing side-by-side capability cards.
+
+Make the cards equal in height and visually balanced.
+
+Within each card, create a clear hierarchy:
+
+1. Stage label
+2. Capability name
+3. Value statement
+4. Three concise actions
+
+Increase whitespace between these elements.
+
+Use consistent font sizes, icon sizing, padding, and vertical alignment across both cards.
+
+Avoid excessive decorative graphics, gradients, shadows, or new illustrations.
+
+The result should feel more like an executive solution architecture overview and less like a document containing bullet points.
+
+5. Preserve and enhance the Shared Resolution timeline
+
+Retain the existing horizontal four-milestone timeline below the cards.
+
+Section heading:
+
+“Shared Resolution | Illustrative verified journey”
+
+Milestones:
+
+01 — Action identified
+
+02 — Owner confirmed
+
+03 — Information received
+
+04 — Resolution confirmed
+
+Keep the teal horizontal connector and four circular milestones.
+
+Improve the readability and spacing of the milestone labels, ensuring the fourth milestone is not cramped.
+
+The timeline must be clearly presented as illustrative. Milestones should only appear in an actual implementation when supported by authoritative records or validated events. Information receipt must not imply verification or acceptance.
+
+Do not add a second timeline or additional workflow diagram.
+
+6. Preserve the governance statement
+
+Keep the existing statement at the bottom:
+
+“Existing claims platforms remain authoritative for adjudication. ClaimTrack does not independently approve, deny, or pay claims.”
+
+Make it readable but visually subordinate to the solution content.
+
+7. Maintain consistency with the deck
+
+- Preserve the existing white background, navy typography, blue and teal capability colors, and green accent.
+- Preserve the top navigation bar with Solution highlighted.
+- Retain the existing footer, company branding, and slide number.
+- Maintain a clean, spacious, executive-level aesthetic.
+- Keep all text, shapes, and diagrams editable in PowerPoint.
+- Do not introduce new metrics, performance claims, or unsupported AI capabilities.
+- Do not modify the presentation theme or slide dimensions.
+
+8. Strict editing boundary
+
+Edit Slide 4 only.
+
+Do not modify, delete, reorder, recreate, or restyle any other slide.
+
+Preserve the existing slide's recognizable composition. Prioritize content simplification, alignment, typography, and whitespace over cosmetic redesign.
+
+Desired final impression
+
+The audience should immediately understand:
+
+Proactive PreClear = Identify actionable COB gaps before adjudication.
+
+Shared Resolution = Make verified progress visible after a claim pends.
+
+The two capabilities should feel complementary, practical, differentiated, and suitable for a controlled pilot.
+
+Produce a polished, boardroom-ready solution slide that is visually engaging, technically defensible, and easy to explain in approximately 45–60 seconds.
